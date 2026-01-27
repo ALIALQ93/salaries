@@ -3753,10 +3753,20 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- قسم العلاقات المرتبطة -->
+                <div id="editLinkedRelationsSection" style="background: #fef3c7; padding: 20px; border-radius: 12px; margin: 20px 0; border: 2px solid #fbbf24; display: none;">
+                    <h4 style="color: #92400e; margin-bottom: 15px; font-size: 16px;">🔗 ${t('showLinkedRelations')}</h4>
+                    <div id="editLinkedRelationsContent"></div>
+                </div>
             </div>
             
             <div class="modal-actions">
                 <button type="button" class="btn btn-primary" onclick="closeModal('editModal')">❌ إلغاء</button>
+                <button type="button" id="editCreateLinkedBtn" class="btn" onclick="createLinkedDuplicateFromEdit()" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; display: none;">🔗 ${t('createLinkedDuplicate')}</button>
+                <button type="button" id="editUnlinkBtn" class="btn" onclick="unlinkDuplicateFromEdit()" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; display: none;">🔓 ${t('unlinkDuplicate')}</button>
+                <button type="button" id="editGoToOriginalBtn" class="btn" onclick="goToOriginalFromEdit()" style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); color: white; display: none;">🔗 ${t('goToOriginal')}</button>
+                <button type="button" id="editShowEmployeeBtn" class="btn" onclick="unhideEmployeeFromEdit()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; display: none;">👁️ ${t('showEmployee')}</button>
                 <button type="submit" class="btn btn-success">✅ حفظ التعديلات</button>
             </div>
             </form>
@@ -6715,6 +6725,7 @@
         let currentMonth = 'august'; // سيتم تحديثها لاحقاً بناءً على أحدث تعديل
         let paymentFilter = 'all'; // 'all', 'paid', 'unpaid' - فلترة حسب حالة الدفع
         let reservationFilter = 'all'; // 'all', 'enabled', 'disabled', 'shortage', 'completed' - فلترة حسب حالة الحجز
+        let linkedFilter = 'all'; // 'all', 'linked', 'original', 'unlinked' - فلترة حسب حالة الربط
         let currentProject = null;
         let selectedProjectMonth = 'august';
         let dashboardSelectedMonth = 'august';
@@ -6972,6 +6983,41 @@
                 totalReservedThisMonth: 'إجمالي المحجوز هذا الشهر',
                 totalReservedOverall: 'إجمالي المحجوز الإجمالي',
                 reservationProgress: 'تقدم الحجز',
+                // Linked Duplicate Employees
+                linkedDuplicate: 'نسخة مرتبطة',
+                linkedToOriginal: 'مرتبط بـ',
+                createLinkedDuplicate: 'إنشاء نسخة مرتبطة',
+                linkedDuplicateDescription: 'إنشاء نسخة من هذا الموظف مرتبطة بالبطاقة الأصلية',
+                goToOriginal: 'الانتقال إلى الأصل',
+                unlinkDuplicate: 'فك الربط',
+                unlinkDuplicateConfirm: 'هل أنت متأكد من فك ربط هذه النسخة؟ ستصبح موظفاً مستقلاً.',
+                linkedEmployeesCount: 'عدد النسخ المرتبطة',
+                hasLinkedDuplicates: 'يوجد له نسخ مرتبطة',
+                isLinkedDuplicate: 'هذه نسخة مرتبطة',
+                originalEmployee: 'الموظف الأصلي',
+                linkedDuplicates: 'النسخ المرتبطة',
+                deleteWithLinked: 'حذف مع النسخ المرتبطة',
+                deleteOriginalOnly: 'حذف الأصل فقط (فك الربط)',
+                deleteLinkedWarning: 'هذا الموظف له {count} نسخة مرتبطة. ماذا تريد أن تفعل؟',
+                filterLinkedOnly: 'عرض الموظفين المرتبطين فقط',
+                showLinkedRelations: 'إظهار العلاقات',
+                noLinkedDuplicates: 'لا توجد نسخ مرتبطة',
+                unlinked: 'غير مرتبط',
+                mustSaveBeforeLink: 'يجب حفظ الموظف أولاً قبل إنشاء نسخة مرتبطة',
+                linkedDuplicateCreated: 'تم إنشاء النسخة المرتبطة بنجاح',
+                linkedDuplicateFailed: 'فشل إنشاء النسخة المرتبطة',
+                employeeNotLinked: 'هذا الموظف غير مرتبط',
+                unlinkedSuccessfully: 'تم فك الربط بنجاح',
+                deleteOriginalConfirm: 'هل تريد حذف الموظف الأصلي فقط وفك ربط النسخ المرتبطة؟\n\nOK = حذف الأصل فقط (فك الربط)\nCancel = إلغاء',
+                hideEmployee: 'إخفاء',
+                hideEmployeeConfirm: 'هل أنت متأكد من إخفاء هذا الموظف من الجدول؟',
+                employeeHidden: 'تم إخفاء الموظف بنجاح',
+                employeeUnhidden: 'تم إظهار الموظف بنجاح',
+                onlyUnpaidCanHide: 'يمكن إخفاء الموظفين غير المدفوعين فقط',
+                onlyZeroNetCanHide: 'يمكن إخفاء الموظفين الذين راتبهم الصافي = 0 فقط',
+                onlyPaidCanLink: 'يمكن إنشاء نسخة مرتبطة للموظفين المدفوعين فقط',
+                showEmployee: 'إظهار الموظف',
+                showEmployeeConfirm: 'هل تريد إظهار هذا الموظف في الجدول؟',
                 // Settings Page
                 settingsTitle: 'إعدادات النظام',
                 settingsDescription: 'إدارة معلومات الشركة وإعدادات الطباعة',
@@ -7330,6 +7376,41 @@
                 totalReservedThisMonth: 'Total Reserved This Month',
                 totalReservedOverall: 'Total Reserved Overall',
                 reservationProgress: 'Reservation Progress',
+                // Linked Duplicate Employees
+                linkedDuplicate: 'Linked Duplicate',
+                linkedToOriginal: 'Linked To',
+                createLinkedDuplicate: 'Create Linked Duplicate',
+                linkedDuplicateDescription: 'Create a duplicate of this employee linked to the original card',
+                goToOriginal: 'Go to Original',
+                unlinkDuplicate: 'Unlink',
+                unlinkDuplicateConfirm: 'Are you sure you want to unlink this duplicate? It will become an independent employee.',
+                linkedEmployeesCount: 'Linked Duplicates Count',
+                hasLinkedDuplicates: 'Has Linked Duplicates',
+                isLinkedDuplicate: 'This is a linked duplicate',
+                originalEmployee: 'Original Employee',
+                linkedDuplicates: 'Linked Duplicates',
+                deleteWithLinked: 'Delete with Linked Duplicates',
+                deleteOriginalOnly: 'Delete Original Only (Unlink)',
+                deleteLinkedWarning: 'This employee has {count} linked duplicates. What would you like to do?',
+                filterLinkedOnly: 'Show Linked Employees Only',
+                showLinkedRelations: 'Show Relations',
+                noLinkedDuplicates: 'No Linked Duplicates',
+                unlinked: 'Unlinked',
+                mustSaveBeforeLink: 'Employee must be saved first before creating a linked duplicate',
+                linkedDuplicateCreated: 'Linked duplicate created successfully',
+                linkedDuplicateFailed: 'Failed to create linked duplicate',
+                employeeNotLinked: 'This employee is not linked',
+                unlinkedSuccessfully: 'Unlinked successfully',
+                deleteOriginalConfirm: 'Do you want to delete the original employee only and unlink duplicates?\n\nOK = Delete original only (unlink)\nCancel = Cancel',
+                hideEmployee: 'Hide',
+                hideEmployeeConfirm: 'Are you sure you want to hide this employee from the table?',
+                employeeHidden: 'Employee hidden successfully',
+                employeeUnhidden: 'Employee shown successfully',
+                onlyUnpaidCanHide: 'Only unpaid employees can be hidden',
+                onlyZeroNetCanHide: 'Only employees with net salary = 0 can be hidden',
+                onlyPaidCanLink: 'Only paid employees can create linked duplicates',
+                showEmployee: 'Show Employee',
+                showEmployeeConfirm: 'Do you want to show this employee in the table?',
                 // Settings Page
                 settingsTitle: 'System Settings',
                 settingsDescription: 'Manage company information and print settings',
@@ -8282,6 +8363,40 @@
                     element.textContent = text;
                 }
             });
+            
+            // تحديث نصوص الأزرار في نافذة التعديل إذا كانت مفتوحة
+            const editModal = document.getElementById('editModal');
+            if (editModal && editModal.classList.contains('active')) {
+                const createLinkedBtn = document.getElementById('editCreateLinkedBtn');
+                const unlinkBtn = document.getElementById('editUnlinkBtn');
+                const goToOriginalBtn = document.getElementById('editGoToOriginalBtn');
+                const showEmployeeBtn = document.getElementById('editShowEmployeeBtn');
+                
+                if (createLinkedBtn) {
+                    createLinkedBtn.innerHTML = `🔗 ${t('createLinkedDuplicate')}`;
+                }
+                if (unlinkBtn) {
+                    unlinkBtn.innerHTML = `🔓 ${t('unlinkDuplicate')}`;
+                }
+                if (goToOriginalBtn) {
+                    goToOriginalBtn.innerHTML = `🔗 ${t('goToOriginal')}`;
+                }
+                if (showEmployeeBtn) {
+                    showEmployeeBtn.innerHTML = `👁️ ${t('showEmployee')}`;
+                }
+                
+                // تحديث قسم العلاقات المرتبطة إذا كان موجوداً
+                const section = document.getElementById('editLinkedRelationsSection');
+                if (section && section.style.display !== 'none') {
+                    const employeeIndexToEdit = window.employeeIndexToEdit;
+                    if (employeeIndexToEdit !== undefined && employeeData[currentYear] && employeeData[currentYear][currentMonth]) {
+                        const emp = employeeData[currentYear][currentMonth][employeeIndexToEdit];
+                        if (emp) {
+                            updateLinkedRelationsSection(emp, employeeIndexToEdit);
+                        }
+                    }
+                }
+            }
             
             // Update breadcrumb current based on active view
             updateNavigation(currentView);
@@ -9314,11 +9429,14 @@
                             if (emp.nameAr.trim().toLowerCase() === nameAr.trim().toLowerCase()) {
                                 // فقط في نفس الشهر والسنة - نتحقق من المشروع أيضاً
                                 if (isCurrentMonth) {
-                                    // في نفس الشهر، نتحقق من المشروع أيضاً
-                                    // لكن هنا نرجع النتيجة لأنه قد يكون نفس الاسم في مشروع مختلف
+                                    // السماح بالتكرار إذا كان الموظف الموجود مرتبطاً (linkedToFirebaseId)
+                                    // أو إذا كان الموظف الجديد سيتم ربطه (allowLinkedDuplicate)
+                                    // في هذه الحالة، نرجع معلومات التكرار مع خيار الربط
                                     return {
                                         duplicate: true,
                                         existingEmployee: emp,
+                                        isLinked: !!emp.linkedToFirebaseId,
+                                        canLink: true, // يمكن إنشاء نسخة مرتبطة
                                         message: currentLang === 'ar' 
                                             ? `اسم الموظف "${nameAr}" موجود بالفعل في المشروع "${projects[emp.project] || emp.project}" في نفس الشهر`
                                             : `Employee name "${nameAr}" already exists in project "${projects[emp.project] || emp.project}" in the same month`
@@ -9334,6 +9452,8 @@
                                     return {
                                         duplicate: true,
                                         existingEmployee: emp,
+                                        isLinked: !!emp.linkedToFirebaseId,
+                                        canLink: true, // يمكن إنشاء نسخة مرتبطة
                                         message: currentLang === 'ar' 
                                             ? `اسم الموظف "${nameEn}" موجود بالفعل في المشروع "${projects[emp.project] || emp.project}" في نفس الشهر`
                                             : `Employee name "${nameEn}" already exists in project "${projects[emp.project] || emp.project}" in the same month`
@@ -10954,6 +11074,8 @@
             } else if (paymentFilter === 'unpaid') {
                 employees = employees.filter(emp => !emp.isPaid);
             }
+            // فلترة الموظفين المخفيين (إظهار غير المخفيين فقط)
+            employees = employees.filter(emp => !emp.isHidden);
             // فلترة حسب حالة الحجز
             if (reservationFilter === 'enabled') {
                 employees = employees.filter(emp => emp.salaryReservationEnabled === true);
@@ -10979,6 +11101,18 @@
                     const progress = getReservationProgress(emp, currentMonth, currentYear);
                     return progress.isCompleted;
                 });
+            }
+            
+            // فلترة حسب حالة الربط
+            if (linkedFilter === 'linked') {
+                employees = employees.filter(emp => emp.linkedToFirebaseId);
+            } else if (linkedFilter === 'original') {
+                employees = employees.filter(emp => {
+                    if (!emp.firebaseId) return false;
+                    return getLinkedDuplicatesCount(emp.firebaseId, currentMonth, currentYear) > 0;
+                });
+            } else if (linkedFilter === 'unlinked') {
+                employees = employees.filter(emp => !emp.linkedToFirebaseId);
             }
 
             const allEmployees = (employeeData[currentYear] && employeeData[currentYear][currentMonth]) ? employeeData[currentYear][currentMonth] : [];
@@ -11173,7 +11307,18 @@
                     <button class="btn ${reservationFilter === 'shortage' ? 'btn-warning' : 'btn'}" onclick="setReservationFilter('shortage')" style="font-weight: 600;">⚠️ ${t('reservationShortage')}</button>
                     <button class="btn ${reservationFilter === 'completed' ? 'btn-info' : 'btn'}" onclick="setReservationFilter('completed')" style="font-weight: 600;">🎉 ${t('reservationCompleted')}</button>
                 </div>
-            </div>`;
+                <div class="filter-group">
+                    <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px; font-weight: 600; color: var(--dark);">
+                        <span>🔗</span> ${t('showLinkedRelations')}
+                    </label>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button class="btn ${linkedFilter === 'all' ? 'btn-primary' : 'btn'}" onclick="setLinkedFilter('all')" style="font-weight: 600;">${t('showAll')}</button>
+                        <button class="btn ${linkedFilter === 'linked' ? 'btn-warning' : 'btn'}" onclick="setLinkedFilter('linked')" style="font-weight: 600;">🔗 ${t('linkedDuplicate')}</button>
+                        <button class="btn ${linkedFilter === 'original' ? 'btn-success' : 'btn'}" onclick="setLinkedFilter('original')" style="font-weight: 600;">✅ ${t('originalEmployee')}</button>
+                        <button class="btn ${linkedFilter === 'unlinked' ? 'btn-secondary' : 'btn'}" onclick="setLinkedFilter('unlinked')" style="font-weight: 600;">⚪ ${t('unlinked')}</button>
+                    </div>
+                </div>
+                </div>`;
 
             // لوحة التحكم في الأعمدة
             html += `<div id="columnVisibilityPanel" style="display: none; background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 2px solid #0ea5e9;">
@@ -11303,7 +11448,11 @@
                         <td style="font-weight: 600; color: var(--primary); font-size: 12px;">
                             ${emp.employeeCode || '-'}
                         </td>
-                        <td>${empName}</td><td>${emp.position}</td><td>${empType}</td><td>${projects[emp.project] || emp.project}</td>
+                        <td style="${emp.linkedToFirebaseId ? 'background: #fff3cd; border-left: 3px solid #ffc107;' : ''}">
+                            ${emp.linkedToFirebaseId ? '🔗 ' : ''}${empName}
+                            ${emp.linkedToFirebaseId ? `<span style="font-size: 10px; color: #856404; display: block; margin-top: 2px;" title="${t('linkedToOriginal')}">${t('linkedDuplicate')}</span>` : ''}
+                        </td>
+                        <td>${emp.position}</td><td>${empType}</td><td>${projects[emp.project] || emp.project}</td>
                         <td>${formatCurrency(emp.salary)}</td><td>${emp.salaryCurrency}</td><td>${emp.paymentCurrency}</td>
                         <td class="editable excel-cell" data-field="exchangeRate" data-index="${index}" style="font-weight: 600; background: #fef3c7;">${emp.exchangeRate}</td>
                         ${renderAttendanceCell(emp, index, '11px', currentMonth, currentYear)}
@@ -11435,6 +11584,9 @@
                         </td>
                         <td style="white-space: nowrap;">
                             <button class="btn btn-primary btn-small" onclick="openEditModal(${index})" ${!canEditCurrentMonth(currentMonth, currentYear) ? 'disabled title="الشهر مقفل من التعديل"' : (emp.isPaid ? 'disabled title="' + (currentLang === 'ar' ? 'تم الدفع - لا يمكن التعديل' : 'Paid - Cannot edit') + '"' : '')}>${t('edit')}</button>
+                            ${emp.linkedToFirebaseId ? `<button class="btn btn-secondary btn-small" onclick="goToOriginalEmployee('${emp.linkedToFirebaseId}', '${currentMonth}', ${currentYear})" title="${t('goToOriginal')}" style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); color: white;">🔗 ${t('goToOriginal')}</button>` : ''}
+                            ${emp.isPaid && !emp.linkedToFirebaseId ? `<button class="btn btn-small" onclick="createLinkedDuplicate(${index})" title="${t('createLinkedDuplicate')}" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">🔗 ${t('createLinkedDuplicate')}</button>` : ''}
+                            ${!emp.isPaid && netSalary === 0 ? `<button class="btn btn-warning btn-small" onclick="hideEmployee(${index})" title="${t('hideEmployee')}" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">👁️‍🗨️ ${t('hideEmployee')}</button>` : ''}
                             <button class="btn btn-warning btn-small" onclick="openAttendanceModal(${index}, '${currentMonth}', ${currentYear})" title="${currentLang === 'ar' ? 'إدخال الدوام' : 'Enter Attendance'}" ${!canEditCurrentMonth(currentMonth, currentYear) ? 'disabled title="الشهر مقفل من التعديل"' : (emp.isPaid ? 'disabled title="' + (currentLang === 'ar' ? 'تم الدفع - لا يمكن التعديل' : 'Paid - Cannot edit') + '"' : '')}>⏰</button>
                             <button class="btn btn-info btn-small" onclick="openEmployeeReportModal(${index}, '${currentMonth}', ${currentYear})" title="${currentLang === 'ar' ? 'تقرير الموظف عبر الأشهر' : 'Employee Monthly Report'}" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white;">📊</button>
                             <button class="btn btn-success btn-small" onclick="openCopyModal(${index})" ${!canEditCurrentMonth(currentMonth, currentYear) ? 'disabled title="الشهر مقفل من التعديل"' : ''}>${t('copy')}</button>
@@ -11581,6 +11733,8 @@ function renderProjectView() {
             let monthData = (employeeData[currentYear] && employeeData[currentYear][selectedProjectMonth]) ? employeeData[currentYear][selectedProjectMonth] : [];
             // تطبيق فلتر الصلاحيات أولاً
             monthData = monthData.filter(emp => hasProjectAccess(emp.project));
+            // فلترة الموظفين المخفيين (إظهار غير المخفيين فقط)
+            monthData = monthData.filter(emp => !emp.isHidden);
             // تصفية الموظفين حسب المشروع الحالي
             let monthEmployees = monthData.filter(emp => emp.project === currentProject);
             // تطبيق فلاتر الأعمدة على الموظفين المصفّين
@@ -11817,7 +11971,12 @@ function renderProjectView() {
                     const empName = currentLang === 'ar' ? emp.nameAr : emp.nameEn;
                     
                     html += `<tr>
-                        <td>${index + 1}</td><td>${empName}</td><td>${emp.position}</td><td>${formatCurrency(emp.salary)}</td><td>${emp.salaryCurrency}</td><td>${emp.paymentCurrency}</td>
+                        <td>${index + 1}</td>
+                        <td style="${emp.linkedToFirebaseId ? 'background: #fff3cd; border-left: 3px solid #ffc107;' : ''}">
+                            ${emp.linkedToFirebaseId ? '🔗 ' : ''}${empName}
+                            ${emp.linkedToFirebaseId ? `<span style="font-size: 10px; color: #856404; display: block; margin-top: 2px;" title="${t('linkedToOriginal')}">${t('linkedDuplicate')}</span>` : ''}
+                        </td>
+                        <td>${emp.position}</td><td>${formatCurrency(emp.salary)}</td><td>${emp.salaryCurrency}</td><td>${emp.paymentCurrency}</td>
                         <td><input type="number" value="${emp.exchangeRate}" min="0" onchange="updateProjectField(${globalIndex}, 'exchangeRate', this.value)" style="width: 100%;"></td>
                         ${renderAttendanceCell(emp, globalIndex, '11px', selectedProjectMonth, currentYear)}
                         <td>${formatCurrency(dailySalaryUSD)}</td><td>${formatCurrency(actualSalaryUSD)}</td><td>${formatCurrency(actualSalaryIQD)}</td>
@@ -12188,6 +12347,11 @@ function renderProjectView() {
         
         function setReservationFilter(filter) {
             reservationFilter = filter;
+            renderContent();
+        }
+        
+        function setLinkedFilter(filter) {
+            linkedFilter = filter;
             renderContent();
         }
         
@@ -14404,11 +14568,73 @@ function renderProjectView() {
                 return;
             }
             
-            if (confirm(t('confirmDeleteEmployee'))) {
-                if (emp.firebaseId) {
-                    await deleteEmployeeFromFirebase(emp.firebaseId);
+            // التحقق من وجود نسخ مرتبطة
+            const linkedCount = getLinkedDuplicatesCount(emp.firebaseId, currentMonth, currentYear);
+            
+            if (linkedCount > 0) {
+                // إذا كان له نسخ مرتبطة، عرض خيارات
+                const message = t('deleteLinkedWarning').replace('{count}', linkedCount);
+                const action = confirm(
+                    message + '\n\n' + 
+                    (currentLang === 'ar' 
+                        ? 'اضغط OK لحذف الكل، أو Cancel للاختيار'
+                        : 'Press OK to delete all, or Cancel to choose')
+                );
+                
+                if (action) {
+                    // حذف الكل
+                    const linkedDuplicates = getLinkedDuplicates(emp.firebaseId, currentMonth, currentYear);
+                    
+                    // حذف النسخ المرتبطة أولاً
+                    for (const dup of linkedDuplicates) {
+                        if (dup.firebaseId) {
+                            await deleteEmployeeFromFirebase(dup.firebaseId);
+                        } else {
+                            // حذف محلي
+                            const dupIndex = employeeData[currentYear][currentMonth].indexOf(dup);
+                            if (dupIndex !== -1) {
+                                employeeData[currentYear][currentMonth].splice(dupIndex, 1);
+                            }
+                        }
+                    }
+                    
+                    // حذف الموظف الأصلي
+                    if (emp.firebaseId) {
+                        await deleteEmployeeFromFirebase(emp.firebaseId);
+                    }
+                } else {
+                    // عرض خيارات إضافية
+                    const choice = confirm(
+                        t('deleteOriginalConfirm')
+                    );
+                    
+                    if (choice) {
+                        // فك ربط النسخ المرتبطة
+                        const linkedDuplicates = getLinkedDuplicates(emp.firebaseId, currentMonth, currentYear);
+                        for (const dup of linkedDuplicates) {
+                            delete dup.linkedToFirebaseId;
+                            if (dup.firebaseId) {
+                                await updateEmployeeInFirebase(dup.firebaseId, { linkedToFirebaseId: null });
+                            }
+                        }
+                        
+                        // حذف الموظف الأصلي
+                        if (emp.firebaseId) {
+                            await deleteEmployeeFromFirebase(emp.firebaseId);
+                        }
+                    }
+                }
+            } else {
+                // لا توجد نسخ مرتبطة، حذف عادي
+                if (confirm(t('confirmDeleteEmployee'))) {
+                    if (emp.firebaseId) {
+                        await deleteEmployeeFromFirebase(emp.firebaseId);
+                    }
                 }
             }
+            
+            // إعادة تحميل المحتوى
+            renderContent();
         }
 
         async function deleteProject(code) {
@@ -14631,6 +14857,9 @@ function renderProjectView() {
                     // تحديث التسميات
                     updateSalaryLabelByType('editSalary');
                     
+                    // تحديث قسم العلاقات المرتبطة
+                    updateLinkedRelationsSection(emp, index);
+                    
                 }, 100);
                 
                 console.log('✅ تم فتح نافذة التعديل بنجاح');
@@ -14638,6 +14867,212 @@ function renderProjectView() {
             } catch (error) {
                 console.error('❌ خطأ في openEditModal:', error);
                 showNotification('error', t('error'), t('editWindowError') + ': ' + error.message);
+            }
+        }
+
+        // دالة تحديث قسم العلاقات المرتبطة
+        function updateLinkedRelationsSection(emp, index) {
+            const section = document.getElementById('editLinkedRelationsSection');
+            const content = document.getElementById('editLinkedRelationsContent');
+            const createLinkedBtn = document.getElementById('editCreateLinkedBtn');
+            const unlinkBtn = document.getElementById('editUnlinkBtn');
+            const goToOriginalBtn = document.getElementById('editGoToOriginalBtn');
+            const showEmployeeBtn = document.getElementById('editShowEmployeeBtn');
+            
+            if (!section || !content) return;
+            
+            // تحديث نصوص الأزرار
+            if (createLinkedBtn) {
+                createLinkedBtn.innerHTML = `🔗 ${t('createLinkedDuplicate')}`;
+            }
+            if (unlinkBtn) {
+                unlinkBtn.innerHTML = `🔓 ${t('unlinkDuplicate')}`;
+            }
+            if (goToOriginalBtn) {
+                goToOriginalBtn.innerHTML = `🔗 ${t('goToOriginal')}`;
+            }
+            if (showEmployeeBtn) {
+                showEmployeeBtn.innerHTML = `👁️ ${t('showEmployee')}`;
+            }
+            
+            // إخفاء جميع الأزرار أولاً
+            createLinkedBtn.style.display = 'none';
+            unlinkBtn.style.display = 'none';
+            goToOriginalBtn.style.display = 'none';
+            if (showEmployeeBtn) {
+                showEmployeeBtn.style.display = 'none';
+            }
+            
+            // إذا كان الموظف مخفياً، إظهار زر الإظهار
+            if (emp.isHidden) {
+                section.style.display = 'block';
+                section.style.background = '#fee2e2';
+                section.style.borderColor = '#ef4444';
+                
+                content.innerHTML = `
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 2px solid #ef4444;">
+                        <p style="color: #991b1b; font-weight: 600; margin-bottom: 10px;">
+                            👁️‍🗨️ ${currentLang === 'ar' ? 'هذا الموظف مخفي من الجدول' : 'This employee is hidden from the table'}
+                        </p>
+                        <p style="color: #7f1d1d; font-size: 14px; margin-bottom: 15px;">
+                            ${currentLang === 'ar' ? 'يمكنك إظهاره مرة أخرى باستخدام الزر أدناه' : 'You can show it again using the button below'}
+                        </p>
+                    </div>
+                `;
+                
+                if (showEmployeeBtn) {
+                    showEmployeeBtn.style.display = 'inline-block';
+                }
+                return;
+            }
+            
+            // إذا كان الموظف مرتبطاً (نسخة مكررة)
+            if (emp.linkedToFirebaseId) {
+                section.style.display = 'block';
+                section.style.background = '#fff3cd';
+                section.style.borderColor = '#fbbf24';
+                
+                // البحث عن الموظف الأصلي
+                const originalEmp = findEmployeeByFirebaseId(emp.linkedToFirebaseId, currentMonth, currentYear);
+                const originalName = originalEmp ? (currentLang === 'ar' ? originalEmp.nameAr : originalEmp.nameEn) : 'غير معروف';
+                
+                content.innerHTML = `
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 2px solid #fbbf24;">
+                        <p style="color: #856404; font-weight: 600; margin-bottom: 10px;">
+                            ⚠️ ${t('isLinkedDuplicate')}
+                        </p>
+                        <p style="color: #92400e; font-size: 14px;">
+                            ${t('linkedToOriginal')}: <strong>${originalName}</strong>
+                        </p>
+                        <button class="btn" onclick="goToOriginalFromEdit()" style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); color: white; margin-top: 10px; padding: 8px 16px;">
+                            🔗 ${t('goToOriginal')}
+                        </button>
+                        <button class="btn" onclick="unlinkDuplicateFromEdit()" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; margin-top: 10px; margin-left: 10px; padding: 8px 16px;">
+                            🔓 ${t('unlinkDuplicate')}
+                        </button>
+                    </div>
+                `;
+                
+                goToOriginalBtn.style.display = 'inline-block';
+                unlinkBtn.style.display = 'inline-block';
+            }
+            // إذا كان الموظف أصلياً (له نسخ مرتبطة)
+            else if (emp.firebaseId) {
+                const linkedCount = getLinkedDuplicatesCount(emp.firebaseId, currentMonth, currentYear);
+                
+                if (linkedCount > 0) {
+                    section.style.display = 'block';
+                    section.style.background = '#e7f3ff';
+                    section.style.borderColor = '#3b82f6';
+                    
+                    const linkedDuplicates = getLinkedDuplicates(emp.firebaseId, currentMonth, currentYear);
+                    let duplicatesList = '';
+                    
+                    linkedDuplicates.forEach((dup, idx) => {
+                        const dupName = currentLang === 'ar' ? dup.nameAr : dup.nameEn;
+                        duplicatesList += `
+                            <div style="background: white; padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #bfdbfe; display: flex; justify-content: space-between; align-items: center;">
+                                <span style="color: #1e40af; font-weight: 500;">${idx + 1}. ${dupName}</span>
+                                <button class="btn btn-small" onclick="goToLinkedDuplicate('${dup.firebaseId || idx}', '${currentMonth}', ${currentYear})" style="background: #3b82f6; color: white; padding: 4px 12px; font-size: 12px;">
+                                    🔗 ${currentLang === 'ar' ? 'فتح' : 'Open'}
+                                </button>
+                            </div>
+                        `;
+                    });
+                    
+                    content.innerHTML = `
+                        <div style="background: white; padding: 15px; border-radius: 8px; border: 2px solid #3b82f6;">
+                            <p style="color: #1e40af; font-weight: 600; margin-bottom: 10px;">
+                                ✅ ${t('hasLinkedDuplicates')}
+                            </p>
+                            <p style="color: #1e3a8a; font-size: 14px; margin-bottom: 15px;">
+                                ${t('linkedEmployeesCount')}: <strong>${linkedCount}</strong>
+                            </p>
+                            <div style="max-height: 200px; overflow-y: auto;">
+                                ${duplicatesList}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    section.style.display = 'none';
+                }
+                
+                // إظهار زر إنشاء نسخة مرتبطة
+                createLinkedBtn.style.display = 'inline-block';
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
+        // دالة البحث عن موظف بـ firebaseId
+        function findEmployeeByFirebaseId(firebaseId, month, year) {
+            if (!employeeData[year] || !employeeData[year][month]) return null;
+            return employeeData[year][month].find(emp => emp.firebaseId === firebaseId) || null;
+        }
+
+        // دالة الانتقال إلى نسخة مرتبطة
+        function goToLinkedDuplicate(firebaseIdOrIndex, month, year) {
+            const targetYear = parseInt(year);
+            const targetMonth = month;
+            
+            if (!employeeData[targetYear] || !employeeData[targetYear][targetMonth]) {
+                showNotification('error', t('error'), currentLang === 'ar' 
+                    ? 'لم يتم العثور على بيانات الشهر المحدد'
+                    : 'Month data not found');
+                return;
+            }
+            
+            const monthEmployees = employeeData[targetYear][targetMonth];
+            let targetIndex = -1;
+            
+            if (firebaseIdOrIndex.startsWith('emp_') || firebaseIdOrIndex.length > 10) {
+                // firebaseId
+                targetIndex = monthEmployees.findIndex(emp => emp.firebaseId === firebaseIdOrIndex);
+            } else {
+                // index
+                targetIndex = parseInt(firebaseIdOrIndex);
+            }
+            
+            if (targetIndex === -1 || targetIndex >= monthEmployees.length) {
+                showNotification('error', t('error'), currentLang === 'ar' 
+                    ? 'لم يتم العثور على الموظف'
+                    : 'Employee not found');
+                return;
+            }
+            
+            // تغيير السنة والشهر الحاليين
+            currentYear = targetYear;
+            currentMonth = targetMonth;
+            
+            // إعادة رسم المحتوى
+            renderContent();
+            
+            // فتح نافذة التعديل
+            setTimeout(() => {
+                openEditModal(targetIndex);
+            }, 300);
+        }
+
+        // دوال مساعدة من نافذة التعديل
+        function createLinkedDuplicateFromEdit() {
+            if (employeeIndexToEdit !== null && employeeIndexToEdit !== undefined) {
+                createLinkedDuplicate(employeeIndexToEdit);
+                closeModal('editModal');
+            }
+        }
+
+        function unlinkDuplicateFromEdit() {
+            if (employeeIndexToEdit !== null && employeeIndexToEdit !== undefined) {
+                unlinkDuplicate(employeeIndexToEdit);
+                closeModal('editModal');
+            }
+        }
+
+        function goToOriginalFromEdit() {
+            const emp = employeeData[currentYear][currentMonth][employeeIndexToEdit];
+            if (emp && emp.linkedToFirebaseId) {
+                closeModal('editModal');
+                goToOriginalEmployee(emp.linkedToFirebaseId, currentMonth, currentYear);
             }
         }
 
@@ -14716,6 +15151,255 @@ function renderProjectView() {
             openModal('copyModal');
         }
 
+        // دالة إنشاء نسخة مرتبطة
+        async function createLinkedDuplicate(index) {
+            try {
+                if (!canEditCurrentMonth()) {
+                    showNotification('warning', t('warning'), t('monthLocked'));
+                    return;
+                }
+
+                const originalEmp = employeeData[currentYear][currentMonth][index];
+                if (!originalEmp) {
+                    showNotification('error', t('error'), t('employeeNotFound'));
+                    return;
+                }
+
+                // التحقق من أن الموظف مدفوع
+                if (!originalEmp.isPaid) {
+                    showNotification('error', t('error'), t('onlyPaidCanLink'));
+                    return;
+                }
+
+                if (!originalEmp.firebaseId) {
+                    showNotification('error', t('error'), t('mustSaveBeforeLink'));
+                    return;
+                }
+
+                // إنشاء نسخة من الموظف
+                const duplicateEmp = JSON.parse(JSON.stringify(originalEmp));
+                
+                // إزالة firebaseId للنسخة الجديدة (سيتم إنشاء واحد جديد)
+                delete duplicateEmp.firebaseId;
+                
+                // إزالة بيانات الدفع للنسخة المرتبطة (يجب أن تكون غير مدفوع)
+                delete duplicateEmp.paidDate;
+                delete duplicateEmp.paymentMethod;
+                duplicateEmp.isPaid = false;
+                
+                // إضافة حقل الربط
+                duplicateEmp.linkedToFirebaseId = originalEmp.firebaseId;
+                
+                // إضافة للشهر الحالي
+                if (!employeeData[currentYear][currentMonth]) {
+                    employeeData[currentYear][currentMonth] = [];
+                }
+                
+                employeeData[currentYear][currentMonth].push(duplicateEmp);
+                
+                // حفظ في Firebase
+                await saveEmployeeToFirebase(duplicateEmp, currentMonth, currentYear);
+                
+                showNotification('success', t('success'), t('linkedDuplicateCreated'));
+                
+                renderContent();
+            } catch (error) {
+                console.error('Error creating linked duplicate:', error);
+                showNotification('error', t('error'), t('linkedDuplicateFailed'));
+            }
+        }
+
+        // دالة الانتقال إلى الموظف الأصلي
+        function goToOriginalEmployee(originalFirebaseId, month, year) {
+            try {
+                const targetYear = parseInt(year);
+                const targetMonth = month;
+                
+                // البحث عن الموظف الأصلي
+                if (!employeeData[targetYear] || !employeeData[targetYear][targetMonth]) {
+                    showNotification('error', t('error'), currentLang === 'ar' 
+                        ? 'لم يتم العثور على بيانات الشهر المحدد'
+                        : 'Month data not found');
+                    return;
+                }
+                
+                const monthEmployees = employeeData[targetYear][targetMonth];
+                const originalIndex = monthEmployees.findIndex(emp => emp.firebaseId === originalFirebaseId);
+                
+                if (originalIndex === -1) {
+                    showNotification('error', t('error'), currentLang === 'ar' 
+                        ? 'لم يتم العثور على الموظف الأصلي'
+                        : 'Original employee not found');
+                    return;
+                }
+                
+                // تغيير السنة والشهر الحاليين
+                currentYear = targetYear;
+                currentMonth = targetMonth;
+                
+                // إعادة رسم المحتوى
+                renderContent();
+                
+                // فتح نافذة التعديل للموظف الأصلي
+                setTimeout(() => {
+                    openEditModal(originalIndex);
+                }, 300);
+                
+            } catch (error) {
+                console.error('Error going to original employee:', error);
+                showNotification('error', t('error'), currentLang === 'ar' 
+                    ? 'فشل الانتقال إلى الموظف الأصلي'
+                    : 'Failed to go to original employee');
+            }
+        }
+
+        // دالة إخفاء الموظف
+        async function hideEmployee(index) {
+            try {
+                if (!canEditCurrentMonth()) {
+                    showNotification('warning', t('warning'), t('monthLocked'));
+                    return;
+                }
+
+                const emp = employeeData[currentYear][currentMonth][index];
+                if (!emp) {
+                    showNotification('error', t('error'), t('employeeNotFound'));
+                    return;
+                }
+
+                // التحقق من أن الموظف غير مدفوع
+                if (emp.isPaid) {
+                    showNotification('error', t('error'), t('onlyUnpaidCanHide'));
+                    return;
+                }
+
+                // التحقق من أن الراتب الصافي = 0
+                const netSalary = calculateNetSalary(emp, currentMonth, currentYear);
+                if (Math.abs(netSalary) > 0.01) { // استخدام 0.01 للتعامل مع الأخطاء العشرية
+                    showNotification('error', t('error'), t('onlyZeroNetCanHide'));
+                    return;
+                }
+
+                if (!confirm(t('hideEmployeeConfirm'))) {
+                    return;
+                }
+
+                // تعيين isHidden = true
+                emp.isHidden = true;
+
+                // حفظ في Firebase
+                if (emp.firebaseId) {
+                    await updateEmployeeInFirebase(emp, currentMonth, currentYear);
+                } else {
+                    await saveEmployeeToFirebase(emp, currentMonth, currentYear);
+                }
+
+                showNotification('success', t('success'), t('employeeHidden'));
+                renderContent();
+            } catch (error) {
+                console.error('Error hiding employee:', error);
+                showNotification('error', t('error'), currentLang === 'ar' 
+                    ? 'فشل إخفاء الموظف'
+                    : 'Failed to hide employee');
+            }
+        }
+
+        // دالة إظهار الموظف
+        async function unhideEmployee(index) {
+            try {
+                if (!canEditCurrentMonth()) {
+                    showNotification('warning', t('warning'), t('monthLocked'));
+                    return;
+                }
+
+                const emp = employeeData[currentYear][currentMonth][index];
+                if (!emp) {
+                    showNotification('error', t('error'), t('employeeNotFound'));
+                    return;
+                }
+
+                if (!confirm(t('showEmployeeConfirm'))) {
+                    return;
+                }
+
+                // إزالة isHidden
+                delete emp.isHidden;
+
+                // حفظ في Firebase
+                if (emp.firebaseId) {
+                    await updateEmployeeInFirebase(emp, currentMonth, currentYear);
+                } else {
+                    await saveEmployeeToFirebase(emp, currentMonth, currentYear);
+                }
+
+                showNotification('success', t('success'), t('employeeUnhidden'));
+                renderContent();
+            } catch (error) {
+                console.error('Error unhiding employee:', error);
+                showNotification('error', t('error'), currentLang === 'ar' 
+                    ? 'فشل إظهار الموظف'
+                    : 'Failed to show employee');
+            }
+        }
+
+        // دالة إظهار الموظف من نافذة التعديل
+        function unhideEmployeeFromEdit() {
+            if (window.employeeIndexToEdit !== undefined) {
+                unhideEmployee(window.employeeIndexToEdit);
+                closeModal('editModal');
+            }
+        }
+
+        // دالة فك الربط
+        async function unlinkDuplicate(index) {
+            try {
+                if (!confirm(t('unlinkDuplicateConfirm'))) {
+                    return;
+                }
+
+                const emp = employeeData[currentYear][currentMonth][index];
+                if (!emp || !emp.linkedToFirebaseId) {
+                    showNotification('error', t('error'), t('employeeNotLinked'));
+                    return;
+                }
+
+                // إزالة حقل الربط
+                delete emp.linkedToFirebaseId;
+                
+                // حفظ التعديلات
+                if (emp.firebaseId) {
+                    await updateEmployeeInFirebase(emp.firebaseId, { linkedToFirebaseId: null });
+                }
+                
+                showNotification('success', t('success'), t('unlinkedSuccessfully'));
+                
+                renderContent();
+            } catch (error) {
+                console.error('Error unlinking duplicate:', error);
+                showNotification('error', t('error'), currentLang === 'ar' 
+                    ? 'فشل فك الربط'
+                    : 'Failed to unlink');
+            }
+        }
+
+        // دالة الحصول على عدد النسخ المرتبطة
+        function getLinkedDuplicatesCount(firebaseId, month, year) {
+            if (!employeeData[year] || !employeeData[year][month]) return 0;
+            
+            return employeeData[year][month].filter(emp => 
+                emp.linkedToFirebaseId === firebaseId
+            ).length;
+        }
+
+        // دالة الحصول على جميع النسخ المرتبطة
+        function getLinkedDuplicates(firebaseId, month, year) {
+            if (!employeeData[year] || !employeeData[year][month]) return [];
+            
+            return employeeData[year][month].filter(emp => 
+                emp.linkedToFirebaseId === firebaseId
+            );
+        }
+
         async function confirmCopy() {
             const targetYear = document.getElementById('copyTargetYear').value;
             if (!targetYear) {
@@ -14767,6 +15451,7 @@ function renderProjectView() {
                     delete copiedEmployee.firebaseId;
                     delete copiedEmployee.paidDate; // حذف تاريخ الدفع (بدلاً من undefined)
                     delete copiedEmployee.paymentMethod; // حذف طريقة الدفع
+                    delete copiedEmployee.linkedToFirebaseId; // حذف رابط النسخة المرتبطة
                     await saveEmployeeToFirebase(copiedEmployee, month, targetYear);
                     copiedCount++;
                     console.log(`✅ تم نسخ ${empName} إلى ${t('monthNames')[month]} ${targetYear}`);
@@ -15423,6 +16108,7 @@ function renderProjectView() {
                     delete copiedEmployee.firebaseId;
                     delete copiedEmployee.paidDate; // حذف تاريخ الدفع (بدلاً من undefined)
                     delete copiedEmployee.paymentMethod; // حذف طريقة الدفع
+                    delete copiedEmployee.linkedToFirebaseId; // حذف رابط النسخة المرتبطة
                     await saveEmployeeToFirebase(copiedEmployee, targetMonth, targetYear);
                     copiedCount++;
                 } else {
@@ -15609,6 +16295,7 @@ function renderProjectView() {
                             delete copiedEmployee.firebaseId;
                             delete copiedEmployee.paidDate; // حذف تاريخ الدفع (بدلاً من undefined)
                             delete copiedEmployee.paymentMethod; // حذف طريقة الدفع
+                            delete copiedEmployee.linkedToFirebaseId; // حذف رابط النسخة المرتبطة
                             await saveEmployeeToFirebase(copiedEmployee, targetMonth, targetYear);
                             copiedCount++;
                             console.log(`✅ تم نسخ ${emp.nameAr || emp.name} إلى ${t('monthNames')[targetMonth]} ${targetYear}`);
@@ -21474,7 +22161,11 @@ function renderProjectView() {
                 const actualSalaryUSD = calculateActualSalary(emp);
                 const actualSalaryIQD = actualSalaryUSD * (emp.exchangeRate || 1420);
                 const netSalary = calculateNetSalary(emp);
-                const empName = isArabic ? (emp.nameAr || emp.name || '') : (emp.nameEn || emp.name || '');
+                let empName = isArabic ? (emp.nameAr || emp.name || '') : (emp.nameEn || emp.name || '');
+                // إضافة مؤشر الربط إذا كان الموظف مرتبطاً
+                if (emp.linkedToFirebaseId) {
+                    empName = '🔗 ' + empName + ' (' + t('linkedDuplicate') + ')';
+                }
                 
                 // تحديد قيمة الدوام حسب نوع الموظف
                 let attendanceValue = '-';
@@ -25042,6 +25733,17 @@ function generateComparisonSummary(projectCode, month1, month2) {
         window.savePaymentDetails = savePaymentDetails;
         window.setPaymentFilter = setPaymentFilter;
         window.setReservationFilter = setReservationFilter;
+        window.setLinkedFilter = setLinkedFilter;
+        window.createLinkedDuplicate = createLinkedDuplicate;
+        window.goToOriginalEmployee = goToOriginalEmployee;
+        window.unlinkDuplicate = unlinkDuplicate;
+        window.hideEmployee = hideEmployee;
+        window.unhideEmployee = unhideEmployee;
+        window.unhideEmployeeFromEdit = unhideEmployeeFromEdit;
+        window.goToLinkedDuplicate = goToLinkedDuplicate;
+        window.createLinkedDuplicateFromEdit = createLinkedDuplicateFromEdit;
+        window.unlinkDuplicateFromEdit = unlinkDuplicateFromEdit;
+        window.goToOriginalFromEdit = goToOriginalFromEdit;
         window.bulkMarkAsPaid = bulkMarkAsPaid;
         window.bulkMarkAsUnpaid = bulkMarkAsUnpaid;
         window.confirmBulkPayment = confirmBulkPayment;
