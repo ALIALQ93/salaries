@@ -2026,6 +2026,16 @@
             box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
         }
         
+        .print-column-check-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .print-column-check-label input {
+            cursor: pointer;
+        }
         .form-group small {
             display: block;
             margin-top: 6px;
@@ -3509,6 +3519,23 @@
                     </div>
                 </div>
                 
+                <!-- طريقة الدفع (لإصدار القوائم) -->
+                <div style="background: #f0fdf4; padding: 20px; border-radius: 12px; margin: 20px 0; border: 2px solid #22c55e;">
+                    <h4 style="color: #15803d; margin-bottom: 15px; font-size: 16px;">💳 طريقة الدفع</h4>
+                    <div class="form-group">
+                        <label id="paymentMethodLabelAdd">طريقة الدفع</label>
+                        <select id="paymentMethodAdd" class="form-control" onchange="toggleAddMastercardField()">
+                            <option value="cash">نقداً</option>
+                            <option value="mastercard">تحويل ماستر كارت</option>
+                            <option value="banking">صيرفة</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="mastercardNumberGroupAdd" style="display: none;">
+                        <label id="mastercardNumberLabelAdd">رقم الماستر كارت</label>
+                        <input type="text" id="mastercardNumberAdd" placeholder="رقم البطاقة" maxlength="20">
+                    </div>
+                </div>
+                
                 <!-- إعدادات نظام الدوام -->
                 <div style="background: #f0f9ff; padding: 20px; border-radius: 12px; margin: 20px 0; border: 2px solid #60a5fa;">
                     <h4 style="color: var(--primary); margin-bottom: 15px; font-size: 16px;">⏰ إعدادات نظام الدوام</h4>
@@ -3611,10 +3638,13 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>✏️ تعديل بيانات الموظف</h2>
-                <p>🔖 رمز الموظف: <span id="editEmployeeCode" style="font-weight: 700;">-</span></p>
             </div>
             <form id="editForm">
             <div class="modal-body">
+                <div class="form-group">
+                    <label>🔖 رمز الموظف</label>
+                    <input type="text" id="editEmployeeCode" placeholder="FSF-001" style="font-weight: 700;">
+                </div>
                 <div class="form-group">
                     <label>الاسم بالعربية</label>
                     <input type="text" id="editNameAr" required>
@@ -3663,6 +3693,23 @@
                     <div class="form-group">
                         <label>سعر الصرف</label>
                         <input type="number" id="editExchangeRate" required min="0">
+                    </div>
+                </div>
+                
+                <!-- طريقة الدفع (لإصدار القوائم) -->
+                <div style="background: #f0fdf4; padding: 20px; border-radius: 12px; margin: 20px 0; border: 2px solid #22c55e;">
+                    <h4 style="color: #15803d; margin-bottom: 15px; font-size: 16px;">💳 طريقة الدفع</h4>
+                    <div class="form-group">
+                        <label id="editPaymentMethodLabel">طريقة الدفع</label>
+                        <select id="editPaymentMethod" class="form-control" onchange="toggleEditMastercardField()">
+                            <option value="cash">نقداً</option>
+                            <option value="mastercard">تحويل ماستر كارت</option>
+                            <option value="banking">صيرفة</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="editMastercardNumberGroup" style="display: none;">
+                        <label id="editMastercardNumberLabel">رقم الماستر كارت</label>
+                        <input type="text" id="editMastercardNumber" placeholder="رقم البطاقة" maxlength="20">
                     </div>
                 </div>
                 
@@ -3992,6 +4039,63 @@
                         <option value="paid">الموظفون المدفوعون فقط</option>
                         <option value="unpaid">الموظفون غير المدفوعين فقط</option>
                     </select>
+                </div>
+                
+                <!-- طريقة الدفع (لإصدار قوائم للجهات) -->
+                <div class="form-group">
+                    <label style="font-weight: 600; font-size: 14px; color: var(--primary); margin-bottom: 10px; display: block;">
+                        💵 طريقة الدفع:
+                    </label>
+                    <select id="printPaymentMethod" style="width: 100%; padding: 10px; font-size: 14px; border: 2px solid var(--primary); border-radius: 8px;">
+                        <option value="all">جميع طرق الدفع</option>
+                        <option value="cash">نقداً فقط</option>
+                        <option value="mastercard">ماستر كارت فقط</option>
+                        <option value="banking">صيرفة فقط</option>
+                    </select>
+                </div>
+                
+                <!-- اختيار الأعمدة للطباعة -->
+                <div class="form-group">
+                    <label style="font-weight: 600; font-size: 14px; color: var(--primary); margin-bottom: 10px; display: block;">
+                        📋 الأعمدة المطلوبة في الطباعة:
+                    </label>
+                    <div style="padding: 12px; background: #f0f9ff; border-radius: 8px; border: 1px solid #bae6fd;">
+                        <div style="margin-bottom: 10px; display: flex; gap: 10px;">
+                            <button type="button" class="btn" onclick="selectAllPrintColumns(true)" style="font-size: 12px; padding: 6px 12px;">اختيار الكل</button>
+                            <button type="button" class="btn" onclick="selectAllPrintColumns(false)" style="font-size: 12px; padding: 6px 12px; background: #94a3b8;">إلغاء الكل</button>
+                            <button type="button" class="btn" onclick="selectEssentialPrintColumns()" style="font-size: 12px; padding: 6px 12px; background: #059669; color: white;">الأساسية فقط</button>
+                        </div>
+                        <div id="printColumnsContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; max-height: 180px; overflow-y: auto;">
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="index" checked> الرقم</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="name" checked> الاسم</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="position" checked> المنصب</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="project" checked> المشروع</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="salary" checked> الراتب</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="salaryCurrency" checked> ع.راتب</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="exchangeRate" checked> الصرف</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="attendance" checked> الدوام</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="actualSalaryUSD" checked> راتب فعلي USD</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="actualSalaryIQD" checked> راتب فعلي IQD</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="bonus" checked> بونص</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="bonusCurrency" checked> ع.بونص</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="phoneBills" checked> فواتير</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="phoneBillsCurrency" checked> ع.فواتير</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="deductions" checked> خصومات</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="deductionsCurrency" checked> ع.خصومات</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="advance" checked> سلفة</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="advanceCurrency" checked> ع.سلفة</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="salaryIncrease" checked> زيادة</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="salaryIncreaseCurrency" checked> ع.زيادة</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="ceoBonus" checked> مكافأة</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="ceoBonusCurrency" checked> ع.مكافأة</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="netSalary" checked> الصافي</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="paymentMethod" checked> طريقة الدفع</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="mastercardNumber" checked> رقم الماستر</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="paymentStatus" checked> حالة الدفع</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="workDays" checked> أيام العمل</label>
+                        </div>
+                        <p style="font-size: 11px; color: #64748b; margin-top: 8px;">💡 اترك فارغاً أو اختر "الأساسية فقط" للقوائم المختصرة (بنك/ماستر كارت)</p>
+                    </div>
                 </div>
                 
                 <!-- اتجاه الصفحة -->
@@ -5361,6 +5465,8 @@
                     <label id="paymentMethodLabel">طريقة الدفع:</label>
                     <select id="paymentMethod" class="form-control">
                         <option value="cash" id="paymentMethodCash">نقداً</option>
+                        <option value="mastercard" id="paymentMethodMastercard">تحويل ماستر كارت</option>
+                        <option value="banking" id="paymentMethodBanking">صيرفة</option>
                         <option value="transfer" id="paymentMethodTransfer">تحويل بنكي</option>
                         <option value="check" id="paymentMethodCheck">شيك</option>
                         <option value="other" id="paymentMethodOther">أخرى</option>
@@ -5393,6 +5499,8 @@
                     <label id="bulkPaymentMethodLabel">طريقة الدفع:</label>
                     <select id="bulkPaymentMethod" class="form-control">
                         <option value="cash" id="bulkPaymentMethodCash">نقداً</option>
+                        <option value="mastercard" id="bulkPaymentMethodMastercard">تحويل ماستر كارت</option>
+                        <option value="banking" id="bulkPaymentMethodBanking">صيرفة</option>
                         <option value="transfer" id="bulkPaymentMethodTransfer">تحويل بنكي</option>
                         <option value="check" id="bulkPaymentMethodCheck">شيك</option>
                         <option value="other" id="bulkPaymentMethodOther">أخرى</option>
@@ -6726,6 +6834,7 @@
         let paymentFilter = 'all'; // 'all', 'paid', 'unpaid' - فلترة حسب حالة الدفع
         let reservationFilter = 'all'; // 'all', 'enabled', 'disabled', 'shortage', 'completed' - فلترة حسب حالة الحجز
         let linkedFilter = 'all'; // 'all', 'linked', 'original', 'unlinked' - فلترة حسب حالة الربط
+        let duplicateCodeFilter = 'all'; // 'all', 'duplicates' - فلترة الموظفين ذوي الرموز المكررة
         let currentProject = null;
         let selectedProjectMonth = 'august';
         let dashboardSelectedMonth = 'august';
@@ -6927,6 +7036,9 @@
                 paymentNotes: 'ملاحظات الدفع',
                 cash: 'نقداً',
                 transfer: 'تحويل بنكي',
+                mastercard: 'تحويل ماستر كارت',
+                banking: 'صيرفة',
+                mastercardNumber: 'رقم الماستر كارت',
                 check: 'شيك',
                 other: 'أخرى',
                 filterByPayment: 'فلترة حسب الدفع',
@@ -7018,6 +7130,8 @@
                 onlyPaidCanLink: 'يمكن إنشاء نسخة مرتبطة للموظفين المدفوعين فقط',
                 showEmployee: 'إظهار الموظف',
                 showEmployeeConfirm: 'هل تريد إظهار هذا الموظف في الجدول؟',
+                duplicateCodeFilter: 'رمز مكرر',
+                showDuplicatesOnly: 'عرض المكرر فقط',
                 // Settings Page
                 settingsTitle: 'إعدادات النظام',
                 settingsDescription: 'إدارة معلومات الشركة وإعدادات الطباعة',
@@ -7320,6 +7434,9 @@
                 paymentNotes: 'Payment Notes',
                 cash: 'Cash',
                 transfer: 'Bank Transfer',
+                mastercard: 'Mastercard Transfer',
+                banking: 'Banking',
+                mastercardNumber: 'Mastercard Number',
                 check: 'Check',
                 other: 'Other',
                 filterByPayment: 'Filter by Payment',
@@ -7411,6 +7528,8 @@
                 onlyPaidCanLink: 'Only paid employees can create linked duplicates',
                 showEmployee: 'Show Employee',
                 showEmployeeConfirm: 'Do you want to show this employee in the table?',
+                duplicateCodeFilter: 'Duplicate Code',
+                showDuplicatesOnly: 'Show Duplicates Only',
                 // Settings Page
                 settingsTitle: 'System Settings',
                 settingsDescription: 'Manage company information and print settings',
@@ -9468,6 +9587,33 @@
             return { duplicate: false };
         }
         
+        // التحقق من تكرار رمز الموظف في نفس الشهر والمشروع
+        function checkDuplicateEmployeeCode(code, projectCode, excludeFirebaseId, monthKey, yearKey) {
+            if (!code || !code.trim()) return { duplicate: false };
+            
+            const monthEmployees = (employeeData[yearKey] && employeeData[yearKey][monthKey]) 
+                ? employeeData[yearKey][monthKey] : [];
+            
+            const trimmedCode = code.trim();
+            
+            for (const emp of monthEmployees) {
+                if (excludeFirebaseId && emp.firebaseId === excludeFirebaseId) continue;
+                if (emp.project !== projectCode) continue;
+                
+                const empCode = (emp.employeeCode || '').trim();
+                if (empCode && empCode.toUpperCase() === trimmedCode.toUpperCase()) {
+                    return {
+                        duplicate: true,
+                        message: currentLang === 'ar' 
+                            ? `رمز الموظف "${trimmedCode}" موجود بالفعل في المشروع "${projects[projectCode] || projectCode}"`
+                            : `Employee code "${trimmedCode}" already exists in project "${projects[projectCode] || projectCode}"`
+                    };
+                }
+            }
+            
+            return { duplicate: false };
+        }
+        
         // دالة مساعدة لعرض حالة الدوام بشكل موحد
         function renderAttendanceCell(emp, index, fontSize = '11px', monthKey = null, year = null) {
             const targetMonth = monthKey || emp?.month || currentMonth;
@@ -10766,8 +10912,8 @@
                 <canvas id="projectsChart" style="max-height: 350px;"></canvas>
             </div>
             
-            <!-- إحصائيات استخدام قاعدة البيانات -->
-            <div id="databaseUsageStats" style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 30px;">
+            <!-- إحصائيات استخدام قاعدة البيانات - معطّلة مؤقتاً -->
+            <div id="databaseUsageStats" style="display: none; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 30px;">
                 <h3 style="color: var(--primary); margin: 0 0 25px 0; font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
                     <span>💾</span> ${currentLang === 'ar' ? 'إحصائيات استخدام قاعدة البيانات' : 'Database Usage Statistics'}
                 </h3>
@@ -10952,8 +11098,8 @@
                     });
                 }
                 
-                // تحميل إحصائيات قاعدة البيانات
-                loadDatabaseUsageStats();
+                // تحميل إحصائيات قاعدة البيانات - معطّل مؤقتاً
+                // loadDatabaseUsageStats();
             }, 100);
 
             // ========== ملخص المشاريع للسنة كاملة - مفصل شهرياً (حسب النوع وعملة الدفع) ==========
@@ -11113,6 +11259,25 @@
                 });
             } else if (linkedFilter === 'unlinked') {
                 employees = employees.filter(emp => !emp.linkedToFirebaseId);
+            }
+            
+            // فلترة الموظفين ذوي الرموز المكررة
+            if (duplicateCodeFilter === 'duplicates') {
+                const codeCounts = {};
+                const monthEmps = (employeeData[currentYear] && employeeData[currentYear][currentMonth]) ? employeeData[currentYear][currentMonth] : [];
+                monthEmps.forEach(emp => {
+                    const code = (emp.employeeCode || '').trim();
+                    if (code) {
+                        const key = `${emp.project || ''}-${code}`;
+                        codeCounts[key] = (codeCounts[key] || 0) + 1;
+                    }
+                });
+                employees = employees.filter(emp => {
+                    const code = (emp.employeeCode || '').trim();
+                    if (!code) return false;
+                    const key = `${emp.project || ''}-${code}`;
+                    return codeCounts[key] > 1;
+                });
             }
 
             const allEmployees = (employeeData[currentYear] && employeeData[currentYear][currentMonth]) ? employeeData[currentYear][currentMonth] : [];
@@ -11316,6 +11481,13 @@
                         <button class="btn ${linkedFilter === 'linked' ? 'btn-warning' : 'btn'}" onclick="setLinkedFilter('linked')" style="font-weight: 600;">🔗 ${t('linkedDuplicate')}</button>
                         <button class="btn ${linkedFilter === 'original' ? 'btn-success' : 'btn'}" onclick="setLinkedFilter('original')" style="font-weight: 600;">✅ ${t('originalEmployee')}</button>
                         <button class="btn ${linkedFilter === 'unlinked' ? 'btn-secondary' : 'btn'}" onclick="setLinkedFilter('unlinked')" style="font-weight: 600;">⚪ ${t('unlinked')}</button>
+                    </div>
+                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                        <label style="font-weight: 600; color: #333;">🔖 ${t('duplicateCodeFilter')}:</label>
+                        <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                            <button class="btn ${duplicateCodeFilter === 'all' ? 'btn-primary' : 'btn'}" onclick="setDuplicateCodeFilter('all')" style="font-weight: 600;">${t('showAll')}</button>
+                            <button class="btn ${duplicateCodeFilter === 'duplicates' ? 'btn-danger' : 'btn'}" onclick="setDuplicateCodeFilter('duplicates')" style="font-weight: 600;">⚠️ ${t('showDuplicatesOnly')}</button>
+                        </div>
                     </div>
                 </div>
                 </div>`;
@@ -12355,6 +12527,11 @@ function renderProjectView() {
             renderContent();
         }
         
+        function setDuplicateCodeFilter(filter) {
+            duplicateCodeFilter = filter;
+            renderContent();
+        }
+        
         async function bulkMarkAsPaid() {
             if (selectedEmployees.size === 0) {
                 showNotification('warning', t('warning'), t('noEmployeesSelected'));
@@ -12371,6 +12548,10 @@ function renderProjectView() {
             
             // تحديث خيارات طريقة الدفع
             document.getElementById('bulkPaymentMethodCash').textContent = t('cash');
+            const bpmMc = document.getElementById('bulkPaymentMethodMastercard');
+            if (bpmMc) bpmMc.textContent = t('mastercard');
+            const bpmBank = document.getElementById('bulkPaymentMethodBanking');
+            if (bpmBank) bpmBank.textContent = t('banking');
             document.getElementById('bulkPaymentMethodTransfer').textContent = t('transfer');
             document.getElementById('bulkPaymentMethodCheck').textContent = t('check');
             document.getElementById('bulkPaymentMethodOther').textContent = t('other');
@@ -12547,6 +12728,10 @@ function renderProjectView() {
             
             // تحديث خيارات طريقة الدفع
             document.getElementById('paymentMethodCash').textContent = t('cash');
+            const pmMc = document.getElementById('paymentMethodMastercard');
+            if (pmMc) pmMc.textContent = t('mastercard');
+            const pmBank = document.getElementById('paymentMethodBanking');
+            if (pmBank) pmBank.textContent = t('banking');
             document.getElementById('paymentMethodTransfer').textContent = t('transfer');
             document.getElementById('paymentMethodCheck').textContent = t('check');
             document.getElementById('paymentMethodOther').textContent = t('other');
@@ -13753,6 +13938,19 @@ function renderProjectView() {
             });
         }
 
+        // إظهار/إخفاء حقل رقم الماستر كارت في نافذة التعديل
+        function toggleEditMastercardField() {
+            const sel = document.getElementById('editPaymentMethod');
+            const grp = document.getElementById('editMastercardNumberGroup');
+            if (sel && grp) grp.style.display = sel.value === 'mastercard' ? 'block' : 'none';
+        }
+        // إظهار/إخفاء حقل رقم الماستر كارت في نافذة الإضافة
+        function toggleAddMastercardField() {
+            const sel = document.getElementById('paymentMethodAdd');
+            const grp = document.getElementById('mastercardNumberGroupAdd');
+            if (sel && grp) grp.style.display = sel.value === 'mastercard' ? 'block' : 'none';
+        }
+
         // ========== تحديث تسميات حسب نوع الموظف ==========
         function updateSalaryLabelByType(fieldPrefix) {
             try {
@@ -14011,6 +14209,8 @@ function renderProjectView() {
                 'salaryCurrency': '💱 عملة الراتب',
                 'paymentCurrency': '💳 عملة الدفع',
                 'exchangeRate': '🔄 سعر الصرف',
+                'paymentMethod': '💳 طريقة الدفع',
+                'mastercardNumber': 'رقم الماستر كارت',
                 'attendance': '⏰ الدوام',
                 'attendanceSystem': '⏰ نظام الدوام',
                 'dailyWorkHours': '⏱️ ساعات العمل',
@@ -14782,8 +14982,7 @@ function renderProjectView() {
                     firebaseId: emp.firebaseId
                 });
                 
-                // عرض الرمز
-                document.getElementById('editEmployeeCode').textContent = emp.employeeCode || 'غير محدد';
+                // سيتم تعيين الرمز في setTimeout أدناه
             
                 // ✅ الخطوة 1: ملء قوائم المشاريع أولاً
                 populateProjectSelects();
@@ -14794,6 +14993,7 @@ function renderProjectView() {
                 // ✅ الخطوة 3: تعيين القيم بعد فتح النافذة وملء القوائم
                 setTimeout(() => {
                     // البيانات الأساسية
+                    document.getElementById('editEmployeeCode').value = emp.employeeCode || '';
                     document.getElementById('editNameAr').value = emp.nameAr || '';
                     document.getElementById('editNameEn').value = emp.nameEn || '';
                     document.getElementById('editPosition').value = emp.position || '';
@@ -14853,6 +15053,16 @@ function renderProjectView() {
                     if (paidLeaveSelect) {
                         paidLeaveSelect.value = emp.paidLeaveCalculation || 'full';
                     }
+                    
+                    // تحميل طريقة الدفع ورقم الماستر كارت
+                    const pmVal = emp.paymentMethod || 'cash';
+                    const pmSelect = document.getElementById('editPaymentMethod');
+                    if (pmSelect) {
+                        pmSelect.value = ['cash','mastercard','banking'].includes(pmVal) ? pmVal : 'cash';
+                    }
+                    const mcInput = document.getElementById('editMastercardNumber');
+                    if (mcInput) mcInput.value = emp.mastercardNumber || '';
+                    toggleEditMastercardField();
                     
                     // تحديث التسميات
                     updateSalaryLabelByType('editSalary');
@@ -15184,8 +15394,8 @@ function renderProjectView() {
                 
                 // إزالة بيانات الدفع للنسخة المرتبطة (يجب أن تكون غير مدفوع)
                 delete duplicateEmp.paidDate;
-                delete duplicateEmp.paymentMethod;
                 duplicateEmp.isPaid = false;
+                // الاحتفاظ بـ paymentMethod و mastercardNumber (طريقة الدفع من بطاقة الموظف)
                 
                 // إضافة حقل الربط
                 duplicateEmp.linkedToFirebaseId = originalEmp.firebaseId;
@@ -15450,8 +15660,8 @@ function renderProjectView() {
                     // حذف الحقول التي لا يجب أن تكون موجودة في النسخة الجديدة
                     delete copiedEmployee.firebaseId;
                     delete copiedEmployee.paidDate; // حذف تاريخ الدفع (بدلاً من undefined)
-                    delete copiedEmployee.paymentMethod; // حذف طريقة الدفع
                     delete copiedEmployee.linkedToFirebaseId; // حذف رابط النسخة المرتبطة
+                    // الاحتفاظ بـ paymentMethod و mastercardNumber (طريقة الدفع من بطاقة الموظف)
                     await saveEmployeeToFirebase(copiedEmployee, month, targetYear);
                     copiedCount++;
                     console.log(`✅ تم نسخ ${empName} إلى ${t('monthNames')[month]} ${targetYear}`);
@@ -16107,8 +16317,8 @@ function renderProjectView() {
                     // حذف الحقول التي لا يجب أن تكون موجودة في النسخة الجديدة
                     delete copiedEmployee.firebaseId;
                     delete copiedEmployee.paidDate; // حذف تاريخ الدفع (بدلاً من undefined)
-                    delete copiedEmployee.paymentMethod; // حذف طريقة الدفع
                     delete copiedEmployee.linkedToFirebaseId; // حذف رابط النسخة المرتبطة
+                    // الاحتفاظ بـ paymentMethod و mastercardNumber (طريقة الدفع من بطاقة الموظف)
                     await saveEmployeeToFirebase(copiedEmployee, targetMonth, targetYear);
                     copiedCount++;
                 } else {
@@ -16294,8 +16504,8 @@ function renderProjectView() {
                             // حذف الحقول التي لا يجب أن تكون موجودة في النسخة الجديدة
                             delete copiedEmployee.firebaseId;
                             delete copiedEmployee.paidDate; // حذف تاريخ الدفع (بدلاً من undefined)
-                            delete copiedEmployee.paymentMethod; // حذف طريقة الدفع
                             delete copiedEmployee.linkedToFirebaseId; // حذف رابط النسخة المرتبطة
+                            // الاحتفاظ بـ paymentMethod و mastercardNumber (طريقة الدفع من بطاقة الموظف)
                             await saveEmployeeToFirebase(copiedEmployee, targetMonth, targetYear);
                             copiedCount++;
                             console.log(`✅ تم نسخ ${emp.nameAr || emp.name} إلى ${t('monthNames')[targetMonth]} ${targetYear}`);
@@ -19609,6 +19819,7 @@ function renderProjectView() {
                             <table id="bulkEditTable" style="width: 100%; border-collapse: collapse;">
                                 <thead style="position: sticky; top: 0; background: var(--primary); color: white; z-index: 10;">
                                     ${createPinCheckboxRow([
+                                        {dataColumn: 'employeeCode'},
                                         {dataColumn: 'nameAr'},
                                         {dataColumn: 'nameEn'},
                                         {dataColumn: 'position'},
@@ -19618,6 +19829,8 @@ function renderProjectView() {
                                         {dataColumn: 'salaryCurrency'},
                                         {dataColumn: 'paymentCurrency'},
                                         {dataColumn: 'exchangeRate'},
+                                        {dataColumn: 'paymentMethod'},
+                                        {dataColumn: 'mastercardNumber'},
                                         {dataColumn: 'attendanceSystem'},
                                         {dataColumn: 'dailyWorkHours'},
                                         {dataColumn: 'overtimeMultiplier'},
@@ -19626,6 +19839,7 @@ function renderProjectView() {
                                         {dataColumn: 'actions'}
                                     ], 'bulkEditTable', 'bulkEdit')}
                                     <tr>
+                                        <th data-column="employeeCode" style="padding: 12px; text-align: right; min-width: 100px;">🔖 ${currentLang === 'ar' ? 'الرمز' : 'Code'}</th>
                                         <th data-column="nameAr" style="padding: 12px; text-align: right; min-width: 120px;">${t('nameAr')}</th>
                                         <th data-column="nameEn" style="padding: 12px; text-align: right; min-width: 120px;">${t('nameEn')}</th>
                                         <th data-column="position" style="padding: 12px; text-align: right; min-width: 100px;">${t('position')}</th>
@@ -19638,6 +19852,8 @@ function renderProjectView() {
                                         <th data-column="attendanceSystem" style="padding: 12px; text-align: right; min-width: 120px;">${t('attendanceSystem')}</th>
                                         <th data-column="dailyWorkHours" style="padding: 12px; text-align: right; min-width: 100px;">${t('dailyWorkHours')}</th>
                                         <th data-column="overtimeMultiplier" style="padding: 12px; text-align: right; min-width: 100px;">${t('overtimeMultiplier')}</th>
+                                        <th data-column="paymentMethod" style="padding: 12px; text-align: right; min-width: 120px;">💳 ${t('paymentMethod')}</th>
+                                        <th data-column="mastercardNumber" style="padding: 12px; text-align: right; min-width: 110px;">${t('mastercardNumber')}</th>
                                         <th data-column="monthCalculationMethod" style="padding: 12px; text-align: right; min-width: 120px;">${t('monthCalculationMethod')}</th>
                                         <th data-column="paidLeaveCalculation" style="padding: 12px; text-align: right; min-width: 120px;">${t('paidLeaveCalculation')}</th>
                                         <th data-column="actions" style="padding: 12px; text-align: center; min-width: 100px;">${t('actions')}</th>
@@ -19646,7 +19862,7 @@ function renderProjectView() {
                                 <tbody id="bulkEditTableBody">
                                     ${employees.length === 0 ? `
                                     <tr>
-                                        <td colspan="15" style="padding: 40px; text-align: center; color: var(--gray);">
+                                        <td colspan="18" style="padding: 40px; text-align: center; color: var(--gray);">
                                             ${t('noEmployeesInMonth')} ${t('monthNames')[bulkEditMonth]} ${bulkEditYear}
                                         </td>
                                     </tr>
@@ -19655,6 +19871,15 @@ function renderProjectView() {
                                         const workDays = emp.workDays || [0,1,2,3,4,6]; // الأحد إلى الخميس والسبت
                                         return `
                                     <tr data-emp-id="${empId}" data-emp-index="${idx}" style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 8px;">
+                                            <input type="text" 
+                                                class="bulk-edit-field" 
+                                                data-field="employeeCode" 
+                                                data-emp-id="${empId}"
+                                                value="${(emp.employeeCode || '').replace(/"/g, '&quot;')}" 
+                                                placeholder="FSF-001"
+                                                style="width: 100%; padding: 8px; font-size: 12px; border: 1px solid var(--border); border-radius: 4px; background: white; font-weight: 600;">
+                                        </td>
                                         <td style="padding: 8px;">
                                             <input type="text" 
                                                 class="bulk-edit-field" 
@@ -19776,6 +20001,27 @@ function renderProjectView() {
                                         <td style="padding: 8px;">
                                             <select 
                                                 class="bulk-edit-field" 
+                                                data-field="paymentMethod" 
+                                                data-emp-id="${empId}"
+                                                style="width: 100%; padding: 8px; font-size: 12px; border: 1px solid var(--border); border-radius: 4px; background: white;">
+                                                <option value="cash" ${(emp.paymentMethod || 'cash') === 'cash' ? 'selected' : ''}>${t('cash')}</option>
+                                                <option value="mastercard" ${emp.paymentMethod === 'mastercard' ? 'selected' : ''}>${t('mastercard')}</option>
+                                                <option value="banking" ${emp.paymentMethod === 'banking' ? 'selected' : ''}>${t('banking')}</option>
+                                            </select>
+                                        </td>
+                                        <td style="padding: 8px;">
+                                            <input type="text" 
+                                                class="bulk-edit-field" 
+                                                data-field="mastercardNumber" 
+                                                data-emp-id="${empId}"
+                                                value="${(emp.mastercardNumber || '').replace(/"/g, '&quot;')}" 
+                                                placeholder="${emp.paymentMethod === 'mastercard' ? (currentLang === 'ar' ? 'رقم البطاقة' : 'Card #') : '-'}"
+                                                maxlength="20"
+                                                style="width: 100%; padding: 8px; font-size: 12px; border: 1px solid var(--border); border-radius: 4px; background: white;">
+                                        </td>
+                                        <td style="padding: 8px;">
+                                            <select 
+                                                class="bulk-edit-field" 
                                                 data-field="monthCalculationMethod" 
                                                 data-emp-id="${empId}"
                                                 style="width: 100%; padding: 8px; font-size: 12px; border: 1px solid var(--border); border-radius: 4px; background: white;">
@@ -19840,6 +20086,8 @@ function renderProjectView() {
                 'salaryCurrency': '💱 عملة الراتب',
                 'paymentCurrency': '💳 عملة الدفع',
                 'exchangeRate': '🔄 سعر الصرف',
+                'paymentMethod': '💳 ' + t('paymentMethod'),
+                'mastercardNumber': t('mastercardNumber'),
                 'attendanceSystem': '⏰ نظام الدوام',
                 'dailyWorkHours': '⏱️ ساعات العمل',
                 'overtimeMultiplier': '🔢 معامل الأوفر تايم',
@@ -19987,6 +20235,7 @@ function renderProjectView() {
             }
             
             const updates = {};
+            const employeeCodeField = row.querySelector('[data-field="employeeCode"]');
             const nameArField = row.querySelector('[data-field="nameAr"]');
             const nameEnField = row.querySelector('[data-field="nameEn"]');
             const positionField = row.querySelector('[data-field="position"]');
@@ -19999,8 +20248,23 @@ function renderProjectView() {
             const attendanceSystemField = row.querySelector('[data-field="attendanceSystem"]');
             const dailyWorkHoursField = row.querySelector('[data-field="dailyWorkHours"]');
             const overtimeMultiplierField = row.querySelector('[data-field="overtimeMultiplier"]');
+            const paymentMethodField = row.querySelector('[data-field="paymentMethod"]');
+            const mastercardNumberField = row.querySelector('[data-field="mastercardNumber"]');
             const monthCalculationMethodField = row.querySelector('[data-field="monthCalculationMethod"]');
             const paidLeaveCalculationField = row.querySelector('[data-field="paidLeaveCalculation"]');
+            
+            if (employeeCodeField) {
+                const employeeCode = employeeCodeField.value.trim();
+                if (employeeCode) {
+                    const projectCode = (projectField && projectField.value) || emp.project;
+                    const codeDupCheck = checkDuplicateEmployeeCode(employeeCode, projectCode, emp.firebaseId || emp.id, bulkEditMonth, bulkEditYear);
+                    if (codeDupCheck.duplicate) {
+                        showNotification('error', t('error'), codeDupCheck.message);
+                        return;
+                    }
+                    updates.employeeCode = employeeCode;
+                }
+            }
             
             if (nameArField) {
                 const nameAr = nameArField.value.trim();
@@ -20077,6 +20341,14 @@ function renderProjectView() {
                 if (overtimeMultiplier) {
                     updates.overtimeMultiplier = parseFloat(overtimeMultiplier);
                 }
+            }
+            
+            if (paymentMethodField) {
+                const paymentMethod = paymentMethodField.value || 'cash';
+                updates.paymentMethod = paymentMethod;
+                updates.mastercardNumber = paymentMethod === 'mastercard' && mastercardNumberField 
+                    ? (mastercardNumberField.value || '').trim() || null 
+                    : null;
             }
             
             if (monthCalculationMethodField) {
@@ -21631,6 +21903,22 @@ function renderProjectView() {
             openModal('printOptionsModal');
         }
         
+        // دوال اختيار الأعمدة للطباعة
+        function getPrintColumns() {
+            const checks = document.querySelectorAll('.print-column-check:checked');
+            if (checks.length === 0) return null;
+            return Array.from(checks).map(cb => cb.value);
+        }
+        function selectAllPrintColumns(checked) {
+            document.querySelectorAll('.print-column-check').forEach(cb => { cb.checked = checked; });
+        }
+        function selectEssentialPrintColumns() {
+            const essential = ['index', 'name', 'position', 'project', 'netSalary', 'paymentMethod', 'mastercardNumber'];
+            document.querySelectorAll('.print-column-check').forEach(cb => {
+                cb.checked = essential.includes(cb.value);
+            });
+        }
+        
         function executePrintWithOptions(showPreview) {
             console.log('⚙️ تنفيذ الطباعة البسيطة');
             
@@ -21639,8 +21927,10 @@ function renderProjectView() {
                 selectedProject: document.getElementById('printProjectSelect').value,
                 reportType: document.getElementById('printReportType').value,
                 paymentStatus: document.getElementById('printPaymentStatus').value,
+                paymentMethod: document.getElementById('printPaymentMethod')?.value || 'all',
                 orientation: document.querySelector('input[name="printOrientation"]:checked').value,
-                pageSize: document.querySelector('input[name="printPageSize"]:checked').value
+                pageSize: document.querySelector('input[name="printPageSize"]:checked').value,
+                printColumns: getPrintColumns()
             };
             
             closeModal('printOptionsModal');
@@ -21658,8 +21948,10 @@ function renderProjectView() {
                 selectedProject: document.getElementById('printProjectSelect').value,
                 reportType: document.getElementById('printReportType').value,
                 paymentStatus: document.getElementById('printPaymentStatus').value,
+                paymentMethod: document.getElementById('printPaymentMethod')?.value || 'all',
                 orientation: document.querySelector('input[name="printOrientation"]:checked').value,
-                pageSize: document.querySelector('input[name="printPageSize"]:checked').value
+                pageSize: document.querySelector('input[name="printPageSize"]:checked').value,
+                printColumns: getPrintColumns()
             };
             
             // إنشاء نافذة المعاينة
@@ -21698,6 +21990,14 @@ function renderProjectView() {
                     if (settings.paymentStatus === 'paid') return emp.isPaid === true;
                     if (settings.paymentStatus === 'unpaid') return !emp.isPaid;
                     return true;
+                });
+            }
+            
+            // تصفية حسب طريقة الدفع (لإصدار قوائم للجهات)
+            if (settings.paymentMethod && settings.paymentMethod !== 'all') {
+                filteredEmployees = filteredEmployees.filter(emp => {
+                    const pm = emp.paymentMethod || 'cash';
+                    return pm === settings.paymentMethod;
                 });
             }
             
@@ -21769,11 +22069,17 @@ function renderProjectView() {
             }
             const monthToShow = currentView === 'project' ? (selectedProjectMonth || currentMonth) : currentMonth;
             html += '<h2>الشهر: ' + translations[currentLang].monthNames[monthToShow] + '</h2>';
+            if (settings.paymentMethod && settings.paymentMethod !== 'all') {
+                const pmLabels = { cash: 'نقداً', mastercard: 'ماستر كارت', banking: 'صيرفة' };
+                html += '<h2 style="color: #15803d;">طريقة الدفع: ' + (pmLabels[settings.paymentMethod] || settings.paymentMethod) + '</h2>';
+            }
             html += '<h2>تاريخ الطباعة: ' + currentDate + '</h2>';
             html += '</div>';
             
-            // أدوات التحكم في عرض الأعمدة
+            // أدوات التحكم في عرض الأعمدة (فقط عند عرض كل الأعمدة)
+            const hasCustomColumns = settings.printColumns && settings.printColumns.length > 0;
             html += '<div class="controls">';
+            if (!hasCustomColumns) {
             html += '<h3>🎛️ تحكم في عرض الأعمدة</h3>';
             html += '<div class="column-controls">';
             html += '<div class="column-control"><label>الرقم:</label><input type="number" value="30" min="20" max="100" onchange="adjustColumnWidth(0, this.value)"></div>';
@@ -21797,6 +22103,7 @@ function renderProjectView() {
             html += '<div class="column-control"><label>ع.مكافأة:</label><input type="number" value="50" min="40" max="80" onchange="adjustColumnWidth(18, this.value)"></div>';
             html += '<div class="column-control"><label>الصافي:</label><input type="number" value="80" min="60" max="120" onchange="adjustColumnWidth(19, this.value)"></div>';
             html += '</div>';
+            }
             html += '<button class="print-btn" onclick="printFromPreview()">🖨️ طباعة</button>';
             html += '<button class="print-btn" onclick="window.close()" style="background: #6c757d;">❌ إغلاق</button>';
             html += '</div>';
@@ -21809,19 +22116,19 @@ function renderProjectView() {
             // طباعة الموظفين الشهريين
             if (monthlyEmps.length > 0 && (settings.reportType === 'all' || settings.reportType === 'monthly')) {
                 html += '<div class="section-title">الموظفون الشهريون</div>';
-                html += generatePreviewTable(monthlyEmps, 'monthly');
+                html += generatePreviewTable(monthlyEmps, 'monthly', settings);
             }
             
             // طباعة الموظفين اليوميين
             if (dailyEmps.length > 0 && (settings.reportType === 'all' || settings.reportType === 'daily')) {
                 html += '<div class="section-title">الموظفون اليوميون</div>';
-                html += generatePreviewTable(dailyEmps, 'daily');
+                html += generatePreviewTable(dailyEmps, 'daily', settings);
             }
             
             // طباعة السيارات
             if (vehicleEmps.length > 0 && (settings.reportType === 'all' || settings.reportType === 'vehicle')) {
                 html += '<div class="section-title">السيارات</div>';
-                html += generatePreviewTable(vehicleEmps, 'vehicle');
+                html += generatePreviewTable(vehicleEmps, 'vehicle', settings);
             }
             
             // التوقيعات من الإعدادات
@@ -21850,6 +22157,83 @@ function renderProjectView() {
             previewWindow.document.close();
         }
         
+        // تكوين الأعمدة المتاحة للطباعة
+        const PRINT_COLUMNS_CONFIG = [
+            { id: 'index', labelAr: '#', labelEn: '#' },
+            { id: 'name', labelAr: 'الاسم', labelEn: 'Name' },
+            { id: 'position', labelAr: 'المنصب', labelEn: 'Position' },
+            { id: 'project', labelAr: 'المشروع', labelEn: 'Project' },
+            { id: 'salary', labelAr: 'الراتب', labelEn: 'Salary' },
+            { id: 'salaryCurrency', labelAr: 'ع.راتب', labelEn: 'S.Curr' },
+            { id: 'exchangeRate', labelAr: 'الصرف', labelEn: 'Exch.' },
+            { id: 'attendance', labelAr: 'الدوام', labelEn: 'Attendance', simpleOnly: true },
+            { id: 'actualSalaryUSD', labelAr: 'راتب فعلي USD', labelEn: 'Actual USD', simpleOnly: true },
+            { id: 'actualSalaryIQD', labelAr: 'راتب فعلي IQD', labelEn: 'Actual IQD', simpleOnly: true },
+            { id: 'bonus', labelAr: 'بونص', labelEn: 'Bonus' },
+            { id: 'bonusCurrency', labelAr: 'ع.بونص', labelEn: 'B.Curr' },
+            { id: 'phoneBills', labelAr: 'فواتير', labelEn: 'Bills' },
+            { id: 'phoneBillsCurrency', labelAr: 'ع.فواتير', labelEn: 'Bills C.' },
+            { id: 'deductions', labelAr: 'خصومات', labelEn: 'Ded.' },
+            { id: 'deductionsCurrency', labelAr: 'ع.خصومات', labelEn: 'Ded.C.' },
+            { id: 'advance', labelAr: 'سلفة', labelEn: 'Advance' },
+            { id: 'advanceCurrency', labelAr: 'ع.سلفة', labelEn: 'Adv.C.' },
+            { id: 'salaryIncrease', labelAr: 'زيادة', labelEn: 'Increase' },
+            { id: 'salaryIncreaseCurrency', labelAr: 'ع.زيادة', labelEn: 'Inc.C.' },
+            { id: 'ceoBonus', labelAr: 'مكافأة', labelEn: 'CEO Bonus' },
+            { id: 'ceoBonusCurrency', labelAr: 'ع.مكافأة', labelEn: 'CEO B.C.' },
+            { id: 'netSalary', labelAr: 'الصافي', labelEn: 'Net' },
+            { id: 'paymentMethod', labelAr: 'طريقة الدفع', labelEn: 'Payment Method' },
+            { id: 'mastercardNumber', labelAr: 'رقم الماستر', labelEn: 'Mastercard #' },
+            { id: 'paymentStatus', labelAr: 'حالة الدفع', labelEn: 'Payment Status', simpleOnly: true },
+            { id: 'workDays', labelAr: 'أيام العمل', labelEn: 'Work Days', simpleOnly: true }
+        ];
+        
+        function getPrintColumnsList(printColumns, isPreview) {
+            if (!printColumns || printColumns.length === 0) return null;
+            return PRINT_COLUMNS_CONFIG.filter(c => {
+                if (!printColumns.includes(c.id)) return false;
+                if (isPreview && c.simpleOnly) return false;  // في المعاينة لا نعرض أعمدة الطباعة المباشرة فقط
+                return true;
+            });
+        }
+        
+        function getCellValueForPrint(col, emp, index, type, isArabic, ctx) {
+            const pmLabels = { cash: isArabic ? 'نقداً' : 'Cash', mastercard: isArabic ? 'ماستر كارت' : 'Mastercard', banking: isArabic ? 'صيرفة' : 'Banking' };
+            const pm = emp.paymentMethod || 'cash';
+            if (ctx && ctx[col.id] !== undefined) return ctx[col.id];
+            switch(col.id) {
+                case 'index': return index + 1;
+                case 'name': 
+                    let n = isArabic ? (emp.nameAr || emp.name || '') : (emp.nameEn || emp.name || '');
+                    if (emp.linkedToFirebaseId) n = '🔗 ' + n + ' (' + t('linkedDuplicate') + ')';
+                    return n;
+                case 'position': return emp.position || '';
+                case 'project': return projects[emp.project] || emp.project || '';
+                case 'salary': return (emp.salary || 0);
+                case 'salaryCurrency': return emp.salaryCurrency || 'IQD';
+                case 'exchangeRate': return emp.exchangeRate || 1420;
+                case 'bonus': return emp.bonus || 0;
+                case 'bonusCurrency': return emp.bonusCurrency || 'IQD';
+                case 'phoneBills': return emp.phoneBills || 0;
+                case 'phoneBillsCurrency': return emp.phoneBillsCurrency || 'IQD';
+                case 'deductions': return emp.deductions || 0;
+                case 'deductionsCurrency': return emp.deductionsCurrency || 'IQD';
+                case 'advance': return emp.advance || 0;
+                case 'advanceCurrency': return emp.advanceCurrency || 'IQD';
+                case 'salaryIncrease': return emp.salaryIncrease || 0;
+                case 'salaryIncreaseCurrency': return emp.salaryIncreaseCurrency || 'IQD';
+                case 'ceoBonus': return emp.ceoBonus || 0;
+                case 'ceoBonusCurrency': return emp.ceoBonusCurrency || 'IQD';
+                case 'paymentMethod': return pmLabels[pm] || pm;
+                case 'mastercardNumber': return (pm === 'mastercard' && emp.mastercardNumber) ? emp.mastercardNumber : '-';
+                case 'workDays': return emp.workDays || 0;
+                case 'netSalary': 
+                    const net = calculateNetSalary(emp, emp.month || currentMonth, emp.year || currentYear);
+                    return formatCurrency(net) + ' ' + (emp.paymentCurrency || 'IQD');
+                default: return '';
+            }
+        }
+        
         // دالة جلب معلومات رأس الصفحة من الإعدادات
         function getHeaderInfo() {
             const isArabic = currentLang === 'ar';
@@ -21868,62 +22252,42 @@ function renderProjectView() {
             };
         }
         
-        // دالة إنشاء جدول المعاينة مع جميع الأعمدة
-        function generatePreviewTable(employees, type) {
+        // دالة إنشاء جدول المعاينة
+        function generatePreviewTable(employees, type, settings) {
+            const cols = settings && settings.printColumns ? getPrintColumnsList(settings.printColumns, true) : null;
+            const isArabic = true;
+            
             let html = '<table>';
-            
-            // رأس الجدول مع جميع الأعمدة
             html += '<thead><tr>';
-            html += '<th>#</th><th>الاسم</th><th>المنصب</th><th>المشروع</th>';
-            html += '<th>الراتب</th><th>ع.راتب</th>';
             
-            if (type === 'daily') {
-                html += '<th>سعر اليوم</th><th>عدد الأيام</th>';
+            if (cols && cols.length > 0) {
+                cols.forEach(c => { html += '<th>' + c.labelAr + '</th>'; });
+            } else {
+                html += '<th>#</th><th>الاسم</th><th>المنصب</th><th>المشروع</th><th>الراتب</th><th>ع.راتب</th>';
+                if (type === 'daily') html += '<th>سعر اليوم</th><th>عدد الأيام</th>';
+                html += '<th>الصرف</th><th>بونص</th><th>ع.بونص</th><th>فواتير</th><th>ع.فواتير</th><th>خصومات</th><th>ع.خصومات</th><th>سلفة</th><th>ع.سلفة</th><th>زيادة</th><th>ع.زيادة</th><th>مكافأة</th><th>ع.مكافأة</th><th>الصافي</th><th>طريقة الدفع</th><th>رقم الماستر</th>';
             }
-            
-            html += '<th>الصرف</th>';
-            html += '<th>بونص</th><th>ع.بونص</th>';
-            html += '<th>فواتير</th><th>ع.فواتير</th>';
-            html += '<th>خصومات</th><th>ع.خصومات</th>';
-            html += '<th>سلفة</th><th>ع.سلفة</th>';
-            html += '<th>زيادة</th><th>ع.زيادة</th>';
-            html += '<th>مكافأة</th><th>ع.مكافأة</th>';
-            html += '<th>الصافي</th>';
             html += '</tr></thead><tbody>';
             
-            // بيانات الموظفين
             employees.forEach((emp, index) => {
-                const netSalary = calculateNetSalary(emp, emp.month || currentMonth, emp.year || currentYear);
                 html += '<tr>';
-                html += '<td>' + (index + 1) + '</td>';
-                html += '<td>' + (emp.nameAr || emp.name || '') + '</td>';
-                html += '<td>' + (emp.position || '') + '</td>';
-                html += '<td>' + (projects[emp.project] || emp.project || '') + '</td>';
-                html += '<td>' + (emp.salary || 0) + '</td>';
-                html += '<td>' + (emp.salaryCurrency || 'IQD') + '</td>';
-                
-                if (type === 'daily') {
-                    html += '<td>' + (emp.salary || 0) + '</td>';
-                    html += '<td>' + (emp.workDays || 0) + '</td>';
+                if (cols && cols.length > 0) {
+                    cols.forEach(c => {
+                        let val = getCellValueForPrint(c, emp, index, type, isArabic);
+                        if (c.id === 'salary' || (c.id === 'bonus' || c.id === 'phoneBills' || c.id === 'deductions' || c.id === 'advance' || c.id === 'salaryIncrease' || c.id === 'ceoBonus')) val = formatCurrency(val);
+                        html += '<td>' + (val !== undefined && val !== null ? val : '') + '</td>';
+                    });
+                } else {
+                    const netSalary = calculateNetSalary(emp, emp.month || currentMonth, emp.year || currentYear);
+                    html += '<td>' + (index + 1) + '</td><td>' + (emp.nameAr || emp.name || '') + '</td><td>' + (emp.position || '') + '</td><td>' + (projects[emp.project] || emp.project || '') + '</td><td>' + (emp.salary || 0) + '</td><td>' + (emp.salaryCurrency || 'IQD') + '</td>';
+                    if (type === 'daily') html += '<td>' + (emp.salary || 0) + '</td><td>' + (emp.workDays || 0) + '</td>';
+                    html += '<td>' + (emp.exchangeRate || 1420) + '</td><td>' + (emp.bonus || 0) + '</td><td>' + (emp.bonusCurrency || 'IQD') + '</td><td>' + (emp.phoneBills || 0) + '</td><td>' + (emp.phoneBillsCurrency || 'IQD') + '</td><td>' + (emp.deductions || 0) + '</td><td>' + (emp.deductionsCurrency || 'IQD') + '</td><td>' + (emp.advance || 0) + '</td><td>' + (emp.advanceCurrency || 'IQD') + '</td><td>' + (emp.salaryIncrease || 0) + '</td><td>' + (emp.salaryIncreaseCurrency || 'IQD') + '</td><td>' + (emp.ceoBonus || 0) + '</td><td>' + (emp.ceoBonusCurrency || 'IQD') + '</td><td>' + formatCurrency(netSalary) + ' ' + (emp.paymentCurrency || 'IQD') + '</td>';
+                    const pm = emp.paymentMethod || 'cash';
+                    const pmLabels = { cash: 'نقداً', mastercard: 'ماستر كارت', banking: 'صيرفة' };
+                    html += '<td>' + (pmLabels[pm] || pm) + '</td><td>' + (pm === 'mastercard' && emp.mastercardNumber ? emp.mastercardNumber : '-') + '</td>';
                 }
-                
-                html += '<td>' + (emp.exchangeRate || 1420) + '</td>';
-                html += '<td>' + (emp.bonus || 0) + '</td>';
-                html += '<td>' + (emp.bonusCurrency || 'IQD') + '</td>';
-                html += '<td>' + (emp.phoneBills || 0) + '</td>';
-                html += '<td>' + (emp.phoneBillsCurrency || 'IQD') + '</td>';
-                html += '<td>' + (emp.deductions || 0) + '</td>';
-                html += '<td>' + (emp.deductionsCurrency || 'IQD') + '</td>';
-                html += '<td>' + (emp.advance || 0) + '</td>';
-                html += '<td>' + (emp.advanceCurrency || 'IQD') + '</td>';
-                html += '<td>' + (emp.salaryIncrease || 0) + '</td>';
-                html += '<td>' + (emp.salaryIncreaseCurrency || 'IQD') + '</td>';
-                html += '<td>' + (emp.ceoBonus || 0) + '</td>';
-                html += '<td>' + (emp.ceoBonusCurrency || 'IQD') + '</td>';
-                html += '<td>' + formatCurrency(netSalary) + ' ' + (emp.paymentCurrency || 'IQD') + '</td>';
                 html += '</tr>';
             });
-            
             html += '</tbody></table>';
             return html;
         }
@@ -21968,6 +22332,14 @@ function renderProjectView() {
                     if (settings.paymentStatus === 'paid') return emp.isPaid === true;
                     if (settings.paymentStatus === 'unpaid') return !emp.isPaid;
                     return true;
+                });
+            }
+            
+            // تصفية حسب طريقة الدفع (لإصدار قوائم للجهات)
+            if (settings.paymentMethod && settings.paymentMethod !== 'all') {
+                filteredEmployees = filteredEmployees.filter(emp => {
+                    const pm = emp.paymentMethod || 'cash';
+                    return pm === settings.paymentMethod;
                 });
             }
             
@@ -22075,6 +22447,10 @@ function renderProjectView() {
                     : (isArabic ? 'الموظفون غير المدفوعين فقط' : 'Unpaid Employees Only');
                 html += '<h3 style="font-size: 13px; margin: 5px 0; color: #007bff;">' + (isArabic ? 'حالة الدفع: ' : 'Payment Status: ') + paymentStatusText + '</h3>';
             }
+            if (settings.paymentMethod && settings.paymentMethod !== 'all') {
+                const pmLabels = { cash: isArabic ? 'نقداً' : 'Cash', mastercard: isArabic ? 'ماستر كارت' : 'Mastercard', banking: isArabic ? 'صيرفة' : 'Banking' };
+                html += '<h3 style="font-size: 13px; margin: 5px 0; color: #15803d;">' + (isArabic ? 'طريقة الدفع: ' : 'Payment Method: ') + (pmLabels[settings.paymentMethod] || settings.paymentMethod) + '</h3>';
+            }
             html += '<p style="font-size: 11px; margin: 5px 0; color: #666;">' + (isArabic ? 'تاريخ الطباعة: ' : 'Print Date: ') + currentDate + '</p>';
             html += '</div>';
             
@@ -22086,19 +22462,19 @@ function renderProjectView() {
             // طباعة الموظفين الشهريين
             if (monthlyEmps.length > 0 && (settings.reportType === 'all' || settings.reportType === 'monthly')) {
                 html += '<div class="section-title">الموظفون الشهريون</div>';
-                html += generateSimpleTable(monthlyEmps, 'monthly');
+                html += generateSimpleTable(monthlyEmps, 'monthly', settings);
             }
             
             // طباعة الموظفين اليوميين
             if (dailyEmps.length > 0 && (settings.reportType === 'all' || settings.reportType === 'daily')) {
                 html += '<div class="section-title">الموظفون اليوميون</div>';
-                html += generateSimpleTable(dailyEmps, 'daily');
+                html += generateSimpleTable(dailyEmps, 'daily', settings);
             }
             
             // طباعة السيارات
             if (vehicleEmps.length > 0 && (settings.reportType === 'all' || settings.reportType === 'vehicle')) {
                 html += '<div class="section-title">السيارات</div>';
-                html += generateSimpleTable(vehicleEmps, 'vehicle');
+                html += generateSimpleTable(vehicleEmps, 'vehicle', settings);
             }
             
             // تذييل مكرر بالتوقيعات في جميع الصفحات
@@ -22115,41 +22491,25 @@ function renderProjectView() {
         }
         
         // دالة إنشاء جدول بسيط مع الحقول المطلوبة
-        function generateSimpleTable(employees, type) {
+        function generateSimpleTable(employees, type, settings) {
             const isArabic = currentLang === 'ar';
+            const cols = settings && settings.printColumns ? getPrintColumnsList(settings.printColumns, false) : null;
             
             let html = '<table>';
-            
-            // رأس الجدول
             html += '<thead><tr>';
-            html += '<th>#</th>';
-            html += '<th>' + (isArabic ? 'الاسم' : 'Name') + '</th>';
-            html += '<th>' + (isArabic ? 'المنصب' : 'Position') + '</th>';
-            html += '<th>' + (isArabic ? 'المشروع' : 'Project') + '</th>';
-            html += '<th>' + (isArabic ? 'الراتب' : 'Salary') + '</th>';
-            html += '<th>' + (isArabic ? 'ع.راتب' : 'S.Curr') + '</th>';
-            html += '<th>' + (isArabic ? 'الصرف' : 'Exch.') + '</th>';
-            html += '<th>' + (isArabic ? 'الدوام' : 'Attendance') + '</th>';
-            html += '<th>' + (isArabic ? 'راتب فعلي USD' : 'Actual USD') + '</th>';
-            html += '<th>' + (isArabic ? 'راتب فعلي IQD' : 'Actual IQD') + '</th>';
-            html += '<th>' + (isArabic ? 'بونص' : 'Bonus') + '</th>';
-            html += '<th>' + (isArabic ? 'ع.بونص' : 'B.Curr') + '</th>';
-            html += '<th>' + (isArabic ? 'فواتير' : 'Bills') + '</th>';
-            html += '<th>' + (isArabic ? 'ع.فواتير' : 'Bills C.') + '</th>';
-            html += '<th>' + (isArabic ? 'خصومات' : 'Ded.') + '</th>';
-            html += '<th>' + (isArabic ? 'ع.خصومات' : 'Ded.C.') + '</th>';
-            html += '<th>' + (isArabic ? 'سلفة' : 'Advance') + '</th>';
-            html += '<th>' + (isArabic ? 'ع.سلفة' : 'Adv.C.') + '</th>';
-            html += '<th>' + (isArabic ? 'زيادة' : 'Increase') + '</th>';
-            html += '<th>' + (isArabic ? 'ع.زيادة' : 'Inc.C.') + '</th>';
-            html += '<th>' + (isArabic ? 'مكافأة' : 'CEO Bonus') + '</th>';
-            html += '<th>' + (isArabic ? 'ع.مكافأة' : 'CEO B.C.') + '</th>';
-            html += '<th>' + (isArabic ? 'الصافي' : 'Net') + '</th>';
-            html += '<th>' + (isArabic ? 'حالة الدفع' : 'Payment Status') + '</th>';
-            html += '<th>' + (isArabic ? 'نسبة الحجز' : 'Reservation %') + '</th>';
-            html += '<th>' + (isArabic ? 'المحجوز' : 'Reserved') + '</th>';
-            html += '<th>' + (isArabic ? 'المحجوز تراكمي' : 'Accumulated') + '</th>';
-            html += '<th>' + (isArabic ? 'الهدف' : 'Target') + '</th>';
+            
+            if (cols && cols.length > 0) {
+                cols.forEach(c => { html += '<th>' + (isArabic ? c.labelAr : c.labelEn) + '</th>'; });
+            } else {
+            html += '<th>#</th><th>' + (isArabic ? 'الاسم' : 'Name') + '</th><th>' + (isArabic ? 'المنصب' : 'Position') + '</th><th>' + (isArabic ? 'المشروع' : 'Project') + '</th>';
+            html += '<th>' + (isArabic ? 'الراتب' : 'Salary') + '</th><th>' + (isArabic ? 'ع.راتب' : 'S.Curr') + '</th><th>' + (isArabic ? 'الصرف' : 'Exch.') + '</th><th>' + (isArabic ? 'الدوام' : 'Attendance') + '</th>';
+            html += '<th>' + (isArabic ? 'راتب فعلي USD' : 'Actual USD') + '</th><th>' + (isArabic ? 'راتب فعلي IQD' : 'Actual IQD') + '</th>';
+            html += '<th>' + (isArabic ? 'بونص' : 'Bonus') + '</th><th>' + (isArabic ? 'ع.بونص' : 'B.Curr') + '</th><th>' + (isArabic ? 'فواتير' : 'Bills') + '</th><th>' + (isArabic ? 'ع.فواتير' : 'Bills C.') + '</th>';
+            html += '<th>' + (isArabic ? 'خصومات' : 'Ded.') + '</th><th>' + (isArabic ? 'ع.خصومات' : 'Ded.C.') + '</th><th>' + (isArabic ? 'سلفة' : 'Advance') + '</th><th>' + (isArabic ? 'ع.سلفة' : 'Adv.C.') + '</th>';
+            html += '<th>' + (isArabic ? 'زيادة' : 'Increase') + '</th><th>' + (isArabic ? 'ع.زيادة' : 'Inc.C.') + '</th><th>' + (isArabic ? 'مكافأة' : 'CEO Bonus') + '</th><th>' + (isArabic ? 'ع.مكافأة' : 'CEO B.C.') + '</th>';
+            html += '<th>' + (isArabic ? 'الصافي' : 'Net') + '</th><th>' + (isArabic ? 'طريقة الدفع' : 'Payment Method') + '</th><th>' + (isArabic ? 'رقم الماستر' : 'Mastercard #') + '</th>';
+            html += '<th>' + (isArabic ? 'حالة الدفع' : 'Payment Status') + '</th><th>' + (isArabic ? 'نسبة الحجز' : 'Reservation %') + '</th><th>' + (isArabic ? 'المحجوز' : 'Reserved') + '</th><th>' + (isArabic ? 'المحجوز تراكمي' : 'Accumulated') + '</th><th>' + (isArabic ? 'الهدف' : 'Target') + '</th>';
+            }
             html += '</tr></thead><tbody>';
             
             // متغيرات المجاميع
@@ -22245,62 +22605,51 @@ function renderProjectView() {
                 }
                 
                 html += '<tr>';
-                html += '<td>' + (index + 1) + '</td>';
-                html += '<td>' + empName + '</td>';
-                html += '<td>' + (emp.position || '') + '</td>';
-                html += '<td>' + (projects[emp.project] || emp.project || '') + '</td>';
-                html += '<td>' + formatCurrency(emp.salary || 0) + '</td>';
-                html += '<td>' + (emp.salaryCurrency || 'IQD') + '</td>';
-                html += '<td>' + (emp.exchangeRate || 1420) + '</td>';
-                html += '<td>' + attendanceValue + '</td>';
-                html += '<td>' + formatCurrency(actualSalaryUSD) + '</td>';
-                html += '<td>' + formatCurrency(actualSalaryIQD) + '</td>';
-                html += '<td>' + formatCurrency(emp.bonus || 0) + '</td>';
-                html += '<td>' + (emp.bonusCurrency || 'IQD') + '</td>';
-                html += '<td>' + formatCurrency(emp.phoneBills || 0) + '</td>';
-                html += '<td>' + (emp.phoneBillsCurrency || 'IQD') + '</td>';
-                html += '<td>' + formatCurrency(emp.deductions || 0) + '</td>';
-                html += '<td>' + (emp.deductionsCurrency || 'IQD') + '</td>';
-                html += '<td>' + formatCurrency(emp.advance || 0) + '</td>';
-                html += '<td>' + (emp.advanceCurrency || 'IQD') + '</td>';
-                html += '<td>' + formatCurrency(emp.salaryIncrease || 0) + '</td>';
-                html += '<td>' + (emp.salaryIncreaseCurrency || 'IQD') + '</td>';
-                html += '<td>' + formatCurrency(emp.ceoBonus || 0) + '</td>';
-                html += '<td>' + (emp.ceoBonusCurrency || 'IQD') + '</td>';
+                if (cols && cols.length > 0) {
+                    const ctx = { attendance: attendanceValue, actualSalaryUSD: formatCurrency(actualSalaryUSD), actualSalaryIQD: formatCurrency(actualSalaryIQD), paymentStatus: (emp.isPaid ? (isArabic ? '✅ تم الدفع' : '✅ Paid') : (isArabic ? '⏳ لم يتم الدفع' : '⏳ Unpaid')) };
+                    cols.forEach(c => {
+                        let val = getCellValueForPrint(c, emp, index, type, isArabic, ctx);
+                        const formatNumCols = ['salary','bonus','phoneBills','deductions','advance','salaryIncrease','ceoBonus'];
+                        if (formatNumCols.includes(c.id) && typeof val === 'number') val = formatCurrency(val);
+                        if (c.id === 'netSalary') html += '<td style="font-weight: bold;">' + val + '</td>';
+                        else html += '<td>' + (val !== undefined && val !== null ? val : '') + '</td>';
+                    });
+                } else {
+                html += '<td>' + (index + 1) + '</td><td>' + empName + '</td><td>' + (emp.position || '') + '</td><td>' + (projects[emp.project] || emp.project || '') + '</td>';
+                html += '<td>' + formatCurrency(emp.salary || 0) + '</td><td>' + (emp.salaryCurrency || 'IQD') + '</td><td>' + (emp.exchangeRate || 1420) + '</td><td>' + attendanceValue + '</td>';
+                html += '<td>' + formatCurrency(actualSalaryUSD) + '</td><td>' + formatCurrency(actualSalaryIQD) + '</td><td>' + formatCurrency(emp.bonus || 0) + '</td><td>' + (emp.bonusCurrency || 'IQD') + '</td>';
+                html += '<td>' + formatCurrency(emp.phoneBills || 0) + '</td><td>' + (emp.phoneBillsCurrency || 'IQD') + '</td><td>' + formatCurrency(emp.deductions || 0) + '</td><td>' + (emp.deductionsCurrency || 'IQD') + '</td>';
+                html += '<td>' + formatCurrency(emp.advance || 0) + '</td><td>' + (emp.advanceCurrency || 'IQD') + '</td><td>' + formatCurrency(emp.salaryIncrease || 0) + '</td><td>' + (emp.salaryIncreaseCurrency || 'IQD') + '</td>';
+                html += '<td>' + formatCurrency(emp.ceoBonus || 0) + '</td><td>' + (emp.ceoBonusCurrency || 'IQD') + '</td>';
                 html += '<td style="font-weight: bold;">' + formatCurrency(netSalary) + ' ' + (emp.paymentCurrency || 'IQD') + '</td>';
-                
-                // حالة الدفع
+                const pm = emp.paymentMethod || 'cash';
+                const pmLabels = { cash: isArabic ? 'نقداً' : 'Cash', mastercard: isArabic ? 'ماستر كارت' : 'Mastercard', banking: isArabic ? 'صيرفة' : 'Banking', transfer: isArabic ? 'تحويل بنكي' : 'Transfer', check: isArabic ? 'شيك' : 'Check', other: isArabic ? 'أخرى' : 'Other' };
+                html += '<td>' + (pmLabels[pm] || pm) + '</td><td>' + (pm === 'mastercard' && emp.mastercardNumber ? emp.mastercardNumber : '-') + '</td>';
                 const paymentStatusText = emp.isPaid ? (isArabic ? '✅ تم الدفع' : '✅ Paid') : (isArabic ? '⏳ لم يتم الدفع' : '⏳ Unpaid');
                 html += '<td>' + paymentStatusText + '</td>';
-                
-                // بيانات الحجز
                 const accumulatedReservation = calculateAccumulatedReservation(emp, currentMonth, currentYear);
                 const currentReserved = parseFloat(emp.reservedAmount) || 0;
-                const totalReserved = accumulatedReservation + currentReserved;
                 const targetReserved = parseFloat(emp.targetReservedAmount) || calculateTargetReservation(emp);
                 const reservationPercentage = emp.reservationPercentage || 0;
-                
-                html += '<td>' + (reservationPercentage > 0 ? reservationPercentage.toFixed(1) + '%' : '-') + '</td>';
-                html += '<td>' + (currentReserved > 0 ? formatCurrency(currentReserved) : '-') + '</td>';
-                html += '<td>' + (accumulatedReservation > 0 ? formatCurrency(accumulatedReservation) : '-') + '</td>';
-                html += '<td>' + (targetReserved > 0 ? formatCurrency(targetReserved) : '-') + '</td>';
-                
+                html += '<td>' + (reservationPercentage > 0 ? reservationPercentage.toFixed(1) + '%' : '-') + '</td><td>' + (currentReserved > 0 ? formatCurrency(currentReserved) : '-') + '</td><td>' + (accumulatedReservation > 0 ? formatCurrency(accumulatedReservation) : '-') + '</td><td>' + (targetReserved > 0 ? formatCurrency(targetReserved) : '-') + '</td>';
+                }
                 html += '</tr>';
             });
             
             // إضافة صفوف المجاميع
+            const colCount = (cols && cols.length > 0) ? cols.length : 26;
             html += '</tbody><tfoot>';
             
             if (totalUSD > 0) {
                 html += '<tr style="background: #fffbcc; font-weight: bold;">';
-                html += '<td colspan="26" style="text-align: right; padding: 10px;">' + (isArabic ? 'المجموع بالدولار:' : 'Total USD:') + '</td>';
+                html += '<td colspan="' + (colCount - 1) + '" style="text-align: right; padding: 10px;">' + (isArabic ? 'المجموع بالدولار:' : 'Total USD:') + '</td>';
                 html += '<td style="font-size: 12px; padding: 10px;">' + formatCurrency(totalUSD) + ' USD</td>';
                 html += '</tr>';
             }
             
             if (totalIQD > 0) {
                 html += '<tr style="background: #ccf2ff; font-weight: bold;">';
-                html += '<td colspan="26" style="text-align: right; padding: 10px;">' + (isArabic ? 'المجموع بالدينار:' : 'Total IQD:') + '</td>';
+                html += '<td colspan="' + (colCount - 1) + '" style="text-align: right; padding: 10px;">' + (isArabic ? 'المجموع بالدينار:' : 'Total IQD:') + '</td>';
                 html += '<td style="font-size: 12px; padding: 10px;">' + formatCurrency(totalIQD) + ' IQD</td>';
                 html += '</tr>';
             }
@@ -25734,6 +26083,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
         window.setPaymentFilter = setPaymentFilter;
         window.setReservationFilter = setReservationFilter;
         window.setLinkedFilter = setLinkedFilter;
+        window.setDuplicateCodeFilter = setDuplicateCodeFilter;
         window.createLinkedDuplicate = createLinkedDuplicate;
         window.goToOriginalEmployee = goToOriginalEmployee;
         window.unlinkDuplicate = unlinkDuplicate;
@@ -25766,6 +26116,8 @@ function generateComparisonSummary(projectCode, month1, month2) {
         window.printProjectTables = printProjectTables;
         window.exportTableToPDF = exportTableToPDF;
         window.openPrintOptionsModal = openPrintOptionsModal;
+        window.selectAllPrintColumns = selectAllPrintColumns;
+        window.selectEssentialPrintColumns = selectEssentialPrintColumns;
         window.executePrintWithOptions = executePrintWithOptions;
         window.printFromPreview = printFromPreview;
         window.savePDFFromPreview = savePDFFromPreview;
@@ -26303,6 +26655,8 @@ function generateComparisonSummary(projectCode, month1, month2) {
         window.hideAllColumns = hideAllColumns;
         window.resetColumnVisibility = resetColumnVisibility;
         window.updateSalaryLabelByType = updateSalaryLabelByType;
+        window.toggleEditMastercardField = toggleEditMastercardField;
+        window.toggleAddMastercardField = toggleAddMastercardField;
         window.loadUsersData = loadUsersData;
         window.editUserPermissions = editUserPermissions;
         window.deleteUserPermissions = deleteUserPermissions;
@@ -26404,6 +26758,10 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 salaryCurrency: document.getElementById('salaryCurrency').value,
                 paymentCurrency: document.getElementById('paymentCurrency').value,
                 exchangeRate: parseFloat(document.getElementById('exchangeRate').value),
+                paymentMethod: document.getElementById('paymentMethodAdd')?.value || 'cash',
+                mastercardNumber: document.getElementById('paymentMethodAdd')?.value === 'mastercard' 
+                    ? (document.getElementById('mastercardNumberAdd')?.value || '').trim() || null 
+                    : null,
                 workDays: 30,
                 bonus: 0,
                 bonusCurrency: 'IQD',
@@ -26512,6 +26870,18 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 return;
             }
             
+            const employeeCodeInput = document.getElementById('editEmployeeCode').value.trim();
+            const projectCode = document.getElementById('editProject').value;
+            
+            // التحقق من تكرار رمز الموظف (إذا تم إدخال رمز)
+            if (employeeCodeInput) {
+                const codeDupCheck = checkDuplicateEmployeeCode(employeeCodeInput, projectCode, emp.firebaseId, currentMonth, currentYear);
+                if (codeDupCheck.duplicate) {
+                    showNotification('error', t('error'), codeDupCheck.message);
+                    return;
+                }
+            }
+            
             const updates = {
                 nameAr: nameAr,     
                 nameEn: nameEn,
@@ -26536,25 +26906,31 @@ function generateComparisonSummary(projectCode, month1, month2) {
                     document.getElementById('editWorkDay_5')?.checked === true,
                     document.getElementById('editWorkDay_6')?.checked === true
                 ],
-                paidLeaveCalculation: document.getElementById('editPaidLeaveCalculation').value || 'full'
+                paidLeaveCalculation: document.getElementById('editPaidLeaveCalculation').value || 'full',
+                paymentMethod: document.getElementById('editPaymentMethod').value || 'cash',
+                mastercardNumber: document.getElementById('editPaymentMethod').value === 'mastercard' 
+                    ? (document.getElementById('editMastercardNumber').value || '').trim() || null 
+                    : null
             };
             
             console.log('📤 إرسال التحديثات إلى Firebase:', updates);
 
-            // تحديث رمز الموظف إذا تغيّر المشروع
+            // تحديث رمز الموظف: إذا تغيّر المشروع يُولّد تلقائياً، وإلا يُستخدم المدخل يدوياً
             if (updates.project && updates.project !== emp.project) {
                 try {
                     const newCode = await generateEmployeeCode(updates.project);
                     if (newCode) {
                         updates.employeeCode = newCode;
-                        // تحديث العرض في الفورم فوراً
                         const codeEl = document.getElementById('editEmployeeCode');
-                        if (codeEl) codeEl.textContent = newCode;
+                        if (codeEl) codeEl.value = newCode;
                         console.log('🔖 تم تحديث رمز الموظف ليتبع المشروع الجديد:', newCode);
                     }
                 } catch (e) {
                     console.warn('⚠️ تعذّر توليد رمز جديد بعد تغيير المشروع:', e);
                 }
+            } else if (employeeCodeInput) {
+                // لم يتغير المشروع - استخدام الرمز المدخل يدوياً
+                updates.employeeCode = employeeCodeInput;
             }
             
             // updateEmployeeInFirebase تستدعي loadEmployeesFromFirebase بداخلها
