@@ -734,6 +734,60 @@
             font-size: 16px;
         }
 
+        .nav-separator {
+            width: 1px;
+            height: 24px;
+            background: rgba(255,255,255,0.35);
+            margin: 0 4px;
+            flex-shrink: 0;
+        }
+
+        .nav-dropdown-wrapper {
+            position: relative;
+        }
+
+        .nav-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            min-width: 200px;
+            overflow: hidden;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: all 0.25s;
+            z-index: 1002;
+        }
+
+        .nav-dropdown-wrapper.active .nav-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .nav-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            color: #1f2937;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .nav-dropdown-item:hover {
+            background: #f3f4f6;
+        }
+
+        .nav-dropdown-item span:first-child {
+            font-size: 18px;
+        }
+
         /* Breadcrumbs */
         .breadcrumbs {
             background: rgba(255,255,255,0.1);
@@ -3294,48 +3348,62 @@
                 </div>
 
                 <!-- Navigation Bar -->
-                <div class="nav-bar">
-                    <div class="nav-item active" onclick="showTab('dashboard')" id="navDashboard">
+                <nav class="nav-bar" id="mainNav" role="navigation" aria-label="التنقل الرئيسي">
+                    <!-- مجموعة أساسية -->
+                    <div class="nav-item active" onclick="showTab('dashboard')" id="navDashboard" role="button" tabindex="0" aria-current="page">
                         <span>📊</span>
                         <span id="navDashboardText">لوحة التحكم</span>
                     </div>
-                    <div class="nav-item" onclick="showTab('months')" id="navMonths">
+                    <div class="nav-item" onclick="showTab('months')" id="navMonths" role="button" tabindex="0">
                         <span>📅</span>
                         <span id="navMonthsText">الأشهر</span>
                     </div>
-                    <div class="nav-item" onclick="showTab('projects')" id="navProjects">
+                    <div class="nav-item" onclick="showTab('projects')" id="navProjects" role="button" tabindex="0">
                         <span>🏗️</span>
                         <span id="navProjectsText">المشاريع</span>
                     </div>
-                    <div class="nav-item" onclick="showTab('years')" id="navYears">
+                    <div class="nav-separator"></div>
+                    <!-- مجموعة إدارة -->
+                    <div class="nav-item" onclick="showTab('years')" id="navYears" role="button" tabindex="0">
                         <span>📆</span>
                         <span id="navYearsText">السنوات</span>
                     </div>
-                    <div class="nav-item" onclick="showTab('users')" id="navUsers">
+                    <div class="nav-item" onclick="showTab('users')" id="navUsers" role="button" tabindex="0">
                         <span>👥</span>
                         <span id="navUsersText">المستخدمين</span>
                     </div>
-                    <div class="nav-item" onclick="showTab('settings')" id="navSettings">
+                    <div class="nav-item" onclick="showTab('settings')" id="navSettings" role="button" tabindex="0">
                         <span>⚙️</span>
                         <span id="navSettingsText">الإعدادات</span>
                     </div>
-                    <div class="nav-item" onclick="openSummaryModal()" id="navReports">
-                        <span>📑</span>
-                        <span id="navReportsText">التقارير</span>
+                    <div class="nav-separator"></div>
+                    <!-- مجموعة أدوات -->
+                    <div class="nav-dropdown-wrapper" id="navToolsWrapper">
+                        <div class="nav-item" onclick="toggleNavToolsDropdown()" id="navTools" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                            <span>📑</span>
+                            <span id="navToolsText">أدوات</span>
+                            <span style="font-size:10px;margin-right:4px;">▼</span>
+                        </div>
+                        <div class="nav-dropdown-menu" id="navToolsDropdown">
+                            <div class="nav-dropdown-item" onclick="openSummaryModal(); closeNavToolsDropdown();">
+                                <span>📑</span>
+                                <span id="navReportsText">التقارير</span>
+                            </div>
+                            <div class="nav-dropdown-item" onclick="openActivityLogModal(); closeNavToolsDropdown();">
+                                <span>📋</span>
+                                <span id="navActivityLogText">سجل التعديلات</span>
+                            </div>
+                            <div class="nav-dropdown-item" onclick="openSalaryVouchersModal(); closeNavToolsDropdown();">
+                                <span>🎫</span>
+                                <span id="navVouchersText">قسائم الراتب</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="nav-item" onclick="openActivityLogModal()" id="navActivityLog">
-                        <span>📋</span>
-                        <span id="navActivityLogText">سجل التعديلات</span>
-                    </div>
-                    <div class="nav-item" onclick="openSalaryVouchersModal()" id="navVouchers">
-                        <span>🎫</span>
-                        <span id="navVouchersText">قسائم الراتب</span>
-                    </div>
-                    <div class="nav-item" onclick="showTab('bulkEdit')" id="navBulkEdit">
+                    <div class="nav-item" onclick="showTab('bulkEdit')" id="navBulkEdit" role="button" tabindex="0">
                         <span>✏️</span>
                         <span id="navBulkEditText">تعديل متعدد</span>
                     </div>
-                </div>
+                </nav>
 
                 <!-- Breadcrumbs -->
                 <div class="breadcrumbs" id="breadcrumbsContainer">
@@ -5583,7 +5651,7 @@
     <script type="module">
 // ========== Firebase Configuration ==========
         // استخدام dynamic imports مع معالجة الأخطاء
-        let initializeApp, getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, updateDoc, query, orderBy, addDoc;
+        let initializeApp, getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, updateDoc, query, where, orderBy, limit, addDoc;
         let getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword, deleteUser;
         let createClient;
         
@@ -5602,7 +5670,9 @@
             deleteDoc = firebaseFirestore.deleteDoc;
             updateDoc = firebaseFirestore.updateDoc;
             query = firebaseFirestore.query;
+            where = firebaseFirestore.where;
             orderBy = firebaseFirestore.orderBy;
+            limit = firebaseFirestore.limit;
             addDoc = firebaseFirestore.addDoc;
             
             const firebaseAuth = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
@@ -7669,6 +7739,10 @@
 
         let projects = {};
         let employeeData = {};
+        const getEmployeeDataStore = () => employeeData;
+        let usersDataCache = null;
+        let companySettingsCache = null;
+        let printSignaturesCache = null;
         
         // المصطلحات المخصصة (Custom Translations)
         let customTranslations = {
@@ -7737,34 +7811,52 @@
             return text;
         }
         
-        // دالة لتوليد رمز الموظف التلقائي
+        // دالة لتوليد رمز الموظف التلقائي (استخدام الكاش أولاً - توفير القراءات)
         async function generateEmployeeCode(projectCode) {
+            const extractMaxFromEmp = (emp, maxSoFar) => {
+                if (emp.project === projectCode && emp.employeeCode) {
+                    const match = emp.employeeCode.match(/-(\d+)$/);
+                    if (match) {
+                        const num = parseInt(match[1]);
+                        return Math.max(maxSoFar, num);
+                    }
+                }
+                return maxSoFar;
+            };
             try {
-                // جلب جميع الموظفين في هذا المشروع
-                const employeesRef = collection(db, 'employees');
-                const snapshot = await getDocs(employeesRef);
-                
-                let maxNumber = 0;
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    if (data.project === projectCode && data.employeeCode) {
-                        // استخراج الرقم من الكود (مثلاً: PRJ001-015 → 15)
-                        const match = data.employeeCode.match(/-(\d+)$/);
-                        if (match) {
-                            const num = parseInt(match[1]);
-                            if (num > maxNumber) maxNumber = num;
+                if (typeof getEmployeeDataStore === 'function') {
+                    const store = getEmployeeDataStore();
+                    let maxNumber = 0;
+                    for (const y of Object.keys(store)) {
+                        if (store[y] && typeof store[y] === 'object') {
+                            for (const m of Object.keys(store[y])) {
+                                if (Array.isArray(store[y][m])) {
+                                    store[y][m].forEach(emp => { maxNumber = extractMaxFromEmp(emp, maxNumber); });
+                                }
+                            }
                         }
                     }
+                    if (maxNumber > 0 || Object.keys(store).length > 0) {
+                        const newNumber = (maxNumber + 1).toString().padStart(3, '0');
+                        return `${projectCode}-${newNumber}`;
+                    }
+                }
+                if (getStorageMode() !== 'firebase' || !db || typeof where !== 'function') {
+                    return `${projectCode}-${(Math.floor(Math.random() * 900) + 100).toString().padStart(3, '0')}`;
+                }
+                const employeesRef = collection(db, 'employees');
+                const q = query(employeesRef, where('project', '==', projectCode));
+                const snapshot = await getDocs(q);
+                let maxNumber = 0;
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    maxNumber = extractMaxFromEmp(data, maxNumber);
                 });
-                
-                // إنشاء الرمز الجديد
                 const newNumber = (maxNumber + 1).toString().padStart(3, '0');
                 return `${projectCode}-${newNumber}`;
-                
             } catch (error) {
                 console.error('Error generating employee code:', error);
-                // في حالة الخطأ، استخدام رقم عشوائي
-                return `${projectCode}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+                return `${projectCode}-${(Math.floor(Math.random() * 900) + 100).toString().padStart(3, '0')}`;
             }
         }
 
@@ -7871,6 +7963,9 @@
                         await signOut(auth);
                     }
                     currentUser = null;
+                    loadedPeriodsCache.clear();
+                    employeeData = {};
+                    initialPeriodSet = false;
                     document.getElementById('app').style.display = 'none';
                     document.getElementById('loginScreen').style.display = 'flex';
                     document.getElementById('loginForm').reset();
@@ -8379,7 +8474,8 @@
                 'navUsersText': t('navUsers'),
                 'navSettingsText': t('navSettings'),
                 'navBulkEditText': currentLang === 'ar' ? 'تعديل متعدد' : 'Bulk Edit',
-                'navReportsText': t('navReports')
+                'navReportsText': t('navReports'),
+                'navToolsText': currentLang === 'ar' ? 'أدوات' : 'Tools'
             };
             
             // تحديث نافذة كلمة المرور إذا كانت مفتوحة
@@ -8482,6 +8578,8 @@
                     element.textContent = text;
                 }
             });
+            const mainNav = document.getElementById('mainNav');
+            if (mainNav) mainNav.setAttribute('aria-label', currentLang === 'ar' ? 'التنقل الرئيسي' : 'Main navigation');
             
             // تحديث نصوص الأزرار في نافذة التعديل إذا كانت مفتوحة
             const editModal = document.getElementById('editModal');
@@ -8564,8 +8662,9 @@
         
         /**
          * تحميل إعدادات الشركة من Firebase
+         * @param {boolean} forceRefresh - تجاوز الكاش وإعادة التحميل من Firestore
          */
-        async function loadCompanySettings() {
+        async function loadCompanySettings(forceRefresh = false) {
             try {
                 if (getStorageMode() === 'local') {
                     // الوضع المحلي
@@ -8586,22 +8685,29 @@
                         console.log('📝 استخدام الإعدادات الافتراضية (محلي)');
                     }
                 } else {
-                    // الوضع السحابي (Firebase)
-                const settingsDoc = await getDoc(doc(db, 'settings', 'company'));
-                if (settingsDoc.exists()) {
-                    companySettings = settingsDoc.data();
-                    console.log('✅ تم تحميل إعدادات الشركة:', companySettings);
-                } else {
-                    // إعدادات افتراضية
-                    companySettings = {
-                        companyNameAr: 'شركة روزماري',
-                        companyNameEn: 'ROSEMARY COMPANY',
-                        companyLogo: '',
-                        companyAddress: '',
-                        companyPhone: '',
-                        companyEmail: ''
-                    };
-                    console.log('📝 استخدام الإعدادات الافتراضية');
+                    // الوضع السحابي (Firebase) - استخدام الكاش إن وُجد
+                    if (!forceRefresh && companySettingsCache !== null) {
+                        companySettings = companySettingsCache;
+                        console.log('✅ إعدادات الشركة من الكاش');
+                        return;
+                    }
+                    const settingsDoc = await getDoc(doc(db, 'settings', 'company'));
+                    if (settingsDoc.exists()) {
+                        companySettings = settingsDoc.data();
+                        companySettingsCache = companySettings;
+                        console.log('✅ تم تحميل إعدادات الشركة:', companySettings);
+                    } else {
+                        // إعدادات افتراضية
+                        companySettings = {
+                            companyNameAr: 'شركة روزماري',
+                            companyNameEn: 'ROSEMARY COMPANY',
+                            companyLogo: '',
+                            companyAddress: '',
+                            companyPhone: '',
+                            companyEmail: ''
+                        };
+                        companySettingsCache = companySettings;
+                        console.log('📝 استخدام الإعدادات الافتراضية');
                     }
                 }
             } catch (error) {
@@ -8634,7 +8740,8 @@
                     updatedAt: new Date().toISOString(),
                     updatedBy: currentUser?.email || 'unknown'
                 });
-                companySettings = settings;
+                    companySettings = settings;
+                    companySettingsCache = settings;
                 console.log('✅ تم حفظ إعدادات الشركة');
                 return true;
                 }
@@ -8646,8 +8753,9 @@
         
         /**
          * تحميل التوقيعات من Firebase
+         * @param {boolean} forceRefresh - تجاوز الكاش وإعادة التحميل من Firestore
          */
-        async function loadPrintSignatures() {
+        async function loadPrintSignatures(forceRefresh = false) {
             try {
                 if (getStorageMode() === 'local') {
                     // الوضع المحلي
@@ -8660,14 +8768,21 @@
                         console.log('📝 لا توجد توقيعات محفوظة (محلي)');
                     }
                 } else {
-                    // الوضع السحابي (Firebase)
-                const signaturesDoc = await getDoc(doc(db, 'settings', 'signatures'));
-                if (signaturesDoc.exists()) {
-                    printSignatures = signaturesDoc.data();
-                    console.log('✅ تم تحميل التوقيعات:', printSignatures);
-                } else {
-                    printSignatures = {};
-                    console.log('📝 لا توجد توقيعات محفوظة');
+                    // الوضع السحابي (Firebase) - استخدام الكاش إن وُجد
+                    if (!forceRefresh && printSignaturesCache !== null) {
+                        printSignatures = printSignaturesCache;
+                        console.log('✅ التوقيعات من الكاش');
+                        return;
+                    }
+                    const signaturesDoc = await getDoc(doc(db, 'settings', 'signatures'));
+                    if (signaturesDoc.exists()) {
+                        printSignatures = signaturesDoc.data();
+                        printSignaturesCache = printSignatures;
+                        console.log('✅ تم تحميل التوقيعات:', printSignatures);
+                    } else {
+                        printSignatures = {};
+                        printSignaturesCache = {};
+                        console.log('📝 لا توجد توقيعات محفوظة');
                     }
                 }
             } catch (error) {
@@ -8701,6 +8816,7 @@
                     updatedBy: currentUser?.email || 'unknown'
                 });
                 printSignatures = signatures;
+                printSignaturesCache = signatures;
                 console.log('✅ تم حفظ التوقيعات');
                 return true;
                 }
@@ -8875,7 +8991,7 @@
                     }
                     
                     await loadYearsFromFirebase();
-                    await loadEmployeesFromFirebase();
+                    await loadEmployeesFromFirebase(null, null, true); // تحميل كامل بعد حذف سنة
                     hideLoading();
                     showNotification('success', t('success'), t('deleteYearSuccess', {year: year}));
                 }
@@ -8898,7 +9014,18 @@
             }
         }
 
-        async function loadEmployeesFromFirebase() {
+        // تتبع السنوات المحملة لتجنب إعادة التحميل غير الضرورية (التحميل حسب السنة)
+        let loadedPeriodsCache = new Set(); // مفاتيح بصيغة "2025" أو "2026"
+        
+        function getPeriodKey(year, month) {
+            return year + '-' + (month || '');
+        }
+        
+        function getYearKey(year) {
+            return String(year);
+        }
+        
+        async function loadEmployeesFromFirebase(yearOrAll, monthOrAll, forceLoadAll, bypassCache) {
             try {
                 if (getStorageMode() === 'local') {
                     // الوضع المحلي
@@ -8931,14 +9058,32 @@
                     return;
                 }
                 
-                // الوضع السحابي (Firebase)
-                console.log('🔄 Loading employees from Firebase...');
+                // الوضع السحابي (Firebase) - تحميل كسول حسب السنة (لتجنب مشاكل تطابق نوع حقل الشهر)
+                const loadSpecificYear = typeof yearOrAll === 'number' && !forceLoadAll;
+                const yearToLoad = loadSpecificYear ? yearOrAll : (typeof yearOrAll === 'number' ? yearOrAll : null);
+                const periodKey = loadSpecificYear ? getYearKey(yearToLoad) : null;
+                
+                if (loadSpecificYear && !bypassCache && loadedPeriodsCache.has(periodKey)) {
+                    console.log('📦 سنة', yearToLoad, 'محملة مسبقاً - تخطي التحميل');
+                    renderContent();
+                    return;
+                }
+                
+                console.log(loadSpecificYear ? '🔄 تحميل موظفي سنة ' + yearToLoad + '...' : '🔄 Loading all employees from Firebase...');
                 showLoading();
                 
-                // تتبع استخدام Firebase (قراءة)
-                trackFirebaseUsage('read', 1);
-                
                 const employeesRef = collection(db, 'employees');
+                let employeesQuery;
+                let effectiveLoadSpecificYear = loadSpecificYear;
+                if (loadSpecificYear && typeof where === 'function') {
+                    employeesQuery = query(employeesRef, where('year', '==', yearToLoad));
+                } else {
+                    employeesQuery = employeesRef;
+                    if (loadSpecificYear) {
+                        effectiveLoadSpecificYear = false;
+                        console.warn('⚠️ where غير متوفر - تحميل الكل');
+                    }
+                }
                 
                 // إضافة معالجة أخطاء أفضل مع إعادة المحاولة
                 let snapshot;
@@ -8947,7 +9092,7 @@
                 
                 while (retryCount < maxRetries) {
                     try {
-                        snapshot = await getDocs(employeesRef);
+                        snapshot = await getDocs(employeesQuery);
                         break; // نجح، اخرج من الحلقة
                     } catch (fetchError) {
                         retryCount++;
@@ -8956,12 +9101,10 @@
                         // تجاهل أخطاء 404 في WebChannel (لا تؤثر على الوظائف)
                         if (errorMessage.includes('404') && errorMessage.includes('Listen')) {
                             console.warn('⚠️ WebChannel 404 error (ignored, will retry):', errorMessage);
-                            // انتظار قصير ثم إعادة المحاولة
                             await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
                             continue;
                         }
                         
-                        // إذا كانت المحاولة الأخيرة، أظهر الخطأ
                         if (retryCount >= maxRetries) {
                             console.error('❌ Failed to load employees after', maxRetries, 'attempts:', fetchError);
                             hideLoading();
@@ -8979,16 +9122,49 @@
                     }
                 }
                 
-                console.log('📊 Total employee documents:', snapshot.size);
+                // تحميل سنة: استعلام مزدوج (رقم + نص) للـ year لضمان جلب كل البيانات
+                if (effectiveLoadSpecificYear && snapshot && typeof where === 'function') {
+                    try {
+                        const snapStr = await getDocs(query(employeesRef, where('year', '==', String(yearToLoad))));
+                        const merged = new Map();
+                        snapshot.forEach(d => merged.set(d.id, d));
+                        snapStr.forEach(d => merged.set(d.id, d));
+                        snapshot = { forEach: (fn) => merged.forEach((d) => fn(d)), size: merged.size };
+                        trackFirebaseUsage('read', 2);
+                    } catch (e) {
+                        console.warn('⚠️ الاستعلام الثاني (year كنص) فشل، استخدام النتائج الأولى:', e);
+                        trackFirebaseUsage('read', 1);
+                    }
+                } else {
+                    trackFirebaseUsage('read', 1);
+                }
                 
-                // ⚠️ إعادة تهيئة البيانات بشكل كامل (مسح جميع البيانات القديمة)
-                employeeData = {};
-                initializeEmployeeData();
+                console.log('📊 Employee documents loaded:', snapshot.size, effectiveLoadSpecificYear ? '(سنة ' + yearToLoad + ')' : '(الكل)');
+                
+                if (effectiveLoadSpecificYear) {
+                    // تحميل سنة محددة: تحديث employeeData[year] لكل الأشهر دون مسح السنوات الأخرى
+                    if (!employeeData[yearToLoad]) {
+                        employeeData[yearToLoad] = {};
+                    }
+                    months.forEach(m => employeeData[yearToLoad][m] = []);
+                    loadedPeriodsCache.add(periodKey);
+                } else {
+                    // تحميل كامل: مسح وإعادة تهيئة (forceLoadAll أو تحميل أولي)
+                    employeeData = {};
+                    initializeEmployeeData();
+                    loadedPeriodsCache.clear();
+                }
                 
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    const month = data.month || 'august';
-                    const year = data.year || currentYear; // استخدام السنة الحالية للبيانات القديمة
+                    let month = data.month || 'august';
+                    if (typeof month === 'number' && month >= 1 && month <= 12) {
+                        month = months[month - 1];
+                    } else if (typeof month === 'string') {
+                        month = month.toLowerCase();
+                    }
+                    if (!months.includes(month)) month = 'august';
+                    const year = (typeof data.year === 'number' ? data.year : parseInt(data.year, 10) || currentYear);
                     
                     // التأكد من وجود السنة في البنية
                     if (!employeeData[year]) {
@@ -9091,7 +9267,7 @@
                     // حفظ جميع البيانات
                     LocalData.saveAllEmployees(employeeData);
                     
-                    // إعادة تحميل البيانات
+                    // إعادة تحميل البيانات (محلي)
                     await loadEmployeesFromFirebase();
                     hideLoading();
                     showNotification('success', 'تم الحفظ', 'تم حفظ الموظف بنجاح! ✅');
@@ -9238,7 +9414,15 @@
                     console.log(`✅ تم إنشاء موظف جديد ${employeeId} في ${month} ${year}`);
                 }
                 
-                await loadEmployeesFromFirebase();
+                // تحديث محلي بدل إعادة التحميل (توفير القراءات)
+                const store = getEmployeeDataStore();
+                if (!store[year]) { store[year] = {}; months.forEach(m => store[year][m] = []); }
+                if (!store[year][month]) { store[year][month] = []; }
+                const entry = { firebaseId: firebaseIdToUse, ...dataToSave, month, year };
+                const existingIdx = store[year][month].findIndex(e => e.firebaseId === firebaseIdToUse);
+                if (existingIdx >= 0) store[year][month][existingIdx] = entry;
+                else store[year][month].push(entry);
+                renderContent();
                 
                 // تسجيل النشاط
                 const employeeName = employeeData.name || employeeData.nameAr || employeeData.employeeCode || 'Unknown';
@@ -9325,9 +9509,9 @@
                 
                 console.log('✅ تم التحديث في Firebase بنجاح');
                 
-                // إعادة تحميل البيانات
+                // إعادة تحميل البيانات (سنة الحالية)
                 if (!skipReload) {
-                await loadEmployeesFromFirebase();
+                await loadEmployeesFromFirebase(currentYear, currentMonth, false, true);
                 }
                 
                 if (!skipLoading) {
@@ -9368,7 +9552,20 @@
                 }
                 
                 await deleteDoc(doc(db, 'employees', firebaseId));
-                await loadEmployeesFromFirebase();
+                
+                // إزالة محلية بدل إعادة التحميل (توفير القراءات)
+                const store = getEmployeeDataStore();
+                outer: for (const y of Object.keys(store)) {
+                    if (store[y] && typeof store[y] === 'object') {
+                        for (const m of Object.keys(store[y])) {
+                            if (Array.isArray(store[y][m])) {
+                                const idx = store[y][m].findIndex(e => e.firebaseId === firebaseId);
+                                if (idx >= 0) { store[y][m].splice(idx, 1); break outer; }
+                            }
+                        }
+                    }
+                }
+                renderContent();
                 
                 // تسجيل النشاط
                 await logActivity(
@@ -9506,7 +9703,8 @@
         }
         
         // التحقق من تكرار اسم الموظف في جميع المشاريع والسنوات
-        function checkDuplicateEmployeeName(nameAr, nameEn, excludeFirebaseId = null, currentMonthKey = null, currentYearKey = null, excludeIndex = null) {
+        // excludeLinkedToFirebaseId: عند التعديل على نسخة مرتبطة، استثناء الموظف الأصلي والنسخ المرتبطة الأخرى
+        function checkDuplicateEmployeeName(nameAr, nameEn, excludeFirebaseId = null, currentMonthKey = null, currentYearKey = null, excludeIndex = null, excludeLinkedToFirebaseId = null) {
             // البحث في جميع السنوات والمشاريع
             for (const year of availableYears) {
                 if (!employeeData[year]) continue;
@@ -9541,6 +9739,12 @@
                         // تخطي الموظف الحالي باستخدام firebaseId (كحل بديل)
                         if (excludeFirebaseId && emp.firebaseId && emp.firebaseId === excludeFirebaseId) {
                             continue;
+                        }
+                        
+                        // عند التعديل على نسخة مرتبطة: استثناء الموظف الأصلي والنسخ المرتبطة الأخرى
+                        if (excludeLinkedToFirebaseId) {
+                            if (emp.firebaseId === excludeLinkedToFirebaseId) continue; // الموظف الأصلي
+                            if (emp.linkedToFirebaseId === excludeLinkedToFirebaseId) continue; // نسخ مرتبطة أخرى
                         }
                         
                         // التحقق من تطابق الاسم العربي (يجب أن يكون في نفس المشروع)
@@ -9588,7 +9792,8 @@
         }
         
         // التحقق من تكرار رمز الموظف في نفس الشهر والمشروع
-        function checkDuplicateEmployeeCode(code, projectCode, excludeFirebaseId, monthKey, yearKey) {
+        // excludeLinkedToFirebaseId: عند التعديل على نسخة مرتبطة، استثناء الموظف الأصلي والنسخ المرتبطة الأخرى
+        function checkDuplicateEmployeeCode(code, projectCode, excludeFirebaseId, monthKey, yearKey, excludeLinkedToFirebaseId = null) {
             if (!code || !code.trim()) return { duplicate: false };
             
             const monthEmployees = (employeeData[yearKey] && employeeData[yearKey][monthKey]) 
@@ -9598,6 +9803,11 @@
             
             for (const emp of monthEmployees) {
                 if (excludeFirebaseId && emp.firebaseId === excludeFirebaseId) continue;
+                // عند التعديل على نسخة مرتبطة: استثناء الموظف الأصلي والنسخ المرتبطة الأخرى
+                if (excludeLinkedToFirebaseId) {
+                    if (emp.firebaseId === excludeLinkedToFirebaseId) continue; // الموظف الأصلي
+                    if (emp.linkedToFirebaseId === excludeLinkedToFirebaseId) continue; // نسخ مرتبطة أخرى
+                }
                 if (emp.project !== projectCode) continue;
                 
                 const empCode = (emp.employeeCode || '').trim();
@@ -9864,14 +10074,10 @@
             // الرصيد السابق (من أشهر غير موجودة في قاعدة البيانات)
             const previousReserved = parseFloat(emp.previousReservedAmount) || 0;
             
-            // المبلغ المحجوز من قاعدة البيانات (من الأشهر السابقة)
-            // استخدام دالة calculateAccumulatedReservation الموحدة لضمان الاتساق
-            let accumulatedReservation = 0;
-            if (monthKey && yearKey && emp.firebaseId) {
-                accumulatedReservation = calculateAccumulatedReservation(emp, monthKey, yearKey);
-            }
+            // المبلغ المحجوز من قاعدة البيانات (من الأشهر السابقة + الشهر الحالي للنسخة المرتبطة)
+            let accumulatedReservation = getMergedAccumulatedReservation(emp, monthKey, yearKey);
             
-            // الإجمالي = الرصيد السابق + المبلغ المحجوز من قاعدة البيانات
+            // الإجمالي = الرصيد السابق + المبلغ المحجوز من قاعدة البيانات (مدمج للنسخة المرتبطة)
             const totalAccumulatedReservation = previousReserved + accumulatedReservation;
             
             // حساب الهدف (الراتب الأساسي)
@@ -9905,11 +10111,8 @@
             // الرصيد السابق (من أشهر غير موجودة في قاعدة البيانات)
             const previousReserved = parseFloat(emp.previousReservedAmount) || 0;
             
-            // إذا تم تحديد الشهر والسنة، استخدم الحجز التراكمي من قاعدة البيانات
-            let accumulated = 0;
-            if (monthKey && yearKey) {
-                accumulated = calculateAccumulatedReservation(emp, monthKey, yearKey);
-            }
+            // إذا تم تحديد الشهر والسنة، استخدم الحجز التراكمي المدمج (يشمل الأصل والنسخ للنسخة المرتبطة)
+            let accumulated = getMergedAccumulatedReservation(emp, monthKey, yearKey);
             
             const current = parseFloat(emp.reservedAmount) || 0;
             
@@ -9922,9 +10125,10 @@
         // وليس من أول شهر تم إضافة الموظف فيه
         // أي: إذا كان الموظف موجوداً في يناير لكن الحجز لم يُفعّل إلا في مارس،
         // فسيبدأ الحجز التراكمي من مارس فقط
-        function calculateAccumulatedReservation(emp, currentMonthKey, currentYearKey) {
-            if (!emp || !emp.firebaseId) {
-                console.log(`⚠️ لا يوجد firebaseId للموظف`);
+        // searchFirebaseIdOverride: عند النسخة المرتبطة، نبحث بحسب الموظف الأصلي لدمج الحجوزات
+        function calculateAccumulatedReservation(emp, currentMonthKey, currentYearKey, searchFirebaseIdOverride = null) {
+            const searchId = searchFirebaseIdOverride || emp?.firebaseId;
+            if (!emp || !searchId) {
                 return 0;
             }
             
@@ -9935,16 +10139,7 @@
             const currentMonthIndex = months.indexOf(currentMonthKey);
             const currentYearInt = parseInt(currentYearKey);
             const processedEntries = new Set(); // لتجنب حساب نفس السجل مرتين
-            
-            console.log(`🔍 البحث عن الحجز التراكمي للموظف ${emp.nameAr || emp.employeeCode} (${emp.firebaseId})`);
-            console.log(`📅 الشهر الحالي: ${currentMonthKey} ${currentYearKey}`);
-            console.log(`📦 السنوات المتاحة في البيانات:`, Object.keys(employeeData));
-            console.log(`⚙️ الإعدادات العامة للحجز:`, {
-                enabled: companySettings.globalReservationEnabled,
-                type: companySettings.globalReservationType,
-                percentage: companySettings.globalReservationPercentage,
-                amount: companySettings.globalReservationAmount
-            });
+            const debugReservation = typeof window !== 'undefined' && window.DEBUG_RESERVATION === true;
             
             // البحث في جميع السنوات والأشهر السابقة
             for (const year of Object.keys(employeeData).sort((a, b) => parseInt(a) - parseInt(b))) {
@@ -9964,10 +10159,10 @@
                         continue;
                     }
                     
-                    console.log(`  📆 فحص ${month} ${year} (${monthData.length} موظف)`);
+                    if (debugReservation) console.log(`  📆 فحص ${month} ${year} (${monthData.length} موظف)`);
                     
-                    // البحث عن الموظف في هذا الشهر
-                    const empInMonth = monthData.find(e => e.firebaseId === emp.firebaseId);
+                    // البحث عن الموظف في هذا الشهر (استخدام searchId للنسخة المرتبطة = الموظف الأصلي)
+                    const empInMonth = monthData.find(e => e.firebaseId === searchId);
                     if (empInMonth) {
                         // استخدام firebaseId + month + year كمعرف فريد لتجنب التكرار
                         const entryKey = `${empInMonth.firebaseId}_${month}_${year}`;
@@ -9986,7 +10181,7 @@
                         
                         const reserved = parseFloat(empInMonth.reservedAmount) || 0;
                         
-                        console.log(`    👤 الموظف موجود في ${month} ${year}:`, {
+                        if (debugReservation) console.log(`    👤 الموظف موجود في ${month} ${year}:`, {
                             localEnabled: localEnabled,
                             globalEnabled: globalEnabled,
                             isReservationEnabled: isReservationEnabled,
@@ -10000,17 +10195,8 @@
                         // هذا يضمن أننا نحسب جميع الحجوزات الفعلية بغض النظر عن حالة التفعيل
                         if (reserved > 0) {
                             totalReserved += reserved;
-                            console.log(`      ✅ حجز: ${reserved.toFixed(2)}, الإجمالي: ${totalReserved.toFixed(2)}`);
-                            if (!isReservationEnabled) {
-                                console.log(`      ℹ️ ملاحظة: الحجز غير مفعّل لكن يوجد مبلغ محجوز (تم إضافته)`);
-                            }
-                        } else if (isReservationEnabled) {
-                            console.log(`      ⚠️ الحجز مفعّل لكن المبلغ = 0 (قد يكون تم تصفيره)`);
-                        } else {
-                            console.log(`      ⏭️ تخطي - لا يوجد حجز (المبلغ = 0 والحجز غير مفعّل)`);
+                            if (debugReservation) console.log(`      ✅ حجز: ${reserved.toFixed(2)}, الإجمالي: ${totalReserved.toFixed(2)}`);
                         }
-                    } else {
-                        console.log(`    ❌ الموظف غير موجود في ${month} ${year}`);
                     }
                 }
             }
@@ -10018,8 +10204,7 @@
             // إذا لم نجد أي حجز، قد تكون البيانات القديمة لا تحتوي على month/year بشكل صحيح
             // أو قد تكون جميع البيانات في نفس الشهر/السنة
             if (totalReserved === 0) {
-                console.log(`⚠️ لم يتم العثور على حجز في البيانات المنظمة، البحث في جميع البيانات...`);
-                console.log(`  🔍 البحث عن الموظف ${emp.nameAr || emp.employeeCode} (${emp.firebaseId}) في جميع الأشهر...`);
+                if (debugReservation) console.log(`  🔍 البحث عن الموظف ${emp.nameAr || emp.employeeCode} (${searchId}) في جميع الأشهر...`);
                 
                 let foundInMonths = [];
                 
@@ -10039,8 +10224,8 @@
                             continue;
                         }
                         
-                        // البحث عن الموظف في هذا الشهر (باستخدام firebaseId أو nameAr + nameEn كبديل للبيانات القديمة)
-                        let foundEmp = monthData.find(e => e.firebaseId === emp.firebaseId);
+                        // البحث عن الموظف في هذا الشهر (باستخدام searchId أو nameAr + nameEn كبديل للبيانات القديمة)
+                        let foundEmp = monthData.find(e => e.firebaseId === searchId);
                         
                         // إذا لم نجد بـ firebaseId، نبحث بالاسم (للبيانات القديمة)
                         if (!foundEmp && emp.nameAr && emp.nameEn) {
@@ -10066,50 +10251,56 @@
                             
                             const reserved = parseFloat(foundEmp.reservedAmount) || 0;
                             
-                            console.log(`    📍 وجد في ${month} ${year}:`, {
-                                localEnabled: localEnabled,
-                                globalEnabled: globalEnabled,
-                                isReservationEnabled: isReservationEnabled,
-                                reservedAmount: reserved,
-                                reservationPercentage: foundEmp.reservationPercentage,
-                                foundBy: foundEmp.firebaseId === emp.firebaseId ? 'firebaseId' : 'name'
-                            });
-                            
                             // الحل العملي: إذا كان هناك مبلغ محجوز، نعتبره حجز صالح
                             if (reserved > 0) {
                                 totalReserved += reserved;
                                 processedEntries.add(entryKey);
-                                console.log(`      ✅ حجز: ${reserved.toFixed(2)}, الإجمالي: ${totalReserved.toFixed(2)}`);
-                                if (!isReservationEnabled) {
-                                    console.log(`      ℹ️ ملاحظة: الحجز غير مفعّل لكن يوجد مبلغ محجوز (تم إضافته)`);
-                                }
-                            } else if (isReservationEnabled) {
-                                console.log(`      ⚠️ الحجز مفعّل لكن المبلغ = 0`);
-                            } else {
-                                console.log(`      ⏭️ لا يوجد حجز (المبلغ = 0 والحجز غير مفعّل)`);
+                                if (debugReservation) console.log(`    📍 وجد في ${month} ${year}: حجز ${reserved.toFixed(2)}`);
                             }
                         }
                     }
                 }
                 
-                if (foundInMonths.length > 0) {
-                    console.log(`  📊 الموظف موجود في ${foundInMonths.length} شهر/سنة:`, foundInMonths.map(m => `${m.month} ${m.year}`).join(', '));
-                } else {
-                    console.log(`  ❌ الموظف غير موجود في أي شهر سابق`);
+                if (debugReservation) {
+                    if (foundInMonths.length > 0) {
+                        console.log(`  📊 الموظف موجود في ${foundInMonths.length} شهر/سنة`);
+                    } else {
+                        console.log(`  ❌ الموظف غير موجود في أي شهر سابق`);
+                    }
                 }
             }
             
-            console.log(`✅ الحجز التراكمي الإجمالي للموظف ${emp.nameAr || emp.employeeCode}: ${totalReserved.toFixed(2)}`);
-            console.log(`📊 ملخص الحساب:`, {
-                firebaseId: emp.firebaseId,
-                name: emp.nameAr || emp.employeeCode,
-                currentMonth: currentMonthKey,
-                currentYear: currentYearKey,
-                totalReserved: totalReserved.toFixed(2),
-                processedEntries: processedEntries.size,
-                globalReservationEnabled: companySettings.globalReservationEnabled
-            });
+            if (debugReservation) console.log(`✅ الحجز التراكمي للموظف ${emp.nameAr || emp.employeeCode}: ${totalReserved.toFixed(2)}`);
             return totalReserved;
+        }
+        
+        // دالة مساعدة: الحصول على الحجز التراكمي المدمج (للنسخة المرتبطة يشمل الأصل والنسخ الأخرى)
+        function getMergedAccumulatedReservation(emp, monthKey, yearKey) {
+            if (!monthKey || !yearKey) return 0;
+            const searchId = emp.linkedToFirebaseId || emp.firebaseId;
+            if (!searchId) return 0;
+            let accumulated = calculateAccumulatedReservation(emp, monthKey, yearKey, emp.linkedToFirebaseId || undefined);
+            if (emp.linkedToFirebaseId) {
+                accumulated += getCurrentMonthReservedFromLinked(emp, monthKey, yearKey);
+            }
+            return accumulated;
+        }
+        
+        // دالة مساعدة: الحصول على مبلغ الحجز في الشهر الحالي من الموظف الأصلي والنسخ المرتبطة الأخرى (للدمج)
+        function getCurrentMonthReservedFromLinked(emp, monthKey, yearKey) {
+            if (!emp?.linkedToFirebaseId || !employeeData[yearKey]?.[monthKey]) return 0;
+            const originalId = emp.linkedToFirebaseId;
+            const currentEmpId = emp.firebaseId; // قد يكون null عند الإنشاء الأولي
+            let total = 0;
+            const monthData = employeeData[yearKey][monthKey];
+            for (const e of monthData) {
+                if (e.firebaseId === originalId) {
+                    total += parseFloat(e.reservedAmount) || 0;
+                } else if (e.linkedToFirebaseId === originalId && e.firebaseId !== currentEmpId) {
+                    total += parseFloat(e.reservedAmount) || 0;
+                }
+            }
+            return total;
         }
         
         // دالة حساب الهدف (راتب أساسي واحد)
@@ -10287,28 +10478,35 @@
             document.head.appendChild(style);
         }
 
-        function selectMonth(month) {
+        async function selectMonth(month) {
             currentMonth = month;
             currentView = 'month';
             monthFilterSearch = '';
             monthFilterProject = 'all';
             monthFilterType = 'all';
             selectedEmployees.clear();
-            // لا يحفظ تلقائياً
-            renderContent();
+            if (getStorageMode() === 'firebase' && db && typeof loadEmployeesFromFirebase === 'function') {
+                await loadEmployeesFromFirebase(currentYear);
+            } else {
+                if (!employeeData[currentYear]) initializeEmployeeData();
+                renderContent();
+            }
         }
 
-        function selectYear(year) {
-            currentYear = parseInt(year);
+        async function selectYear(year) {
+            const newYear = parseInt(year);
+            currentYear = newYear;
             selectedEmployees.clear();
             
-            // التأكد من وجود السنة في البيانات
-            if (!employeeData[currentYear]) {
-                initializeEmployeeData();
+            // تحميل سنة جديدة إذا لم تكن محملة (التحميل الكسول)
+            if (getStorageMode() === 'firebase' && db && typeof loadEmployeesFromFirebase === 'function') {
+                await loadEmployeesFromFirebase(newYear);
+            } else {
+                if (!employeeData[currentYear]) {
+                    initializeEmployeeData();
+                }
+                renderContent();
             }
-            
-            // لا يحفظ تلقائياً
-            renderContent();
             updateYearSelector();
             console.log(`📅 تم التبديل إلى السنة: ${currentYear}`);
         }
@@ -10391,7 +10589,7 @@
             }
         }
 
-        function confirmProjectMonthYear(ev) {
+        async function confirmProjectMonthYear(ev) {
             try { if (ev && ev.preventDefault) ev.preventDefault(); } catch (e) {}
             const yearSelect = document.getElementById('projectPickerYear');
             const monthSelect = document.getElementById('projectPickerMonth');
@@ -10403,16 +10601,26 @@
             currentView = 'project';
             closeModal('projectPickerModal');
             updateYearSelector();
-            renderContent();
+            if (getStorageMode() === 'firebase' && db && typeof loadEmployeesFromFirebase === 'function') {
+                await loadEmployeesFromFirebase(currentYear);
+            } else {
+                if (!employeeData[currentYear]) initializeEmployeeData();
+                renderContent();
+            }
         }
 
         // التأكد من توفر الدوال على الكائن window للاستخدام من الـ HTML
         window.showProjectMonthYearModal = showProjectMonthYearModal;
         window.confirmProjectMonthYear = confirmProjectMonthYear;
 
-        function renderContent() {
+        async function renderContent() {
             const content = document.getElementById('mainContent');
             if (currentView === 'dashboard') {
+                const idx = months.indexOf(dashboardSelectedMonth);
+                const prevYear = idx > 0 ? currentYear : currentYear - 1;
+                if (getStorageMode() === 'firebase' && db && !loadedPeriodsCache.has(getYearKey(prevYear))) {
+                    await loadEmployeesFromFirebase(prevYear);
+                }
                 setHTML(content, renderDashboard());
             } else if (currentView === 'month') {
                 setHTML(content, renderMonthView());
@@ -10478,23 +10686,45 @@
         }
 
         // دالة لتغيير الشهر في لوحة التحكم
-        function changeDashboardMonth(month) {
+        async function changeDashboardMonth(month) {
             dashboardSelectedMonth = month;
-            renderContent(); // إعادة رسم لوحة التحكم
+            if (getStorageMode() === 'firebase' && db && typeof loadEmployeesFromFirebase === 'function') {
+                await loadEmployeesFromFirebase(currentYear);
+                const idx = months.indexOf(month);
+                const prevIdx = idx > 0 ? idx - 1 : 11;
+                const prevMonth = months[prevIdx];
+                const prevYear = idx > 0 ? currentYear : currentYear - 1;
+                if (!loadedPeriodsCache.has(getYearKey(prevYear))) {
+                    await loadEmployeesFromFirebase(prevYear);
+                }
+            } else {
+                renderContent();
+            }
         }
 
-        // دالة لتغيير السنة في لوحة التحكم وإظهار أشهر تلك السنة
-        function changeDashboardYear(year) {
+        async function changeDashboardYear(year) {
             const y = parseInt(year);
             if (!isNaN(y)) {
                 currentYear = y;
             }
-            // تحديث اختيار السنة في عناصر أخرى إن وجدت
             updateYearSelector();
-            // عند تغيير السنة، اترك الشهر المحدد كما هو إن أردت؛ وإلا أعده للحالي
-            // dashboardSelectedMonth = currentMonth; // يمكن تفعيلها إن لزم
-            renderContent();
+            if (getStorageMode() === 'firebase' && db && typeof loadEmployeesFromFirebase === 'function') {
+                await loadEmployeesFromFirebase(currentYear);
+                const idx = months.indexOf(dashboardSelectedMonth);
+                const prevIdx = idx > 0 ? idx - 1 : 11;
+                const prevMonth = months[prevIdx];
+                const prevYear = idx > 0 ? currentYear : currentYear - 1;
+                if (!loadedPeriodsCache.has(getYearKey(prevYear))) {
+                    await loadEmployeesFromFirebase(prevYear);
+                }
+            } else {
+                renderContent();
+            }
         }
+
+        // جعل دوال لوحة التحكم متاحة عالمياً (للاستخدام من onchange في الـ HTML داخل module)
+        window.changeDashboardYear = changeDashboardYear;
+        window.changeDashboardMonth = changeDashboardMonth;
 
         function renderDashboard() {
             // ==================== جمع بيانات الشهر الحالي ====================
@@ -10596,31 +10826,29 @@
                 ? ((salaryChange / previousStats.totalSalaryUSD) * 100).toFixed(1)
                 : 0;
             
-            // ==================== جمع بيانات السنة كاملة للرسم البياني ====================
+            // ==================== جمع بيانات الأشهر المحملة فقط للرسم البياني ====================
             const monthlyData = {
                 labels: [],
                 employees: [],
                 salaries: []
             };
-            
-            months.forEach(month => {
+            const loadedMonthsForChart = (getStorageMode() === 'firebase' && loadedPeriodsCache.has(getYearKey(currentYear)) && employeeData[currentYear])
+                ? months
+                : (getStorageMode() === 'firebase' ? [] : months);
+            loadedMonthsForChart.forEach(month => {
                 const monthEmps = (employeeData[currentYear] && employeeData[currentYear][month])
                     ? employeeData[currentYear][month].filter(emp => hasProjectAccess(emp.project))
                     : [];
-                
                 let monthSalaryUSD = 0;
                 monthEmps.forEach(emp => {
                     const netSalaryInPaymentCurrency = calculateNetSalary(emp, month, currentYear);
                     const exchangeRate = emp.exchangeRate || 1420;
-                    
-                    // تحويل إلى USD بشكل صحيح
                     if (emp.paymentCurrency === 'USD') {
                         monthSalaryUSD += netSalaryInPaymentCurrency;
                     } else {
                         monthSalaryUSD += netSalaryInPaymentCurrency / exchangeRate;
                     }
                 });
-                
                 monthlyData.labels.push(t('monthNames')[month]);
                 monthlyData.employees.push(monthEmps.length);
                 monthlyData.salaries.push(monthSalaryUSD);
@@ -10931,6 +11159,7 @@
                 // رسم بياني: عدد الموظفين
                 const employeesCtx = document.getElementById('employeesChart');
                 if (employeesCtx) {
+                    Chart.getChart(employeesCtx)?.destroy();
                     new Chart(employeesCtx, {
                         type: 'line',
                         data: {
@@ -10987,6 +11216,7 @@
                 // رسم بياني: الرواتب
                 const salariesCtx = document.getElementById('salariesChart');
                 if (salariesCtx) {
+                    Chart.getChart(salariesCtx)?.destroy();
                     new Chart(salariesCtx, {
                         type: 'bar',
                         data: {
@@ -11046,6 +11276,7 @@
                 // رسم بياني: توزيع المشاريع (Pie Chart)
                 const projectsCtx = document.getElementById('projectsChart');
                 if (projectsCtx && sortedProjects.length > 0) {
+                    Chart.getChart(projectsCtx)?.destroy();
                     new Chart(projectsCtx, {
                         type: 'doughnut',
                         data: {
@@ -11701,9 +11932,10 @@
                                 const advance = convertToPaymentCurrency(emp.advance || 0, emp.advanceCurrency || 'IQD', emp);
                                 const netSalary = netInPaymentCurrency + bonus + phoneBills + ceoBonus - deductions - advance;
                                 const currentReserved = parseFloat(emp.reservedAmount) || 0;
-                                // حساب الحجز التراكمي من الأشهر السابقة
-                                const accumulatedReservation = calculateAccumulatedReservation(emp, currentMonth, currentYear);
-                                const totalReserved = accumulatedReservation + currentReserved;
+                                // حساب الحجز التراكمي المدمج (يشمل الأصل والنسخ للنسخة المرتبطة)
+                                const accumulatedReservation = getMergedAccumulatedReservation(emp, currentMonth, currentYear);
+                                const previousReserved = parseFloat(emp.previousReservedAmount) || 0;
+                                const totalReserved = previousReserved + accumulatedReservation + currentReserved;
                                 return `
                                     <input type="number" 
                                            value="${currentReserved.toFixed(2)}" 
@@ -12225,10 +12457,14 @@ function renderProjectView() {
             return html;
         }
 
-        function changeProjectMonth(month) {
+        async function changeProjectMonth(month) {
             selectedProjectMonth = month;
             currentMonth = month;
-            renderContent();
+            if (getStorageMode() === 'firebase' && db && typeof loadEmployeesFromFirebase === 'function') {
+                await loadEmployeesFromFirebase(currentYear);
+            } else {
+                renderContent();
+            }
         }
 
         function switchProject(projectCode) {
@@ -12628,8 +12864,7 @@ function renderProjectView() {
                 // انتظار اكتمال جميع التحديثات
                 await Promise.all(updatePromises);
                 
-                // إعادة تحميل البيانات مرة واحدة فقط
-                await loadEmployeesFromFirebase();
+                await loadEmployeesFromFirebase(currentYear, currentMonth, false, true);
                 
                 hideLoading();
                 closeModal('bulkPaymentModal');
@@ -12695,8 +12930,7 @@ function renderProjectView() {
                 // انتظار اكتمال جميع التحديثات
                 await Promise.all(updatePromises);
                 
-                // إعادة تحميل البيانات مرة واحدة فقط
-                await loadEmployeesFromFirebase();
+                await loadEmployeesFromFirebase(currentYear, currentMonth, false, true);
                 
                 hideLoading();
                 showNotification('success', t('success'), t('bulkPaymentSuccess').replace('{count}', updatedCount));
@@ -12831,8 +13065,8 @@ function renderProjectView() {
             document.getElementById('targetReservedAmountNote').textContent = currentLang === 'ar' ? 'يُحسب تلقائياً من الراتب الأساسي' : 'Calculated automatically from basic salary';
             document.getElementById('reservationNotes').placeholder = currentLang === 'ar' ? 'ملاحظات إضافية...' : 'Additional notes...';
             
-            // حساب الحجز التراكمي من الأشهر السابقة في قاعدة البيانات
-            const accumulatedReservation = calculateAccumulatedReservation(emp, currentMonth, currentYear);
+            // حساب الحجز التراكمي المدمج (يشمل الأصل والنسخ للنسخة المرتبطة)
+            const accumulatedReservation = getMergedAccumulatedReservation(emp, currentMonth, currentYear);
             
             // ملء الحقول
             // استخدام الإعدادات العامة إذا كانت مفعّلة
@@ -12977,12 +13211,13 @@ function renderProjectView() {
                 const advance = convertToPaymentCurrency(emp.advance || 0, emp.advanceCurrency || 'IQD', emp);
                 const netSalary = netInPaymentCurrency + bonus + phoneBills + ceoBonus - deductions - advance;
                 
-                // حساب الحجز التراكمي من الأشهر السابقة (يجب استخدام القيمة المحسوبة وليس المدخلة)
-                const accumulatedReservation = calculateAccumulatedReservation(emp, currentMonth, currentYear);
+                // حساب الحجز التراكمي المدمج (يشمل الأصل والنسخ للنسخة المرتبطة)
+                const accumulatedReservation = getMergedAccumulatedReservation(emp, currentMonth, currentYear);
+                const totalAccumulated = previousReserved + accumulatedReservation;
                 
                 const requestedAmount = netSalary * (percentage / 100);
                 // الحجز الفعلي = الحد الأدنى بين: المطلوب، الراتب الصافي، والفرق بين الهدف والمحجوز سابقاً
-                const remainingToTarget = Math.max(0, target - accumulatedReservation);
+                const remainingToTarget = Math.max(0, target - totalAccumulated);
                 const maxAllowedReservation = Math.min(netSalary, remainingToTarget);
                 const actualReservation = Math.min(requestedAmount, maxAllowedReservation);
                 
@@ -13031,14 +13266,16 @@ function renderProjectView() {
             const percentageValue = parseFloat(percentage) || 0;
             const requestedAmount = netSalary * (percentageValue / 100);
             
-            // حساب الحجز التراكمي من الأشهر السابقة
-            const accumulatedReservation = calculateAccumulatedReservation(emp, currentMonth, currentYear);
+            // حساب الحجز التراكمي المدمج (يشمل الأصل والنسخ للنسخة المرتبطة)
+            const previousReserved = parseFloat(emp.previousReservedAmount) || 0;
+            const accumulatedReservation = getMergedAccumulatedReservation(emp, currentMonth, currentYear);
+            const totalAccumulated = previousReserved + accumulatedReservation;
             
             // حساب الهدف (الراتب الأساسي)
             const target = parseFloat(emp.targetReservedAmount) || calculateTargetReservation(emp);
             
             // الحجز الفعلي = الحد الأدنى بين: المطلوب، الراتب الصافي، والفرق بين الهدف والمحجوز سابقاً
-            const remainingToTarget = Math.max(0, target - accumulatedReservation);
+            const remainingToTarget = Math.max(0, target - totalAccumulated);
             const maxAllowedReservation = Math.min(netSalary, remainingToTarget);
             const actualReservation = Math.min(requestedAmount, maxAllowedReservation);
             
@@ -13082,14 +13319,16 @@ function renderProjectView() {
             
             const amountValue = parseFloat(amount) || 0;
             
-            // حساب الحجز التراكمي من الأشهر السابقة
-            const accumulatedReservation = calculateAccumulatedReservation(emp, currentMonth, currentYear);
+            // حساب الحجز التراكمي المدمج (يشمل الأصل والنسخ للنسخة المرتبطة)
+            const previousReserved = parseFloat(emp.previousReservedAmount) || 0;
+            const accumulatedReservation = getMergedAccumulatedReservation(emp, currentMonth, currentYear);
+            const totalAccumulated = previousReserved + accumulatedReservation;
             
             // حساب الهدف (الراتب الأساسي)
             const target = parseFloat(emp.targetReservedAmount) || calculateTargetReservation(emp);
             
             // الحد الأقصى = الحد الأدنى بين: الراتب الصافي، والفرق بين الهدف والمحجوز سابقاً
-            const remainingToTarget = Math.max(0, target - accumulatedReservation);
+            const remainingToTarget = Math.max(0, target - totalAccumulated);
             const maxAmount = Math.min(netSalary, remainingToTarget);
             
             // إذا كان المبلغ أكبر من الحد الأقصى، نحدده للحد الأقصى
@@ -13141,15 +13380,17 @@ function renderProjectView() {
             const advance = convertToPaymentCurrency(emp.advance || 0, emp.advanceCurrency || 'IQD', emp);
             const netSalary = netInPaymentCurrency + bonus + phoneBills + ceoBonus - deductions - advance;
             
-            // حساب الحجز التراكمي من الأشهر السابقة
-            const accumulatedReservation = calculateAccumulatedReservation(emp, currentMonth, currentYear);
+            // حساب الحجز التراكمي المدمج (يشمل الأصل والنسخ للنسخة المرتبطة)
+            const previousReserved = parseFloat(emp.previousReservedAmount) || 0;
+            const accumulatedReservation = getMergedAccumulatedReservation(emp, currentMonth, currentYear);
+            const totalAccumulated = previousReserved + accumulatedReservation;
             
             // حساب الهدف (الراتب الأساسي)
             const target = calculateTargetReservation(emp);
             
             const requestedAmount = netSalary * (defaultPercentage / 100);
             // الحجز الفعلي = الحد الأدنى بين: المطلوب، الراتب الصافي، والفرق بين الهدف والمحجوز سابقاً
-            const remainingToTarget = Math.max(0, target - accumulatedReservation);
+            const remainingToTarget = Math.max(0, target - totalAccumulated);
             const maxAllowedReservation = Math.min(netSalary, remainingToTarget);
             const actualReservation = Math.min(requestedAmount, maxAllowedReservation);
             
@@ -14007,6 +14248,9 @@ function renderProjectView() {
 
         // إضافة أيقونات الفلتر إلى رؤوس الأعمدة
         function addFilterIcons() {
+            // جدول الموظفين (#employeeTable) موجود فقط في عرض الشهر
+            if (currentView !== 'month') return;
+            
             // الأعمدة القابلة للفلترة - جميع الأعمدة الآن قابلة للفلترة
             const filterableColumns = {
                 'select': '☑️ التحديد',
@@ -14042,10 +14286,7 @@ function renderProjectView() {
             };
 
             const table = document.querySelector('#employeeTable');
-            if (!table) {
-                console.log('⚠️ لم يتم العثور على جدول الموظفين');
-                return;
-            }
+            if (!table) return;
 
             const headers = table.querySelectorAll('thead th[data-column]');
             console.log('🔍 تم العثور على', headers.length, 'رأس عمود');
@@ -15298,8 +15539,8 @@ function renderProjectView() {
             // ملء قائمة السنوات
             const yearSelect = document.getElementById('copyTargetYear');
             yearSelect.innerHTML = '';
-            const availableYears = Object.keys(employeeData).sort((a, b) => b - a);
-            availableYears.forEach(year => {
+            const yearsForCopy = (availableYears && availableYears.length > 0) ? [...availableYears].sort((a, b) => b - a) : Object.keys(employeeData).map(Number).sort((a, b) => b - a);
+            yearsForCopy.forEach(year => {
                 const option = document.createElement('option');
                 option.value = year;
                 option.textContent = year;
@@ -15686,11 +15927,8 @@ function renderProjectView() {
             
             showNotification('success', '✓ تم النسخ', message);
             
-            // إعادة تحميل البيانات إذا كانت السنة المستهدفة هي السنة الحالية
-            if (targetYear == currentYear) {
-                await loadEmployeesFromFirebase();
-                renderContent();
-            }
+            await loadEmployeesFromFirebase(parseInt(targetYear), null, false, true);
+            renderContent();
         }
 
         // ========== Attendance System Functions ==========
@@ -16220,11 +16458,11 @@ function renderProjectView() {
                 return;
             }
             
-            // ملء قائمة السنوات
+            // ملء قائمة السنوات (استخدام السنوات المتاحة مع التحميل الكسول)
             const yearSelect = document.getElementById('copyAllTargetYear');
             yearSelect.innerHTML = '';
-            const availableYears = Object.keys(employeeData).sort((a, b) => b - a);
-            availableYears.forEach(year => {
+            const yearsForCopyAll = (availableYears && availableYears.length > 0) ? [...availableYears].sort((a, b) => b - a) : Object.keys(employeeData).map(Number).filter(Boolean).sort((a, b) => b - a);
+            yearsForCopyAll.forEach(year => {
                 const option = document.createElement('option');
                 option.value = year;
                 option.textContent = year;
@@ -16343,11 +16581,8 @@ function renderProjectView() {
             
             console.log(`✅ نسخ جماعي: ${copiedCount} موظف من ${t('monthNames')[currentMonth]} ${currentYear} إلى ${t('monthNames')[targetMonth]} ${targetYear}`);
             
-            // إعادة تحميل البيانات إذا كانت السنة المستهدفة هي السنة الحالية
-            if (targetYear == currentYear) {
-                await loadEmployeesFromFirebase();
-                renderContent();
-            }
+            await loadEmployeesFromFirebase(targetYear, targetMonth, false, true); // إعادة تحميل الفترة المستهدفة
+            renderContent();
         }
 
         function openCopySelectedModal() {
@@ -16369,12 +16604,12 @@ function renderProjectView() {
                     return;
                 }
                 yearSelect.innerHTML = '';
-                const availableYears = Object.keys(employeeData).sort((a, b) => b - a);
-                if (availableYears.length === 0) {
+                const yearsForCopy = (availableYears && availableYears.length > 0) ? [...availableYears].sort((a, b) => b - a) : Object.keys(employeeData).map(Number).filter(Boolean).sort((a, b) => b - a);
+                if (yearsForCopy.length === 0) {
                     showNotification('warning', '⚠️ تنبيه', 'لا توجد سنوات متاحة');
                     return;
                 }
-                availableYears.forEach(year => {
+                yearsForCopy.forEach(year => {
                     const option = document.createElement('option');
                     option.value = year;
                     option.textContent = year;
@@ -16533,11 +16768,8 @@ function renderProjectView() {
                 
                 console.log(`✅ نسخ المحدد: ${copiedCount} موظف من ${t('monthNames')[currentMonth]} ${currentYear} إلى ${t('monthNames')[targetMonth]} ${targetYear}`);
                 
-                // إعادة تحميل البيانات إذا كانت السنة المستهدفة هي السنة الحالية
-                if (targetYear == currentYear) {
-                    await loadEmployeesFromFirebase();
-                    renderContent();
-                }
+                await loadEmployeesFromFirebase(targetYear, targetMonth, false, true);
+                renderContent();
             } catch (error) {
                 console.error('❌ خطأ في confirmCopySelected:', error);
                 hideLoading();
@@ -17676,25 +17908,22 @@ function renderProjectView() {
             }
         }
         
-        // دالة لتحميل قائمة المشاريع
+        // دالة لتحميل قائمة المشاريع (استخدام الكاش - توفير القراءات)
         async function loadProjectsList(selectId) {
             try {
-                const projectsSnapshot = await getDocs(collection(db, 'projects'));
                 const selectElement = document.getElementById(selectId);
-                
                 if (!selectElement) return;
                 
                 selectElement.innerHTML = '';
                 
-                projectsSnapshot.forEach((doc) => {
-                    const projectData = doc.data();
-                    const option = document.createElement('option');
-                    option.value = doc.id;
-                    option.textContent = `${projectData.name} (${doc.id})`;
-                    selectElement.appendChild(option);
-                });
-                
-                if (projectsSnapshot.empty) {
+                if (projects && Object.keys(projects).length > 0) {
+                    Object.entries(projects).forEach(([code, name]) => {
+                        const option = document.createElement('option');
+                        option.value = code;
+                        option.textContent = `${name} (${code})`;
+                        selectElement.appendChild(option);
+                    });
+                } else {
                     const option = document.createElement('option');
                     option.value = '';
                     option.textContent = 'لا توجد مشاريع';
@@ -18199,7 +18428,7 @@ function renderProjectView() {
                             ${linkUserBtn}
                         </button>
                     ` : ''}
-                    <button class="btn btn-info" onclick="loadUsersData()">
+                    <button class="btn btn-info" onclick="loadUsersData(true)">
                         ${refreshBtn}
                     </button>
                 </div>
@@ -18222,182 +18451,131 @@ function renderProjectView() {
             loadUsersData();
         }
         
-        async function loadUsersData() {
+        function renderUsersListFromCache(container, cache) {
+            if (!cache || cache.length === 0) {
+                const noUsersTitle = currentLang === 'ar' ? '📭 لا توجد مستخدمين' : '📭 No Users';
+                const noUsersText = currentLang === 'ar' ? 'لم يتم ربط أي مستخدمين بصلاحيات بعد' : 'No users have been linked with permissions yet';
+                const noUsersHint = currentLang === 'ar' ? 
+                    'استخدم الأزرار أعلاه لإضافة مستخدمين جدد أو ربط مستخدمين موجودين' :
+                    'Use the buttons above to add new users or link existing users';
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>${noUsersTitle}</h3>
+                        <p>${noUsersText}</p>
+                        <p style="font-size: 13px; color: var(--gray); margin-top: 10px;">${noUsersHint}</p>
+                    </div>
+                `;
+                return;
+            }
+            let html = '<div class="table-container"><table><thead><tr>';
+            const idLabel = currentLang === 'ar' ? '🆔' : '🆔 ID';
+            const emailLabel = currentLang === 'ar' ? '📧 البريد الإلكتروني' : '📧 Email';
+            const roleLabel = currentLang === 'ar' ? '👤 الدور' : '👤 Role';
+            const permLabel = currentLang === 'ar' ? '🔐 الصلاحيات' : '🔐 Permissions';
+            const detailsLabel = currentLang === 'ar' ? '📊 التفاصيل' : '📊 Details';
+            const createdLabel = currentLang === 'ar' ? '📅 تاريخ الإنشاء' : '📅 Created At';
+            const actionsLabel = currentLang === 'ar' ? '⚙️ الإجراءات' : '⚙️ Actions';
+            html += `<th style="width: 50px;">${idLabel}</th><th>${emailLabel}</th><th>${roleLabel}</th><th>${permLabel}</th><th>${detailsLabel}</th><th>${createdLabel}</th><th style="width: 200px;">${actionsLabel}</th></tr></thead><tbody>`;
+            let index = 1;
+            cache.forEach(({ id: uid, data: userData }) => {
+                const notSpecified = currentLang === 'ar' ? 'غير محدد' : 'Not Specified';
+                const defaultRole = currentLang === 'ar' ? 'مستخدم' : 'User';
+                const fullText = currentLang === 'ar' ? '🔓 كاملة' : '🔓 Full';
+                const limitedText = currentLang === 'ar' ? '🔒 محدودة' : '🔒 Limited';
+                html += '<tr>';
+                html += `<td>${index++}</td>`;
+                html += `<td style="text-align: left; direction: ltr;">${userData.email || notSpecified}</td>`;
+                html += `<td><span style="background: var(--primary); color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">${userData.role || defaultRole}</span></td>`;
+                html += `<td>${userData.fullAccess ? fullText : limitedText}</td>`;
+                let permissionDetails = '';
+                const allPermsText = currentLang === 'ar' ? '✅ جميع الصلاحيات' : '✅ All Permissions';
+                const viewOnlyText = currentLang === 'ar' ? 'عرض فقط' : 'View Only';
+                if (userData.fullAccess) {
+                    permissionDetails = `<span style="color: var(--success); font-weight: 600;">${allPermsText}</span>`;
+                } else if (userData.permissions) {
+                    const perms = userData.permissions;
+                    const details = [];
+                    if (perms.employees) {
+                        if (perms.employees.monthly) {
+                            if (perms.employees.monthly.add) details.push('📅+');
+                            if (perms.employees.monthly.edit) details.push('📅✏️');
+                            if (perms.employees.monthly.delete) details.push('📅🗑️');
+                        }
+                        if (perms.employees.daily) {
+                            if (perms.employees.daily.add) details.push('📆+');
+                            if (perms.employees.daily.edit) details.push('📆✏️');
+                            if (perms.employees.daily.delete) details.push('📆🗑️');
+                        }
+                        if (perms.employees.vehicle) {
+                            if (perms.employees.vehicle.add) details.push('🚗+');
+                            if (perms.employees.vehicle.edit) details.push('🚗✏️');
+                            if (perms.employees.vehicle.delete) details.push('🚗🗑️');
+                        }
+                    }
+                    if (perms.projects) {
+                        if (perms.projects.add) details.push('🏗️+');
+                        if (perms.projects.edit) details.push('🏗️✏️');
+                        if (perms.projects.delete) details.push('🏗️🗑️');
+                        if (perms.projects.allowedProjects && perms.projects.allowedProjects.length > 0) {
+                            details.push(`🏗️[${perms.projects.allowedProjects.length}]`);
+                        }
+                    }
+                    if (perms.users) {
+                        if (perms.users.view) details.push('👥👁️');
+                        if (perms.users.add) details.push('👥+');
+                        if (perms.users.edit) details.push('👥✏️');
+                        if (perms.users.delete) details.push('👥🗑️');
+                    }
+                    if (perms.reports) {
+                        if (perms.reports.export) details.push('📊📤');
+                        if (perms.reports.print) details.push('📊🖨️');
+                    }
+                    if (perms.settings) details.push('⚙️');
+                    permissionDetails = details.length > 0 ? details.join(' ') : `<span style="color: var(--gray);">${viewOnlyText}</span>`;
+                }
+                html += `<td style="font-size: 11px;">${permissionDetails || `<span style="color: var(--gray);">${viewOnlyText}</span>`}</td>`;
+                const locale = currentLang === 'ar' ? 'ar-EG' : 'en-US';
+                const dateText = userData.createdAt ? new Date(userData.createdAt).toLocaleDateString(locale) : notSpecified;
+                const editBtnText = currentLang === 'ar' ? '✏️ تعديل' : '✏️ Edit';
+                const deleteBtnText = currentLang === 'ar' ? '🗑️ حذف' : '🗑️ Delete';
+                const editTitle = currentLang === 'ar' ? 'تعديل الصلاحيات' : 'Edit Permissions';
+                const deleteTitle = currentLang === 'ar' ? 'حذف الربط' : 'Delete Link';
+                const safeEmail = (userData.email || '').replace(/'/g, "\\'");
+                html += `<td>${dateText}</td><td><button class="btn btn-small btn-primary" onclick="editUserPermissions('${uid}', '${safeEmail}', '${(userData.role || defaultRole).replace(/'/g, "\\'")}', ${userData.fullAccess || false})" title="${editTitle}">${editBtnText}</button> <button class="btn btn-small btn-danger" onclick="deleteUserPermissions('${uid}', '${safeEmail}')" title="${deleteTitle}">${deleteBtnText}</button></td></tr>`;
+            });
+            html += '</tbody></table></div>';
+            const notesTitle = currentLang === 'ar' ? '📖 ملاحظات هامة:' : '📖 Important Notes:';
+            const note1 = currentLang === 'ar' ? 'لإضافة مستخدم جديد: استخدم زر "إضافة مستخدم جديد" لإنشاء حساب في Firebase Authentication وربطه تلقائياً' : 'To add new user: Use "Add New User" button to create account in Firebase Authentication and link it automatically';
+            const note2 = currentLang === 'ar' ? 'لربط مستخدم موجود: أضفه أولاً في Firebase Console ثم استخدم زر "ربط مستخدم موجود" مع UID' : 'To link existing user: Add it first in Firebase Console then use "Link Existing User" button with UID';
+            const note3 = currentLang === 'ar' ? 'حذف الربط هنا يحذف الصلاحيات من النظام فقط، الحساب في Firebase Authentication يبقى موجوداً' : 'Deleting link here removes permissions from system only, the account in Firebase Authentication remains';
+            const note4 = currentLang === 'ar' ? 'تعديل الصلاحيات يؤثر فوراً على المستخدم في الجلسة التالية' : 'Permission changes take effect immediately in the next session';
+            html += `<div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 20px; border-radius: 12px; margin-top: 20px; border: 2px solid #bae6fd;"><h4 style="color: var(--primary); margin-bottom: 10px;">${notesTitle}</h4><ul style="font-size: 13px; color: var(--gray); line-height: 1.8; padding-${currentLang === 'ar' ? 'right' : 'left'}: 20px;"><li>${note1}</li><li>${note2}</li><li>${note3}</li><li>${note4}</li></ul></div>`;
+            container.innerHTML = html;
+        }
+        
+        async function loadUsersData(forceRefresh = false) {
             try {
-                console.log('🔄 Loading users data...');
-                console.log('📊 Database object:', db);
-                
-                const usersSnapshot = await getDocs(collection(db, 'users'));
-                console.log('✅ Users snapshot loaded:', usersSnapshot.size, 'users');
-                
                 const usersListContainer = document.getElementById('usersListContainer');
-                
                 if (!usersListContainer) {
                     console.error('❌ usersListContainer not found!');
                     return;
                 }
-                
-                if (usersSnapshot.empty) {
-                    const noUsersTitle = currentLang === 'ar' ? '📭 لا توجد مستخدمين' : '📭 No Users';
-                    const noUsersText = currentLang === 'ar' ? 'لم يتم ربط أي مستخدمين بصلاحيات بعد' : 'No users have been linked with permissions yet';
-                    const noUsersHint = currentLang === 'ar' ? 
-                        'استخدم الأزرار أعلاه لإضافة مستخدمين جدد أو ربط مستخدمين موجودين' :
-                        'Use the buttons above to add new users or link existing users';
-                    
-                    usersListContainer.innerHTML = `
-                        <div class="empty-state">
-                            <h3>${noUsersTitle}</h3>
-                            <p>${noUsersText}</p>
-                            <p style="font-size: 13px; color: var(--gray); margin-top: 10px;">
-                                ${noUsersHint}
-                            </p>
-                        </div>
-                    `;
+                if (getStorageMode() !== 'firebase' || !db) {
+                    usersListContainer.innerHTML = '<div class="empty-state"><p>الوضع المحلي - إدارة المستخدمين غير متاحة</p></div>';
                     return;
                 }
-                
-                let html = '<div class="table-container"><table><thead><tr>';
-                const idLabel = currentLang === 'ar' ? '🆔' : '🆔 ID';
-                const emailLabel = currentLang === 'ar' ? '📧 البريد الإلكتروني' : '📧 Email';
-                const roleLabel = currentLang === 'ar' ? '👤 الدور' : '👤 Role';
-                const permLabel = currentLang === 'ar' ? '🔐 الصلاحيات' : '🔐 Permissions';
-                const detailsLabel = currentLang === 'ar' ? '📊 التفاصيل' : '📊 Details';
-                const createdLabel = currentLang === 'ar' ? '📅 تاريخ الإنشاء' : '📅 Created At';
-                const actionsLabel = currentLang === 'ar' ? '⚙️ الإجراءات' : '⚙️ Actions';
-                
-                html += `<th style="width: 50px;">${idLabel}</th>`;
-                html += `<th>${emailLabel}</th>`;
-                html += `<th>${roleLabel}</th>`;
-                html += `<th>${permLabel}</th>`;
-                html += `<th>${detailsLabel}</th>`;
-                html += `<th>${createdLabel}</th>`;
-                html += `<th style="width: 200px;">${actionsLabel}</th>`;
-                html += '</tr></thead><tbody>';
-                
-                let index = 1;
-                usersSnapshot.forEach((doc) => {
-                    const userData = doc.data();
-                    const uid = doc.id;
-                    
-                    const notSpecified = currentLang === 'ar' ? 'غير محدد' : 'Not Specified';
-                    const defaultRole = currentLang === 'ar' ? 'مستخدم' : 'User';
-                    const fullText = currentLang === 'ar' ? '🔓 كاملة' : '🔓 Full';
-                    const limitedText = currentLang === 'ar' ? '🔒 محدودة' : '🔒 Limited';
-                    
-                    html += '<tr>';
-                    html += `<td>${index++}</td>`;
-                    html += `<td style="text-align: left; direction: ltr;">${userData.email || notSpecified}</td>`;
-                    html += `<td><span style="background: var(--primary); color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">${userData.role || defaultRole}</span></td>`;
-                    html += `<td>${userData.fullAccess ? fullText : limitedText}</td>`;
-                    
-                    // عرض تفاصيل الصلاحيات المتقدمة
-                    let permissionDetails = '';
-                    const allPermsText = currentLang === 'ar' ? '✅ جميع الصلاحيات' : '✅ All Permissions';
-                    const viewOnlyText = currentLang === 'ar' ? 'عرض فقط' : 'View Only';
-                    
-                    if (userData.fullAccess) {
-                        permissionDetails = `<span style="color: var(--success); font-weight: 600;">${allPermsText}</span>`;
-                    } else if (userData.permissions) {
-                        const perms = userData.permissions;
-                        const details = [];
-                        
-                        // صلاحيات الموظفين حسب النوع
-                        if (perms.employees) {
-                            if (perms.employees.monthly) {
-                                if (perms.employees.monthly.add) details.push('📅+');
-                                if (perms.employees.monthly.edit) details.push('📅✏️');
-                                if (perms.employees.monthly.delete) details.push('📅🗑️');
-                            }
-                            if (perms.employees.daily) {
-                                if (perms.employees.daily.add) details.push('📆+');
-                                if (perms.employees.daily.edit) details.push('📆✏️');
-                                if (perms.employees.daily.delete) details.push('📆🗑️');
-                            }
-                            if (perms.employees.vehicle) {
-                                if (perms.employees.vehicle.add) details.push('🚗+');
-                                if (perms.employees.vehicle.edit) details.push('🚗✏️');
-                                if (perms.employees.vehicle.delete) details.push('🚗🗑️');
-                            }
-                        }
-                        
-                        // صلاحيات المشاريع
-                        if (perms.projects) {
-                            if (perms.projects.add) details.push('🏗️+');
-                            if (perms.projects.edit) details.push('🏗️✏️');
-                            if (perms.projects.delete) details.push('🏗️🗑️');
-                            if (perms.projects.allowedProjects && perms.projects.allowedProjects.length > 0) {
-                                details.push(`🏗️[${perms.projects.allowedProjects.length}]`);
-                            }
-                        }
-                        
-                        // صلاحيات المستخدمين
-                        if (perms.users) {
-                            if (perms.users.view) details.push('👥👁️');
-                            if (perms.users.add) details.push('👥+');
-                            if (perms.users.edit) details.push('👥✏️');
-                            if (perms.users.delete) details.push('👥🗑️');
-                        }
-                        
-                        // صلاحيات التقارير
-                        if (perms.reports) {
-                            if (perms.reports.export) details.push('📊📤');
-                            if (perms.reports.print) details.push('📊🖨️');
-                        }
-                        
-                        if (perms.settings) details.push('⚙️');
-                        
-                        permissionDetails = details.length > 0 ? details.join(' ') : `<span style="color: var(--gray);">${viewOnlyText}</span>`;
-                    }
-                    html += `<td style="font-size: 11px;">${permissionDetails || `<span style="color: var(--gray);">${viewOnlyText}</span>`}</td>`;
-                    
-                    const locale = currentLang === 'ar' ? 'ar-EG' : 'en-US';
-                    const dateText = userData.createdAt ? new Date(userData.createdAt).toLocaleDateString(locale) : notSpecified;
-                    const editBtnText = currentLang === 'ar' ? '✏️ تعديل' : '✏️ Edit';
-                    const deleteBtnText = currentLang === 'ar' ? '🗑️ حذف' : '🗑️ Delete';
-                    const editTitle = currentLang === 'ar' ? 'تعديل الصلاحيات' : 'Edit Permissions';
-                    const deleteTitle = currentLang === 'ar' ? 'حذف الربط' : 'Delete Link';
-                    
-                    html += `<td>${dateText}</td>`;
-                    html += `<td>
-                        <button class="btn btn-small btn-primary" onclick="editUserPermissions('${uid}', '${userData.email || ''}', '${userData.role || defaultRole}', ${userData.fullAccess || false})" title="${editTitle}">
-                            ${editBtnText}
-                        </button>
-                        <button class="btn btn-small btn-danger" onclick="deleteUserPermissions('${uid}', '${userData.email || ''}')" title="${deleteTitle}">
-                            ${deleteBtnText}
-                        </button>
-                    </td>`;
-                    html += '</tr>';
+                if (!forceRefresh && usersDataCache) {
+                    renderUsersListFromCache(usersListContainer, usersDataCache);
+                    return;
+                }
+                console.log('🔄 Loading users data...');
+                const usersSnapshot = await getDocs(collection(db, 'users'));
+                usersDataCache = [];
+                usersSnapshot.forEach((docSnap) => {
+                    usersDataCache.push({ id: docSnap.id, data: docSnap.data() });
                 });
-                
-                html += '</tbody></table></div>';
-                
-                const notesTitle = currentLang === 'ar' ? '📖 ملاحظات هامة:' : '📖 Important Notes:';
-                const note1 = currentLang === 'ar' ? 
-                    'لإضافة مستخدم جديد: استخدم زر "إضافة مستخدم جديد" لإنشاء حساب في Firebase Authentication وربطه تلقائياً' :
-                    'To add new user: Use "Add New User" button to create account in Firebase Authentication and link it automatically';
-                const note2 = currentLang === 'ar' ? 
-                    'لربط مستخدم موجود: أضفه أولاً في Firebase Console ثم استخدم زر "ربط مستخدم موجود" مع UID' :
-                    'To link existing user: Add it first in Firebase Console then use "Link Existing User" button with UID';
-                const note3 = currentLang === 'ar' ? 
-                    'حذف الربط هنا يحذف الصلاحيات من النظام فقط، الحساب في Firebase Authentication يبقى موجوداً' :
-                    'Deleting link here removes permissions from system only, the account in Firebase Authentication remains';
-                const note4 = currentLang === 'ar' ? 
-                    'تعديل الصلاحيات يؤثر فوراً على المستخدم في الجلسة التالية' :
-                    'Permission changes take effect immediately in the next session';
-                
-                html += `
-                    <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 20px; border-radius: 12px; margin-top: 20px; border: 2px solid #bae6fd;">
-                        <h4 style="color: var(--primary); margin-bottom: 10px;">${notesTitle}</h4>
-                        <ul style="font-size: 13px; color: var(--gray); line-height: 1.8; padding-${currentLang === 'ar' ? 'right' : 'left'}: 20px;">
-                            <li>${note1}</li>
-                            <li>${note2}</li>
-                            <li>${note3}</li>
-                            <li>${note4}</li>
-                        </ul>
-                    </div>
-                `;
-                
-                usersListContainer.innerHTML = html;
+                console.log('✅ Users snapshot loaded:', usersDataCache.length, 'users');
+                renderUsersListFromCache(usersListContainer, usersDataCache);
                 
             } catch (error) {
                 console.error('❌ خطأ في تحميل المستخدمين:', error);
@@ -18498,7 +18676,7 @@ function renderProjectView() {
                 
                 // تحديث القائمة
                 if (currentView === 'users') {
-                    loadUsersData();
+                    loadUsersData(true);
                 }
                 
             } catch (error) {
@@ -18578,7 +18756,7 @@ function renderProjectView() {
                 
                 // تحديث القائمة
                 if (currentView === 'users') {
-                    loadUsersData();
+                    loadUsersData(true);
                 }
                 
             } catch (error) {
@@ -18637,7 +18815,7 @@ function renderProjectView() {
                 hideLoading();
                 closeModal('editUserModal');
                 showNotification('success', t('success'), t('permissionsUpdatedSuccess'));
-                if (currentView === 'users') { loadUsersData(); }
+                if (currentView === 'users') { loadUsersData(true); }
             } catch (error) {
                 console.error('خطأ في تحديث الصلاحيات:', error);
                 hideLoading();
@@ -18880,7 +19058,7 @@ function renderProjectView() {
                 
                 // تحديث القائمة
                 if (currentView === 'users') {
-                    loadUsersData();
+                    loadUsersData(true);
                 }
                 
             } catch (error) {
@@ -20416,8 +20594,7 @@ function renderProjectView() {
                 
                 await saveEmployeeToFirebase(updatedEmp, bulkEditMonth, bulkEditYear);
                 
-                // تحديث البيانات المحلية
-                await loadEmployeesFromFirebase();
+                await loadEmployeesFromFirebase(bulkEditYear, bulkEditMonth, false, true);
                 
                 // إعادة رسم الواجهة
                 renderBulkEditView();
@@ -20627,8 +20804,23 @@ function renderProjectView() {
                 
                 showNotification('success', '✅ تم التصفير', `تم تصفير الحجوزات لـ ${resetCount} موظف بنجاح!`);
                 
-                // إعادة تحميل البيانات
-                await loadEmployeesFromFirebase();
+                // تحديث محلي بدل إعادة التحميل (توفير القراءات)
+                const store = getEmployeeDataStore();
+                for (const y of Object.keys(store)) {
+                    if (store[y] && typeof store[y] === 'object') {
+                        for (const m of Object.keys(store[y])) {
+                            if (Array.isArray(store[y][m])) {
+                                store[y][m].forEach(emp => {
+                                    emp.reservedAmount = 0;
+                                    emp.previousReservedAmount = 0;
+                                    emp.reservationsReset = true;
+                                    emp.reservationsResetAt = new Date().toISOString();
+                                });
+                            }
+                        }
+                    }
+                }
+                renderContent();
                 
             } catch (error) {
                 console.error('❌ خطأ في تصفير الحجوزات:', error);
@@ -22627,7 +22819,7 @@ function renderProjectView() {
                 html += '<td>' + (pmLabels[pm] || pm) + '</td><td>' + (pm === 'mastercard' && emp.mastercardNumber ? emp.mastercardNumber : '-') + '</td>';
                 const paymentStatusText = emp.isPaid ? (isArabic ? '✅ تم الدفع' : '✅ Paid') : (isArabic ? '⏳ لم يتم الدفع' : '⏳ Unpaid');
                 html += '<td>' + paymentStatusText + '</td>';
-                const accumulatedReservation = calculateAccumulatedReservation(emp, currentMonth, currentYear);
+                const accumulatedReservation = getMergedAccumulatedReservation(emp, currentMonth, currentYear);
                 const currentReserved = parseFloat(emp.reservedAmount) || 0;
                 const targetReserved = parseFloat(emp.targetReservedAmount) || calculateTargetReservation(emp);
                 const reservationPercentage = emp.reservationPercentage || 0;
@@ -24273,7 +24465,7 @@ function renderProjectView() {
                     
                     // إعادة تحميل البيانات
                         await loadProjectsFromFirebase();
-                        await loadEmployeesFromFirebase();
+                        await loadEmployeesFromFirebase(null, null, true); // تحميل كامل بعد الاستيراد
                     await loadCompanySettings();
                     await loadPrintSignatures();
                     
@@ -24714,11 +24906,11 @@ function renderProjectView() {
         // دالة مساعدة لتحميل سجلات Firebase
         async function loadActivityLogsFromFirebase(actionFilter, entityFilter, userFilter) {
             const logsRef = collection(db, 'activityLogs');
-            let q = query(logsRef, orderBy('timestamp', 'desc'));
-            
-            // تطبيق الفلتر
-            if (actionFilter) {
-                q = query(q, orderBy('action'), orderBy('timestamp', 'desc'));
+            let q;
+            if (typeof limit === 'function') {
+                q = query(logsRef, orderBy('timestamp', 'desc'), limit(200));
+            } else {
+                q = query(logsRef, orderBy('timestamp', 'desc'));
             }
             
             const snapshot = await getDocs(q);
@@ -25916,7 +26108,8 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 await checkAndCreateDefaultAdmin(); // التحقق من المستخدمين
                 await loadYearsFromFirebase(); // تحميل السنوات أولاً
                 await loadProjectsFromFirebase();
-                await loadEmployeesFromFirebase();
+                await loadEmployeesFromFirebase(currentYear);
+                // تحميل prevYear يتم كسولاً عند عرض لوحة التحكم (توفير القراءات)
                 
                 // تحميل الإعدادات والتوقيعات المشتركة
                 await loadCompanySettings();
@@ -25951,13 +26144,40 @@ function generateComparisonSummary(projectCode, month1, month2) {
         function toggleUserMenu() {
             const userMenu = document.getElementById('userMenu');
             userMenu.classList.toggle('active');
+            closeNavToolsDropdown();
         }
 
-        // Close user menu when clicking outside
+        // Toggle Nav Tools Dropdown
+        function toggleNavToolsDropdown() {
+            const wrapper = document.getElementById('navToolsWrapper');
+            if (wrapper) {
+                wrapper.classList.toggle('active');
+                const navTools = document.getElementById('navTools');
+                if (navTools) navTools.setAttribute('aria-expanded', wrapper.classList.contains('active'));
+                if (wrapper.classList.contains('active')) {
+                    document.getElementById('userMenu')?.classList.remove('active');
+                }
+            }
+        }
+
+        function closeNavToolsDropdown() {
+            const wrapper = document.getElementById('navToolsWrapper');
+            if (wrapper) {
+                wrapper.classList.remove('active');
+                const navTools = document.getElementById('navTools');
+                if (navTools) navTools.setAttribute('aria-expanded', 'false');
+            }
+        }
+
+        // Close user menu and nav tools when clicking outside
         document.addEventListener('click', function(e) {
             const userMenu = document.getElementById('userMenu');
             if (userMenu && !userMenu.contains(e.target)) {
                 userMenu.classList.remove('active');
+            }
+            const navToolsWrapper = document.getElementById('navToolsWrapper');
+            if (navToolsWrapper && !navToolsWrapper.contains(e.target)) {
+                closeNavToolsDropdown();
             }
         });
 
@@ -25966,12 +26186,15 @@ function generateComparisonSummary(projectCode, month1, month2) {
             // Remove active from all nav items
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.classList.remove('active');
+                item.removeAttribute('aria-current');
             });
             
             // Add active to current tab
-            const navItem = document.getElementById('nav' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            const tabId = 'nav' + tab.charAt(0).toUpperCase() + tab.slice(1);
+            const navItem = document.getElementById(tabId);
             if (navItem) {
                 navItem.classList.add('active');
+                navItem.setAttribute('aria-current', 'page');
             }
             
             // Update breadcrumbs
@@ -25981,7 +26204,8 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 'projects': currentLang === 'ar' ? 'المشاريع' : 'Projects',
                 'years': currentLang === 'ar' ? 'السنوات' : 'Years',
                 'users': currentLang === 'ar' ? 'المستخدمين' : 'Users',
-                'settings': currentLang === 'ar' ? 'الإعدادات' : 'Settings'
+                'settings': currentLang === 'ar' ? 'الإعدادات' : 'Settings',
+                'bulkEdit': currentLang === 'ar' ? 'تعديل متعدد' : 'Bulk Edit'
             };
             
             const breadcrumbCurrent = document.getElementById('breadcrumbCurrent');
@@ -26003,6 +26227,8 @@ function generateComparisonSummary(projectCode, month1, month2) {
         window.checkPassword = checkPassword;
         window.openPasswordModal = openPasswordModal;
         window.toggleUserMenu = toggleUserMenu;
+        window.toggleNavToolsDropdown = toggleNavToolsDropdown;
+        window.closeNavToolsDropdown = closeNavToolsDropdown;
         window.updateNavigation = updateNavigation;
         window.changeDashboardMonth = changeDashboardMonth;
 	window.renderContent = renderContent;
@@ -26863,8 +27089,9 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 return;
             }
             
-            // التحقق من تكرار الاسم في جميع المشاريع (مع استثناء الموظف الحالي - في نفس الشهر فقط)
-            const duplicateCheck = checkDuplicateEmployeeName(nameAr, nameEn, emp.firebaseId, currentMonth, currentYear, employeeIndexToEdit);
+            // التحقق من تكرار الاسم في جميع المشاريع (مع استثناء الموظف الحالي والبطاقة المرتبطة - في نفس الشهر فقط)
+            const excludeLinked = emp.linkedToFirebaseId || null; // عند التعديل على نسخة مرتبطة، استثناء الأصل والنسخ الأخرى
+            const duplicateCheck = checkDuplicateEmployeeName(nameAr, nameEn, emp.firebaseId, currentMonth, currentYear, employeeIndexToEdit, excludeLinked);
             if (duplicateCheck.duplicate) {
                 showNotification('error', currentLang === 'ar' ? 'اسم مكرر' : 'Duplicate Name', duplicateCheck.message);
                 return;
@@ -26873,9 +27100,9 @@ function generateComparisonSummary(projectCode, month1, month2) {
             const employeeCodeInput = document.getElementById('editEmployeeCode').value.trim();
             const projectCode = document.getElementById('editProject').value;
             
-            // التحقق من تكرار رمز الموظف (إذا تم إدخال رمز)
+            // التحقق من تكرار رمز الموظف (إذا تم إدخال رمز) - مع استثناء البطاقة المرتبطة
             if (employeeCodeInput) {
-                const codeDupCheck = checkDuplicateEmployeeCode(employeeCodeInput, projectCode, emp.firebaseId, currentMonth, currentYear);
+                const codeDupCheck = checkDuplicateEmployeeCode(employeeCodeInput, projectCode, emp.firebaseId, currentMonth, currentYear, excludeLinked);
                 if (codeDupCheck.duplicate) {
                     showNotification('error', t('error'), codeDupCheck.message);
                     return;
@@ -27004,7 +27231,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 showNotification('success', 'نجح', `تم إنشاء المستخدم ${email} وربطه بالصلاحيات ✅`);
                 
                 // إعادة تحميل قائمة المستخدمين
-                await loadUsersData();
+                await loadUsersData(true);
                 
             } catch (error) {
                 console.error('❌ Error creating user:', error);
@@ -27087,7 +27314,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 showNotification('success', 'نجح', `تم ربط المستخدم بالصلاحيات ✅`);
                 
                 // إعادة تحميل قائمة المستخدمين
-                await loadUsersData();
+                await loadUsersData(true);
                 
             } catch (error) {
                 console.error('❌ Error linking user:', error);
@@ -27408,8 +27635,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 
                 showNotification('success', 'نجح', `تم تحديث ${updatedCount} سجل بنجاح! ✅`);
                 
-                // إعادة تحميل البيانات
-                await loadEmployeesFromFirebase();
+                await loadEmployeesFromFirebase(null, null, true); // تحميل كامل بعد تحديث البيانات
                 
             } catch (error) {
                 console.error('❌ خطأ في تحديث البيانات القديمة:', error);
