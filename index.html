@@ -2041,6 +2041,18 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 10px;
         }
+        
+        /* إخفاء شريط التمرير العمودي (مع بقاء التمرير يعمل) */
+        #summaryModal .modal-body,
+        #employeeReportModal .modal-body {
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Old Edge */
+        }
+        #summaryModal .modal-body::-webkit-scrollbar,
+        #employeeReportModal .modal-body::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+        }
 
         .form-row {
             display: grid;
@@ -3549,11 +3561,13 @@
                     <input type="text" id="position" required>
                 </div>
                 <div class="form-group">
-                    <label>نوع الموظف</label>
+                        <label>نوع الموظف</label>
                     <select id="employeeType" required onchange="updateSalaryLabelByType('salary')">
                         <option value="monthly">شهري</option>
                         <option value="daily">يومي</option>
                         <option value="vehicle">سيارة</option>
+                        <option value="machinery">الآليات</option>
+                        <option value="external">خارجي</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -3729,8 +3743,10 @@
                     <label>نوع الموظف</label>
                     <select id="editEmployeeType" required onchange="updateSalaryLabelByType('editSalary')">
                         <option value="monthly">شهري</option>
+                        <option value="external">خارجي</option>
                         <option value="daily">يومي</option>
                         <option value="vehicle">سيارة</option>
+                        <option value="machinery">الآليات</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -4094,6 +4110,8 @@
                         <option value="monthly">الموظفون الشهريون فقط</option>
                         <option value="daily">الموظفون اليوميون فقط</option>
                         <option value="vehicle">السيارات فقط</option>
+                        <option value="machinery">الآليات فقط</option>
+                        <option value="external">الخارجيون فقط</option>
                     </select>
                 </div>
                 
@@ -4995,40 +5013,40 @@
                                     <label style="display: block; margin-bottom: 5px; font-weight: 600; color: var(--dark); font-size: 12px;">اختر الأشهر المسموحة:</label>
                                     <div style="max-height: 150px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; padding: 8px; background: white;">
                                         <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 12px;">
-                                            <input type="checkbox" class="month-checkbox" value="january"> يناير
+                                            <input type="checkbox" class="month-checkbox" value="january"> كانون الثاني
                                         </label>
                                         <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 12px;">
-                                            <input type="checkbox" class="month-checkbox" value="february"> فبراير
+                                            <input type="checkbox" class="month-checkbox" value="february"> شباط
                                         </label>
                                         <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 12px;">
-                                            <input type="checkbox" class="month-checkbox" value="march"> مارس
+                                            <input type="checkbox" class="month-checkbox" value="march"> آذار
                                         </label>
                                         <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 12px;">
-                                            <input type="checkbox" class="month-checkbox" value="april"> أبريل
+                                            <input type="checkbox" class="month-checkbox" value="april"> نيسان
                                         </label>
                                         <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 12px;">
-                                            <input type="checkbox" class="month-checkbox" value="may"> مايو
+                                            <input type="checkbox" class="month-checkbox" value="may"> أيار
                                         </label>
                                         <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 12px;">
-                                            <input type="checkbox" class="month-checkbox" value="june"> يونيو
+                                            <input type="checkbox" class="month-checkbox" value="june"> حزيران
                                         </label>
                                         <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 12px;">
-                                            <input type="checkbox" class="month-checkbox" value="july"> يوليو
+                                            <input type="checkbox" class="month-checkbox" value="july"> تموز
                                         </label>
                                         <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 12px;">
-                                            <input type="checkbox" class="month-checkbox" value="august"> أغسطس
+                                            <input type="checkbox" class="month-checkbox" value="august"> آب
                                         </label>
                                         <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 12px;">
-                                            <input type="checkbox" class="month-checkbox" value="september"> سبتمبر
+                                            <input type="checkbox" class="month-checkbox" value="september"> أيلول
                                         </label>
                                         <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 12px;">
-                                            <input type="checkbox" class="month-checkbox" value="october"> أكتوبر
+                                            <input type="checkbox" class="month-checkbox" value="october"> تشرين الأول
                                         </label>
                                         <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 12px;">
-                                            <input type="checkbox" class="month-checkbox" value="november"> نوفمبر
+                                            <input type="checkbox" class="month-checkbox" value="november"> تشرين الثاني
                                         </label>
                                         <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 12px;">
-                                            <input type="checkbox" class="month-checkbox" value="december"> ديسمبر
+                                            <input type="checkbox" class="month-checkbox" value="december"> كانون الأول
                                         </label>
                                     </div>
                                     <small style="color: var(--gray); font-size: 11px; display: block; margin-top: 5px;">حدد الأشهر التي يمكنه الوصول إليها</small>
@@ -6940,9 +6958,9 @@
 
         const translations = {
             ar: {
-                monthNames: {january: 'يناير', february: 'فبراير', march: 'مارس', april: 'أبريل',
-                    may: 'مايو', june: 'يونيو', july: 'يوليو', august: 'أغسطس',
-                    september: 'سبتمبر', october: 'أكتوبر', november: 'نوفمبر', december: 'ديسمبر'},
+                monthNames: {january: 'كانون الثاني', february: 'شباط', march: 'آذار', april: 'نيسان',
+                    may: 'أيار', june: 'حزيران', july: 'تموز', august: 'آب',
+                    september: 'أيلول', october: 'تشرين الأول', november: 'تشرين الثاني', december: 'كانون الأول'},
                 year: 'السنة', currentYear: 'السنة الحالية', selectYear: 'اختر السنة',
                 previousYear: 'السنة السابقة', nextYear: 'السنة التالية',
                 yearsManagement: 'إدارة السنوات', addYear: 'إضافة سنة', deleteYear: 'حذف السنة',
@@ -6959,7 +6977,7 @@
                 actualSalaryUSD: 'الفعلي (USD)', actualSalaryIQD: 'الفعلي (IQD)',
                 bonus: 'بونص', phoneBills: 'فواتير', deductions: 'خصومات',
                 advance: 'سلفة', netSalary: 'الصافي', actions: 'إجراءات',
-                monthly: 'شهري', daily: 'يومي', vehicle: 'سيارة',
+                monthly: 'شهري', daily: 'يومي', vehicle: 'سيارة', machinery: 'الآليات', external: 'خارجي',
                 edit: '✏️', copy: '📋', delete: '🗑️', print: '🖨️ طباعة',
                 search: '🔍 البحث', all: 'الكل', total: 'المجموع',
                 selected: 'محدد', allProjects: 'جميع المشاريع',
@@ -7304,6 +7322,7 @@
                 monthly: 'شهري',
                 daily: 'يومي',
                 vehicle: 'سيارة',
+                machinery: 'الآليات',
                 displayedEmployees: 'عدد الموظفين المعروضين',
                 resetFilters: 'إعادة تعيين الفلاتر',
                 employeesList: 'قائمة الموظفين - تعديل مباشر',
@@ -7357,7 +7376,7 @@
                 actualSalaryUSD: 'Actual (USD)', actualSalaryIQD: 'Actual (IQD)',
                 bonus: 'Bonus', phoneBills: 'Bills', deductions: 'Deductions',
                 advance: 'Advance', netSalary: 'Net', actions: 'Actions',
-                monthly: 'Monthly', daily: 'Daily', vehicle: 'Vehicle',
+                monthly: 'Monthly', daily: 'Daily', vehicle: 'Vehicle', machinery: 'Machinery', external: 'External',
                 edit: '✏️', copy: '📋', delete: '🗑️', print: '🖨️ Print',
                 search: '🔍 Search', all: 'All', total: 'Total',
                 selected: 'selected', allProjects: 'All Projects',
@@ -8003,7 +8022,8 @@
                         employees: {
                             monthly: { view: true, add: false, edit: false, delete: false },
                             daily: { view: true, add: false, edit: false, delete: false },
-                            vehicle: { view: true, add: false, edit: false, delete: false }
+                            vehicle: { view: true, add: false, edit: false, delete: false },
+                            machinery: { view: true, add: false, edit: false, delete: false }
                         },
                         projects: { 
                             view: true, 
@@ -9692,6 +9712,10 @@
                     return currentLang === 'ar' ? 'يومي' : 'Daily';
                 case 'vehicle':
                     return currentLang === 'ar' ? 'سيارة' : 'Vehicle';
+                case 'machinery':
+                    return currentLang === 'ar' ? 'الآليات' : 'Machinery';
+                case 'external':
+                    return currentLang === 'ar' ? 'خارجي' : 'External';
                 default:
                     return employeeType;
             }
@@ -9863,7 +9887,7 @@
 
         // ========== Calculation Functions ==========
         function calculateDailySalary(emp, monthKey = null, year = null) {
-            // للموظف اليومي: الراتب هو أجر اليوم مباشرة
+                // للموظف اليومي: الراتب هو أجر اليوم مباشرة
             if (emp.employeeType === 'daily') {
                 let dailyWageUSD = emp.salary;
                 const exchangeRate = parseFloat(emp.exchangeRate) || 1;
@@ -9871,7 +9895,7 @@
                 return dailyWageUSD;
             }
             
-            // للموظف الشهري والسيارة: حساب الراتب اليومي من الراتب الشهري
+            // للموظف الشهري/الخارجي/السيارة/الآليات: حساب الراتب اليومي من الراتب الشهري
             let baseSalaryUSD = emp.salary;
             const exchangeRate = parseFloat(emp.exchangeRate) || 1;
             if (emp.salaryCurrency === 'IQD') baseSalaryUSD = emp.salary / exchangeRate;
@@ -9928,8 +9952,8 @@
                 // للتوافق مع النظام القديم (إذا لم يُحدد نظام الاحتساب)
                 if (emp.employeeType === 'daily') return 0; // لا راتب بدون دوام
                 if (emp.employeeType === 'vehicle') return emp.workDays || 0;
-                // تعديل: إرجاع 0 بدلاً من 30 للموظفين الشهريين بدون دوام
-                if (emp.employeeType === 'monthly') return 0; // لا دوام بدون بيانات دوام فعلية
+                // تعديل: إرجاع 0 بدلاً من 30 للموظفين الشهريين/الخارجيين بدون دوام
+                if (emp.employeeType === 'monthly' || emp.employeeType === 'external') return 0; // لا دوام بدون بيانات دوام فعلية
             }
             
             let totalDays = 0;
@@ -10748,8 +10772,10 @@
                 totalSalaryUSD: 0,
                 totalSalaryIQD: 0,
                 monthly: 0,
+                external: 0,
                 daily: 0,
                 vehicle: 0,
+                machinery: 0,
                 projectsData: {},
                 avgSalary: 0
             };
@@ -10777,8 +10803,10 @@
                 
                 // تصنيف حسب النوع
                 if (emp.employeeType === 'monthly') currentStats.monthly++;
+                else if (emp.employeeType === 'external') currentStats.external++;
                 else if (emp.employeeType === 'daily') currentStats.daily++;
                 else if (emp.employeeType === 'vehicle') currentStats.vehicle++;
+                else if (emp.employeeType === 'machinery') currentStats.machinery++;
                 
                 // تصنيف حسب المشروع
                 const projectCode = emp.project;
@@ -10863,8 +10891,10 @@
                         name: projects[p] || p,
                         total: 0,
                         monthly: 0,
+                        external: 0,
                         daily: 0,
                         vehicle: 0,
+                        machinery: 0,
                         usdCount: 0,
                         iqdCount: 0,
                         usdNet: 0,
@@ -10873,7 +10903,11 @@
                 }
                 const s = projectSummary[p];
                 s.total++;
-                if (emp.employeeType === 'monthly') s.monthly++; else if (emp.employeeType === 'daily') s.daily++; else if (emp.employeeType === 'vehicle') s.vehicle++;
+                if (emp.employeeType === 'monthly') s.monthly++;
+                else if (emp.employeeType === 'external') s.external++;
+                else if (emp.employeeType === 'daily') s.daily++;
+                else if (emp.employeeType === 'vehicle') s.vehicle++;
+                else if (emp.employeeType === 'machinery') s.machinery++;
                 const net = calculateNetSalary(emp, dashboardSelectedMonth, currentYear);
                 const rate = emp.exchangeRate || 1420;
                 if ((emp.paymentCurrency || 'IQD') === 'USD') { s.usdCount++; s.usdNet += net; s.iqdNet += net * rate; } else { s.iqdCount++; s.iqdNet += net; s.usdNet += net / rate; }
@@ -10982,6 +11016,13 @@
                             ${currentStats.totalEmployees > 0 ? ((currentStats.monthly / currentStats.totalEmployees) * 100).toFixed(1) : 0}%
                         </div>
                     </div>
+                    <div style="background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); padding: 20px; border-radius: 12px; text-align: center; border: 2px solid #0ea5e9;">
+                        <div style="font-size: 48px; font-weight: 900; color: #0f766e; margin-bottom: 8px;">${currentStats.external}</div>
+                        <div style="color: #0f766e; font-size: 15px; font-weight: 600;">🌍 ${t('external')}</div>
+                        <div style="margin-top: 10px; padding-top: 10px; border-top: 2px solid #67e8f9; color: #0f766e; font-size: 13px; font-weight: 600;">
+                            ${currentStats.totalEmployees > 0 ? ((currentStats.external / currentStats.totalEmployees) * 100).toFixed(1) : 0}%
+                        </div>
+                    </div>
                     <div style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); padding: 20px; border-radius: 12px; text-align: center; border: 2px solid #10b981;">
                         <div style="font-size: 48px; font-weight: 900; color: #065f46; margin-bottom: 8px;">${currentStats.daily}</div>
                         <div style="color: #065f46; font-size: 15px; font-weight: 600;">📅 ${t('daily')}</div>
@@ -10994,6 +11035,13 @@
                         <div style="color: #92400e; font-size: 15px; font-weight: 600;">🚗 ${t('vehicle')}</div>
                         <div style="margin-top: 10px; padding-top: 10px; border-top: 2px solid #fcd34d; color: #d97706; font-size: 13px; font-weight: 600;">
                             ${currentStats.totalEmployees > 0 ? ((currentStats.vehicle / currentStats.totalEmployees) * 100).toFixed(1) : 0}%
+                        </div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #f5d0fe 0%, #ddd6fe 100%); padding: 20px; border-radius: 12px; text-align: center; border: 2px solid #a855f7;">
+                        <div style="font-size: 48px; font-weight: 900; color: #7e22ce; margin-bottom: 8px;">${currentStats.machinery}</div>
+                        <div style="color: #7e22ce; font-size: 15px; font-weight: 600;">🚜 ${t('machinery')}</div>
+                        <div style="margin-top: 10px; padding-top: 10px; border-top: 2px solid #c4b5fd; color: #7e22ce; font-size: 13px; font-weight: 600;">
+                            ${currentStats.totalEmployees > 0 ? ((currentStats.machinery / currentStats.totalEmployees) * 100).toFixed(1) : 0}%
                         </div>
                     </div>
                 </div>
@@ -11078,8 +11126,10 @@
                                 <th>${t('project')}</th>
                                 <th>${t('totalEmployees')}</th>
                                 <th>${t('monthly')}</th>
+                                <th>${t('external')}</th>
                                 <th>${t('daily')}</th>
                                 <th>${t('vehicle')}</th>
+                                <th>${t('machinery')}</th>
                                 <th>USD ${currentLang === 'ar' ? 'موظفين' : 'Emp'}</th>
                                 <th>USD ${currentLang === 'ar' ? 'إجمالي' : 'Total'}</th>
                                 <th>IQD ${currentLang === 'ar' ? 'موظفين' : 'Emp'}</th>
@@ -11095,8 +11145,10 @@
                                             <td style="font-weight: 700; color: var(--primary);">${s.name}</td>
                                             <td>${s.total}</td>
                                             <td>${s.monthly}</td>
+                                            <td>${s.external}</td>
                                             <td>${s.daily}</td>
                                             <td>${s.vehicle}</td>
+                                            <td>${s.machinery}</td>
                                             <td>${s.usdCount}</td>
                                             <td>${formatCurrency(s.usdNet)} USD</td>
                                             <td>${s.iqdCount}</td>
@@ -11107,20 +11159,24 @@
                                 const totals = Object.values(projectSummary).reduce((acc, s) => ({
                                     total: acc.total + s.total,
                                     monthly: acc.monthly + s.monthly,
+                                    external: acc.external + s.external,
                                     daily: acc.daily + s.daily,
                                     vehicle: acc.vehicle + s.vehicle,
+                                    machinery: acc.machinery + s.machinery,
                                     usdCount: acc.usdCount + s.usdCount,
                                     iqdCount: acc.iqdCount + s.iqdCount,
                                     usdNet: acc.usdNet + s.usdNet,
                                     iqdNet: acc.iqdNet + s.iqdNet
-                                }), {total:0, monthly:0, daily:0, vehicle:0, usdCount:0, iqdCount:0, usdNet:0, iqdNet:0});
+                                }), {total:0, monthly:0, external:0, daily:0, vehicle:0, machinery:0, usdCount:0, iqdCount:0, usdNet:0, iqdNet:0});
                                 return rows + `
                                     <tr class="total-row" style="font-weight: 800; background: #f8fafc;">
                                         <td>${currentLang === 'ar' ? 'الإجمالي' : 'Total'}</td>
                                         <td>${totals.total}</td>
                                         <td>${totals.monthly}</td>
+                                        <td>${totals.external}</td>
                                         <td>${totals.daily}</td>
                                         <td>${totals.vehicle}</td>
+                                        <td>${totals.machinery}</td>
                                         <td>${totals.usdCount}</td>
                                         <td>${formatCurrency(totals.usdNet)} USD</td>
                                         <td>${totals.iqdCount}</td>
@@ -11346,11 +11402,15 @@
                         emps.forEach(emp => {
                             const p = emp.project;
                             if (!summary[p]) {
-                                summary[p] = { name: projects[p] || p, total:0, monthly:0, daily:0, vehicle:0, usdCount:0, iqdCount:0, usdNet:0, iqdNet:0 };
+                                summary[p] = { name: projects[p] || p, total:0, monthly:0, external:0, daily:0, vehicle:0, machinery:0, usdCount:0, iqdCount:0, usdNet:0, iqdNet:0 };
                             }
                             const s = summary[p];
                             s.total++;
-                            if (emp.employeeType === 'monthly') s.monthly++; else if (emp.employeeType === 'daily') s.daily++; else if (emp.employeeType === 'vehicle') s.vehicle++;
+                        if (emp.employeeType === 'monthly') s.monthly++;
+                        else if (emp.employeeType === 'external') s.external++;
+                        else if (emp.employeeType === 'daily') s.daily++;
+                        else if (emp.employeeType === 'vehicle') s.vehicle++;
+                        else if (emp.employeeType === 'machinery') s.machinery++;
                             const net = calculateNetSalary(emp, m, currentYear);
                             const rate = emp.exchangeRate || 1420;
                             if ((emp.paymentCurrency||'IQD') === 'USD') { s.usdCount++; s.usdNet += net; s.iqdNet += net*rate; } else { s.iqdCount++; s.iqdNet += net; s.usdNet += net/rate; }
@@ -11360,8 +11420,10 @@
                                 <td style=\"font-weight:700; color: var(--primary);\">${s.name}</td>
                                 <td>${s.total}</td>
                                 <td>${s.monthly}</td>
+                            <td>${s.external}</td>
                                 <td>${s.daily}</td>
                                 <td>${s.vehicle}</td>
+                            <td>${s.machinery}</td>
                                 <td>${s.usdCount}</td>
                                 <td>${formatCurrency(s.usdNet)} USD</td>
                                 <td>${s.iqdCount}</td>
@@ -11371,13 +11433,15 @@
                         const totals = Object.values(summary).reduce((acc, s) => ({
                             total: acc.total + s.total,
                             monthly: acc.monthly + s.monthly,
+                        external: acc.external + s.external,
                             daily: acc.daily + s.daily,
                             vehicle: acc.vehicle + s.vehicle,
+                        machinery: acc.machinery + s.machinery,
                             usdCount: acc.usdCount + s.usdCount,
                             iqdCount: acc.iqdCount + s.iqdCount,
                             usdNet: acc.usdNet + s.usdNet,
                             iqdNet: acc.iqdNet + s.iqdNet
-                        }), {total:0, monthly:0, daily:0, vehicle:0, usdCount:0, iqdCount:0, usdNet:0, iqdNet:0});
+                    }), {total:0, monthly:0, external:0, daily:0, vehicle:0, machinery:0, usdCount:0, iqdCount:0, usdNet:0, iqdNet:0});
                         return `
                         <div class=\"table-container\">
                             <h4 style=\"margin: 0 0 10px 0; color: #334155;\">${t('monthNames')[m]} ${currentYear}</h4>
@@ -11387,8 +11451,10 @@
                                         <th>${t('project')}</th>
                                         <th>${t('totalEmployees')}</th>
                                         <th>${t('monthly')}</th>
+                                        <th>${t('external')}</th>
                                         <th>${t('daily')}</th>
                                         <th>${t('vehicle')}</th>
+                                        <th>${t('machinery')}</th>
                                         <th>USD ${currentLang === 'ar' ? 'موظفين' : 'Emp'}</th>
                                         <th>USD ${currentLang === 'ar' ? 'إجمالي' : 'Total'}</th>
                                         <th>IQD ${currentLang === 'ar' ? 'موظفين' : 'Emp'}</th>
@@ -11401,8 +11467,10 @@
                                         <td>${currentLang === 'ar' ? 'الإجمالي' : 'Total'}</td>
                                         <td>${totals.total}</td>
                                         <td>${totals.monthly}</td>
+                                        <td>${totals.external}</td>
                                         <td>${totals.daily}</td>
                                         <td>${totals.vehicle}</td>
+                                        <td>${totals.machinery}</td>
                                         <td>${totals.usdCount}</td>
                                         <td>${formatCurrency(totals.usdNet)} USD</td>
                                         <td>${totals.iqdCount}</td>
@@ -11510,6 +11578,41 @@
                     return codeCounts[key] > 1;
                 });
             }
+
+            // ترتيب واجهة الأشهر: المشروع → نوع الموظف → أعلى راتب أساسي بعد التحويل لعملة موحدة (USD)
+            const typeOrder = { monthly: 1, external: 2, daily: 3, vehicle: 4, machinery: 5 };
+
+            // دالة مساعدة لحساب الراتب الأساسي بالدولار اعتماداً على عملة الراتب وسعر الصرف لكل موظف
+            function getBaseSalaryInUSD(emp) {
+                const salary = Number(emp.salary) || 0;
+                const rate = Number(emp.exchangeRate) || 1;
+                const curr = emp.salaryCurrency || 'IQD';
+
+                // إذا كان الراتب أصلاً بالدولار فلا حاجة للتحويل
+                if (curr === 'USD') return salary;
+
+                // نفترض أن exchangeRate يمثل عدد الدنانير لكل 1 دولار
+                // عندها: الراتب بالدينار / سعر الصرف = الراتب بالدولار
+                return rate ? (salary / rate) : salary;
+            }
+
+            employees.sort((a, b) => {
+                // 1) المشروع بالاسم (أو الكود عند غيابه)
+                const projA = projects[a.project] || a.project || '';
+                const projB = projects[b.project] || b.project || '';
+                const projCmp = projA.localeCompare(projB, currentLang === 'ar' ? 'ar' : 'en', { sensitivity: 'base' });
+                if (projCmp !== 0) return projCmp;
+
+                // 2) نوع الموظف
+                const orderA = typeOrder[a.employeeType] || 99;
+                const orderB = typeOrder[b.employeeType] || 99;
+                if (orderA !== orderB) return orderA - orderB;
+
+                // 3) الراتب الأساسي بعد التحويل إلى دولار (الأعلى أولاً)
+                const salA = getBaseSalaryInUSD(a);
+                const salB = getBaseSalaryInUSD(b);
+                return salB - salA;
+            });
 
             const allEmployees = (employeeData[currentYear] && employeeData[currentYear][currentMonth]) ? employeeData[currentYear][currentMonth] : [];
             
@@ -11747,9 +11850,13 @@
                         <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px; font-weight: 600; color: var(--dark);">
                             <span>🔎</span> ${t('search')}
                         </label>
-                        <input type="text" class="search-box" id="searchBox" placeholder="${currentLang === 'ar' ? '🔍 ابحث عن موظف...' : '🔍 Search employee...'}" 
-                            value="${monthFilterSearch}" oninput="handleSearch(this.value)"
-                            style="width: 100%; padding: 12px 16px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; transition: all 0.3s;">
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="text" class="search-box" id="searchBox" placeholder="${currentLang === 'ar' ? '🔍 ابحث عن موظف...' : '🔍 Search employee...'}" 
+                                value="${monthFilterSearch}" onkeydown="if(event.key==='Enter') handleSearch(this.value)"
+                                style="flex: 1; padding: 12px 16px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; transition: all 0.3s;">
+                            <button type="button" class="btn btn-primary" onclick="handleSearch(document.getElementById('searchBox').value)" style="padding: 12px 16px; white-space: nowrap;">${currentLang === 'ar' ? '🔍 بحث' : '🔍 Search'}</button>
+                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('searchBox').value=''; handleSearch('');" style="padding: 12px 16px; white-space: nowrap;">${currentLang === 'ar' ? '✖ إلغاء' : '✖ Clear'}</button>
+                        </div>
                 </div>
                 <div class="filter-group">
                         <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px; font-weight: 600; color: var(--dark);">
@@ -11778,6 +11885,8 @@
                             <option value="monthly" ${monthFilterType === 'monthly' ? 'selected' : ''}>📋 ${t('monthly')}</option>
                             <option value="daily" ${monthFilterType === 'daily' ? 'selected' : ''}>📅 ${t('daily')}</option>
                             <option value="vehicle" ${monthFilterType === 'vehicle' ? 'selected' : ''}>🚗 ${t('vehicle')}</option>
+                            <option value="machinery" ${monthFilterType === 'machinery' ? 'selected' : ''}>🚜 ${t('machinery')}</option>
+                            <option value="external" ${monthFilterType === 'external' ? 'selected' : ''}>🌍 ${t('external')}</option>
                     </select>
                 </div>
                 </div>
@@ -11839,7 +11948,12 @@
                     const actualSalaryIQD = actualSalaryUSD * emp.exchangeRate;
                     const netSalary = calculateNetSalary(emp, selectedProjectMonth, currentYear);
                     const empName = currentLang === 'ar' ? emp.nameAr : emp.nameEn;
-                    const empType = emp.employeeType === 'monthly' ? t('monthly') : emp.employeeType === 'daily' ? t('daily') : t('vehicle');
+                    const empType =
+                        emp.employeeType === 'monthly' ? t('monthly') :
+                        emp.employeeType === 'external' ? t('external') :
+                        emp.employeeType === 'daily' ? t('daily') :
+                        emp.employeeType === 'machinery' ? t('machinery') :
+                        t('vehicle');
                     
                     html += `<tr draggable="true" data-index="${index}" ondragstart="handleDragStart(event)" ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragend="handleDragEnd(event)">
                         <td><input type="checkbox" ${selectedEmployees.has(index) ? 'checked' : ''} onchange="toggleEmployeeSelection(${index})"></td>
@@ -12144,8 +12258,10 @@ function renderProjectView() {
             // تطبيق فلاتر الأعمدة على الموظفين المصفّين
             monthEmployees = applyFiltersToData(monthEmployees);
             const monthlyEmps = monthEmployees.filter(emp => emp.employeeType === 'monthly');
+            const externalEmps = monthEmployees.filter(emp => emp.employeeType === 'external');
             const dailyEmps = monthEmployees.filter(emp => emp.employeeType === 'daily');
             const vehicleEmps = monthEmployees.filter(emp => emp.employeeType === 'vehicle');
+            const machineryEmps = monthEmployees.filter(emp => emp.employeeType === 'machinery');
 
             const allowedProjects = getAllowedProjects();
             const navigationProjects = Object.entries(projects)
@@ -12177,6 +12293,54 @@ function renderProjectView() {
                     totalUSD += netSalary / exchangeRate;
                 }
             });
+
+            // ==================== إحصائيات الشهر السابق (تفصيلي حسب نوع الموظف + عملات) ====================
+            const currentMonthIndexForProject = months.indexOf(selectedProjectMonth);
+            const previousMonthIndexForProject = currentMonthIndexForProject > 0 ? currentMonthIndexForProject - 1 : 11;
+            const previousMonthForProject = months[previousMonthIndexForProject];
+            const previousMonthYearForProject = currentMonthIndexForProject > 0 ? currentYear : currentYear - 1;
+
+            let previousMonthEmployeesForProject = (employeeData[previousMonthYearForProject] && employeeData[previousMonthYearForProject][previousMonthForProject])
+                ? employeeData[previousMonthYearForProject][previousMonthForProject]
+                : [];
+            previousMonthEmployeesForProject = previousMonthEmployeesForProject
+                .filter(emp => hasProjectAccess(emp.project))
+                .filter(emp => !emp.isHidden)
+                .filter(emp => emp.project === currentProject);
+            // تطبيق نفس فلاتر الأعمدة الحالية (إن كانت مفعّلة)
+            previousMonthEmployeesForProject = applyFiltersToData(previousMonthEmployeesForProject);
+
+            const prevMonthlyEmps = previousMonthEmployeesForProject.filter(emp => emp.employeeType === 'monthly');
+            const prevExternalEmps = previousMonthEmployeesForProject.filter(emp => emp.employeeType === 'external');
+            const prevDailyEmps = previousMonthEmployeesForProject.filter(emp => emp.employeeType === 'daily');
+            const prevVehicleEmps = previousMonthEmployeesForProject.filter(emp => emp.employeeType === 'vehicle');
+            const prevMachineryEmps = previousMonthEmployeesForProject.filter(emp => emp.employeeType === 'machinery');
+
+            function computeUSD_IQD_TotalsForEmployees(empArray, monthKey, yearKey) {
+                let usd = 0, iqd = 0;
+                empArray.forEach(emp => {
+                    const netSalary = calculateNetSalary(emp, monthKey, yearKey); // محسوب بعملة الدفع
+                    const exchangeRate = parseFloat(emp.exchangeRate) || 1;
+
+                    if (emp.paymentCurrency === 'USD') {
+                        usd += netSalary;
+                        iqd += netSalary * exchangeRate;
+                    } else {
+                        iqd += netSalary;
+                        usd += netSalary / exchangeRate;
+                    }
+                });
+                return { count: empArray.length, usd, iqd };
+            }
+
+            const prevMonthlyTotals = computeUSD_IQD_TotalsForEmployees(prevMonthlyEmps, previousMonthForProject, previousMonthYearForProject);
+            const prevExternalTotals = computeUSD_IQD_TotalsForEmployees(prevExternalEmps, previousMonthForProject, previousMonthYearForProject);
+            const prevDailyTotals = computeUSD_IQD_TotalsForEmployees(prevDailyEmps, previousMonthForProject, previousMonthYearForProject);
+            const prevVehicleTotals = computeUSD_IQD_TotalsForEmployees(prevVehicleEmps, previousMonthForProject, previousMonthYearForProject);
+            const prevMachineryTotals = computeUSD_IQD_TotalsForEmployees(prevMachineryEmps, previousMonthForProject, previousMonthYearForProject);
+
+            const prevTotalUSD = prevMonthlyTotals.usd + prevExternalTotals.usd + prevDailyTotals.usd + prevVehicleTotals.usd + prevMachineryTotals.usd;
+            const prevTotalIQD = prevMonthlyTotals.iqd + prevExternalTotals.iqd + prevDailyTotals.iqd + prevVehicleTotals.iqd + prevMachineryTotals.iqd;
 
             // Header محسّن مع بطاقة احترافية
             let html = `
@@ -12245,7 +12409,7 @@ function renderProjectView() {
                         <div style="font-size: 12px; color: #92400e; font-weight: 600; margin-bottom: 6px;">👥 ${t('totalEmployees')}</div>
                         <div style="font-size: 28px; font-weight: 800; color: #1f2937;">${monthEmployees.length}</div>
                         <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">
-                            📅 ${monthlyEmps.length} • ⏰ ${dailyEmps.length} • 🚗 ${vehicleEmps.length}
+                            📅 ${monthlyEmps.length} • 🌍 ${externalEmps.length} • ⏰ ${dailyEmps.length} • 🚗 ${vehicleEmps.length} • 🚜 ${machineryEmps.length}
                         </div>
                     </div>
                     
@@ -12261,6 +12425,93 @@ function renderProjectView() {
                         <div style="font-size: 12px; color: #1e40af; font-weight: 600; margin-bottom: 6px;">💴 ${t('total')} IQD</div>
                         <div style="font-size: 26px; font-weight: 800; color: #1d4ed8;">${formatCurrency(totalIQD)}</div>
                         <div style="font-size: 10px; color: #6b7280; margin-top: 4px;">دينار عراقي</div>
+                    </div>
+                </div>
+
+                <!-- مقارنة بالشهر السابق -->
+                <div style="margin-top: 22px; padding-top: 18px; border-top: 1px dashed rgba(148,163,184,0.7);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap;">
+                        <h3 style="color: #92400e; margin: 0; font-size: 16px; font-weight: 900;">
+                            ${currentLang === 'ar' ? '📌 إحصائيات الشهر السابق' : '📌 Previous Month Statistics'}
+                        </h3>
+                        <span style="background: rgba(255,255,255,0.25); padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 800; color: #334155;">
+                            ${t('monthNames')[previousMonthForProject]} ${previousMonthYearForProject} | 👥 ${previousMonthEmployeesForProject.length}
+                        </span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                        <!-- Monthly -->
+                        <div style="background: rgba(255,255,255,0.7); padding: 16px; border-radius: 12px; text-align: center; border: 2px solid rgba(245,158,11,0.3);">
+                            <div style="font-size: 12px; color: #92400e; font-weight: 600; margin-bottom: 6px;">📅 ${t('monthly') || 'Monthly'}</div>
+                            <div style="font-size: 26px; font-weight: 800; color: #1f2937;">${prevMonthlyTotals.count}</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                                <span style="color: #047857; font-weight: 800;">💵 ${formatCurrency(prevMonthlyTotals.usd)}</span>
+                                <span style="margin: 0 8px;">|</span>
+                                <span style="color: #1d4ed8; font-weight: 800;">💴 ${formatCurrency(prevMonthlyTotals.iqd)}</span>
+                            </div>
+                        </div>
+
+                        <!-- External -->
+                        <div style="background: rgba(255,255,255,0.7); padding: 16px; border-radius: 12px; text-align: center; border: 2px solid rgba(20,184,166,0.3);">
+                            <div style="font-size: 12px; color: #0f766e; font-weight: 600; margin-bottom: 6px;">🌍 ${t('external') || 'External'}</div>
+                            <div style="font-size: 26px; font-weight: 800; color: #1f2937;">${prevExternalTotals.count}</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                                <span style="color: #047857; font-weight: 800;">💵 ${formatCurrency(prevExternalTotals.usd)}</span>
+                                <span style="margin: 0 8px;">|</span>
+                                <span style="color: #1d4ed8; font-weight: 800;">💴 ${formatCurrency(prevExternalTotals.iqd)}</span>
+                            </div>
+                        </div>
+
+                        <!-- Daily -->
+                        <div style="background: rgba(255,255,255,0.7); padding: 16px; border-radius: 12px; text-align: center; border: 2px solid rgba(16,185,129,0.3);">
+                            <div style="font-size: 12px; color: #047857; font-weight: 600; margin-bottom: 6px;">⏰ ${t('daily') || 'Daily'}</div>
+                            <div style="font-size: 26px; font-weight: 800; color: #1f2937;">${prevDailyTotals.count}</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                                <span style="color: #047857; font-weight: 800;">💵 ${formatCurrency(prevDailyTotals.usd)}</span>
+                                <span style="margin: 0 8px;">|</span>
+                                <span style="color: #1d4ed8; font-weight: 800;">💴 ${formatCurrency(prevDailyTotals.iqd)}</span>
+                            </div>
+                        </div>
+
+                        <!-- Vehicle -->
+                        <div style="background: rgba(255,255,255,0.7); padding: 16px; border-radius: 12px; text-align: center; border: 2px solid rgba(59,130,246,0.3);">
+                            <div style="font-size: 12px; color: #1d4ed8; font-weight: 600; margin-bottom: 6px;">🚗 ${t('vehicle') || 'Vehicle'}</div>
+                            <div style="font-size: 26px; font-weight: 800; color: #1f2937;">${prevVehicleTotals.count}</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                                <span style="color: #047857; font-weight: 800;">💵 ${formatCurrency(prevVehicleTotals.usd)}</span>
+                                <span style="margin: 0 8px;">|</span>
+                                <span style="color: #1d4ed8; font-weight: 800;">💴 ${formatCurrency(prevVehicleTotals.iqd)}</span>
+                            </div>
+                        </div>
+
+                        <!-- Machinery -->
+                        <div style="background: rgba(255,255,255,0.7); padding: 16px; border-radius: 12px; text-align: center; border: 2px solid rgba(168,85,247,0.3);">
+                            <div style="font-size: 12px; color: #7e22ce; font-weight: 600; margin-bottom: 6px;">🚜 ${t('machinery') || 'Machinery'}</div>
+                            <div style="font-size: 26px; font-weight: 800; color: #1f2937;">${prevMachineryTotals.count}</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                                <span style="color: #047857; font-weight: 800;">💵 ${formatCurrency(prevMachineryTotals.usd)}</span>
+                                <span style="margin: 0 8px;">|</span>
+                                <span style="color: #1d4ed8; font-weight: 800;">💴 ${formatCurrency(prevMachineryTotals.iqd)}</span>
+                            </div>
+                        </div>
+
+                        <!-- Prev Total USD -->
+                        <div style="background: rgba(255,255,255,0.7); padding: 16px; border-radius: 12px; text-align: center; border: 2px solid rgba(34,197,94,0.3);">
+                            <div style="font-size: 12px; color: #166534; font-weight: 600; margin-bottom: 6px;">💵 ${t('total')} USD</div>
+                            <div style="font-size: 26px; font-weight: 800; color: #047857;">${formatCurrency(prevTotalUSD)}</div>
+                            <div style="font-size: 10px; color: #6b7280; margin-top: 4px;">
+                                ${currentLang === 'ar' ? 'حسب أسعار الصرف' : 'Converted using exchange rates'}
+                            </div>
+                        </div>
+
+                        <!-- Prev Total IQD -->
+                        <div style="background: rgba(255,255,255,0.7); padding: 16px; border-radius: 12px; text-align: center; border: 2px solid rgba(59,130,246,0.3);">
+                            <div style="font-size: 12px; color: #1e40af; font-weight: 600; margin-bottom: 6px;">💴 ${t('total')} IQD</div>
+                            <div style="font-size: 26px; font-weight: 800; color: #1d4ed8;">${formatCurrency(prevTotalIQD)}</div>
+                            <div style="font-size: 10px; color: #6b7280; margin-top: 4px;">
+                                ${currentLang === 'ar' ? 'حسب أسعار الصرف' : 'Converted using exchange rates'}
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -12293,8 +12544,10 @@ function renderProjectView() {
             </div>`;
 
             html += renderProjectSection(currentLang === 'ar' ? '📅 الموظفون الشهريون' : '📅 Monthly Employees', monthlyEmps, 'projectMonthlyTable');
+            html += renderProjectSection(currentLang === 'ar' ? '🌍 الموظفون الخارجيون' : '🌍 External Employees', externalEmps, 'projectExternalTable');
             html += renderProjectSection(currentLang === 'ar' ? '📆 الموظفون اليوميون' : '📆 Daily Employees', dailyEmps, 'projectDailyTable');
             html += renderProjectSection(currentLang === 'ar' ? '🚗 السيارات' : '🚗 Vehicles', vehicleEmps, 'projectVehicleTable');
+            html += renderProjectSection(currentLang === 'ar' ? '🚜 الآليات' : '🚜 Machinery', machineryEmps, 'projectMachineryTable');
             return html;
         }
 
@@ -12324,6 +12577,23 @@ function renderProjectView() {
                 </div>`;
             
             if (employees.length > 0) {
+                // ترتيب جداول المشاريع: أعلى راتب أساسي بعد التحويل إلى دولار داخل كل جدول نوع
+                function getBaseSalaryInUSDForProject(emp) {
+                    const salary = Number(emp.salary) || 0;
+                    const rate = Number(emp.exchangeRate) || 1;
+                    const curr = emp.salaryCurrency || 'IQD';
+
+                    if (curr === 'USD') return salary;
+                    // نفترض أن exchangeRate يمثل عدد الدنانير لكل 1 دولار
+                    return rate ? (salary / rate) : salary;
+                }
+
+                employees.sort((a, b) => {
+                    const salA = getBaseSalaryInUSDForProject(a);
+                    const salB = getBaseSalaryInUSDForProject(b);
+                    return salB - salA;
+                });
+
                 const projectTableId = tableId || 'projectSectionTable';
                 html += '<table id="' + projectTableId + '"><thead>';
                 
@@ -14229,7 +14499,7 @@ function renderProjectView() {
                 if (employeeType === 'daily') {
                     salaryLabel.innerHTML = '💵 أجر اليوم <span style="color: #10b981; font-size: 11px;">(المبلغ المدفوع لكل يوم عمل)</span>';
                     if (attendanceSection) attendanceSection.style.display = 'none';
-                } else if (employeeType === 'monthly') {
+                } else if (employeeType === 'monthly' || employeeType === 'external') {
                     salaryLabel.innerHTML = '💰 الراتب الشهري <span style="color: #6366f1; font-size: 11px;">(الراتب الشهري الأساسي)</span>';
                     if (attendanceSection) attendanceSection.style.display = 'block';
                 } else if (employeeType === 'vehicle') {
@@ -16361,7 +16631,7 @@ function renderProjectView() {
                     // ليس يوم عمل (عطلة أسبوعية)
                     // للموظف الشهري والسيارة: إجازة مدفوعة
                     // للموظف اليومي: لا شيء (لا راتب)
-                    if (employeeType === 'monthly' || employeeType === 'vehicle') {
+                    if (employeeType === 'monthly' || employeeType === 'external' || employeeType === 'vehicle') {
                         attendanceData[day] = { type: 'paid-leave' };
                     } else {
                         attendanceData[day] = { type: 'not-set' };
@@ -16402,7 +16672,7 @@ function renderProjectView() {
                     attendanceData[day] = { type: 'full' };
                 } else {
                     // عطلة مدفوعة الأجر (للموظف الشهري فقط)
-                    if (currentAttendanceEmployee.employeeType === 'monthly' || currentAttendanceEmployee.employeeType === 'vehicle') {
+                    if (currentAttendanceEmployee.employeeType === 'monthly' || currentAttendanceEmployee.employeeType === 'external' || currentAttendanceEmployee.employeeType === 'vehicle') {
                         attendanceData[day] = { type: 'paid-leave' };
                     } else {
                         attendanceData[day] = { type: 'not-set' };
@@ -16973,6 +17243,8 @@ function renderProjectView() {
                         <option value="monthly">شهري</option>
                         <option value="daily">يومي</option>
                         <option value="vehicle">سيارة</option>
+                        <option value="machinery">الآليات</option>
+                        <option value="external">خارجي</option>
                     </select>
                 </td>
                 <td>
@@ -19963,11 +20235,13 @@ function renderProjectView() {
                                 <label style="font-weight: 600; font-size: 14px; color: var(--primary); margin-bottom: 10px; display: block;">
                                     👤 ${t('filterByType')}:
                                 </label>
-                                <select id="bulkEditFilterType" class="form-control" onchange="updateBulkEditFilterType(this.value)" style="padding: 12px; font-size: 14px; border: 2px solid var(--border); border-radius: 8px;">
+                    <select id="bulkEditFilterType" class="form-control" onchange="updateBulkEditFilterType(this.value)" style="padding: 12px; font-size: 14px; border: 2px solid var(--border); border-radius: 8px;">
                                     <option value="all" ${bulkEditFilterType === 'all' ? 'selected' : ''}>${t('allTypes')}</option>
                                     <option value="monthly" ${bulkEditFilterType === 'monthly' ? 'selected' : ''}>${t('monthly')}</option>
                                     <option value="daily" ${bulkEditFilterType === 'daily' ? 'selected' : ''}>${t('daily')}</option>
                                     <option value="vehicle" ${bulkEditFilterType === 'vehicle' ? 'selected' : ''}>${t('vehicle')}</option>
+                                    <option value="machinery" ${bulkEditFilterType === 'machinery' ? 'selected' : ''}>${t('machinery')}</option>
+                                    <option value="external" ${bulkEditFilterType === 'external' ? 'selected' : ''}>${t('external')}</option>
                                 </select>
                             </div>
                         </div>
@@ -20091,6 +20365,8 @@ function renderProjectView() {
                                                 <option value="monthly" ${(emp.employeeType || 'monthly') === 'monthly' ? 'selected' : ''}>${t('monthly')}</option>
                                                 <option value="daily" ${emp.employeeType === 'daily' ? 'selected' : ''}>${t('daily')}</option>
                                                 <option value="vehicle" ${emp.employeeType === 'vehicle' ? 'selected' : ''}>${t('vehicle')}</option>
+                                                <option value="external" ${emp.employeeType === 'external' ? 'selected' : ''}>${t('external')}</option>
+                                                <option value="machinery" ${emp.employeeType === 'machinery' ? 'selected' : ''}>${t('machinery')}</option>
                                             </select>
                                         </td>
                                         <td style="padding: 8px;">
@@ -22172,6 +22448,8 @@ function renderProjectView() {
                     if (settings.reportType === 'monthly') return emp.employeeType === 'monthly';
                     if (settings.reportType === 'daily') return emp.employeeType === 'daily';
                     if (settings.reportType === 'vehicle') return emp.employeeType === 'vehicle';
+                    if (settings.reportType === 'machinery') return emp.employeeType === 'machinery';
+                    if (settings.reportType === 'external') return emp.employeeType === 'external';
                     return true;
                 });
             }
@@ -22197,6 +22475,165 @@ function renderProjectView() {
                 showNotification('warning', 'تحذير', 'لا توجد بيانات للطباعة');
                 return;
             }
+
+            // ==================== ملخص مقارنة (الحالي vs السابق) وفق نفس فلاتر الطباعة ====================
+            const monthKeyCurrentPrint = (currentView === 'project') ? (selectedProjectMonth || currentMonth) : currentMonth;
+            const yearKeyCurrentPrint = currentYear;
+            const currentMonthIndexPrint = months.indexOf(monthKeyCurrentPrint);
+            const prevMonthIndexPrint = currentMonthIndexPrint > 0 ? currentMonthIndexPrint - 1 : 11;
+            const monthKeyPrevPrint = months[prevMonthIndexPrint];
+            const yearKeyPrevPrint = currentMonthIndexPrint > 0 ? yearKeyCurrentPrint : yearKeyCurrentPrint - 1;
+
+            function applyPrintFilters(list) {
+                let out = list || [];
+
+                // reportType
+                if (settings.reportType && settings.reportType !== 'all') {
+                    out = out.filter(emp => {
+                        if (settings.reportType === 'monthly') return emp.employeeType === 'monthly';
+                        if (settings.reportType === 'daily') return emp.employeeType === 'daily';
+                        if (settings.reportType === 'vehicle') return emp.employeeType === 'vehicle';
+                        if (settings.reportType === 'machinery') return emp.employeeType === 'machinery';
+                        return true;
+                    });
+                }
+
+                // paymentStatus
+                if (settings.paymentStatus && settings.paymentStatus !== 'all') {
+                    out = out.filter(emp => {
+                        if (settings.paymentStatus === 'paid') return emp.isPaid === true;
+                        if (settings.paymentStatus === 'unpaid') return !emp.isPaid;
+                        return true;
+                    });
+                }
+
+                // paymentMethod
+                if (settings.paymentMethod && settings.paymentMethod !== 'all') {
+                    out = out.filter(emp => (emp.paymentMethod || 'cash') === settings.paymentMethod);
+                }
+
+                return out;
+            }
+
+            function calcUSD_IQD_Totals(empArray, monthKey, yearKey) {
+                let usd = 0, iqd = 0;
+                (empArray || []).forEach(emp => {
+                    const net = calculateNetSalary(emp, monthKey, yearKey); // بعملة الدفع
+                    const rate = parseFloat(emp.exchangeRate) || 1;
+                    if (emp.paymentCurrency === 'USD') {
+                        usd += net;
+                        iqd += net * rate;
+                    } else {
+                        iqd += net;
+                        usd += net / rate;
+                    }
+                });
+                return { count: (empArray || []).length, usd, iqd };
+            }
+
+            function fmtDelta(value, base) {
+                const v = Number(value) || 0;
+                const b = Number(base) || 0;
+                const color = v > 0 ? '#047857' : v < 0 ? '#b91c1c' : '#334155';
+                const sign = v > 0 ? '+' : '';
+                const pct = b !== 0 ? ((v / b) * 100).toFixed(1) + '%' : '--';
+                return `<span style="color:${color}; font-weight: 800;">${sign}${formatCurrency(v)} (${pct})</span>`;
+            }
+
+            // جمع موظفي الشهر السابق بنفس نطاق المشروع/الاختيار
+            let prevEmployeesBase = [];
+            if (employeeData[yearKeyPrevPrint] && employeeData[yearKeyPrevPrint][monthKeyPrevPrint]) {
+                prevEmployeesBase = employeeData[yearKeyPrevPrint][monthKeyPrevPrint];
+            }
+            if (currentView === 'project') {
+                prevEmployeesBase = prevEmployeesBase.filter(emp => emp.project === currentProject);
+            } else if (settings.selectedProject && settings.selectedProject !== 'all') {
+                prevEmployeesBase = prevEmployeesBase.filter(emp => emp.project === settings.selectedProject);
+            }
+
+            const filteredEmployeesPrev = applyPrintFilters(prevEmployeesBase);
+
+            // تقسيم حسب النوع للحالي والسابق
+            const typesToShow = (settings.reportType && settings.reportType !== 'all')
+                ? [settings.reportType]
+                : ['monthly', 'external', 'daily', 'vehicle', 'machinery'];
+
+            const typeLabels = {
+                monthly: '📅 ' + (currentLang === 'ar' ? 'شهري' : 'Monthly'),
+                external: '🌍 ' + (currentLang === 'ar' ? 'خارجي' : 'External'),
+                daily: '⏰ ' + (currentLang === 'ar' ? 'يومي' : 'Daily'),
+                vehicle: '🚗 ' + (currentLang === 'ar' ? 'سيارات' : 'Vehicles'),
+                machinery: '🚜 ' + (currentLang === 'ar' ? 'آليات' : 'Machinery')
+            };
+
+            const summaryRows = typesToShow.map(typeKey => {
+                const curType = filteredEmployees.filter(emp => emp.employeeType === typeKey);
+                const prevType = filteredEmployeesPrev.filter(emp => emp.employeeType === typeKey);
+                const curT = calcUSD_IQD_Totals(curType, monthKeyCurrentPrint, yearKeyCurrentPrint);
+                const prevT = calcUSD_IQD_Totals(prevType, monthKeyPrevPrint, yearKeyPrevPrint);
+                return { typeKey, label: typeLabels[typeKey] || typeKey, cur: curT, prev: prevT };
+            });
+
+            const curAll = calcUSD_IQD_Totals(filteredEmployees, monthKeyCurrentPrint, yearKeyCurrentPrint);
+            const prevAll = calcUSD_IQD_Totals(filteredEmployeesPrev, monthKeyPrevPrint, yearKeyPrevPrint);
+
+            const summaryHTML = `
+                <div style="margin: 10px 0 18px 0; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; page-break-inside: avoid;">
+                    <div style="display:flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px;">
+                        <div style="font-weight: 900; color: #0f172a;">
+                            ${currentLang === 'ar' ? '📌 مقارنة الحالي vs السابق (حسب الفلاتر)' : '📌 Current vs Previous (filtered)'}
+                        </div>
+                        <div style="font-size: 11px; color: #334155; font-weight: 700;">
+                            ${translations[currentLang].monthNames[monthKeyCurrentPrint]} ${yearKeyCurrentPrint}
+                            <span style="margin: 0 8px;">↔</span>
+                            ${translations[currentLang].monthNames[monthKeyPrevPrint]} ${yearKeyPrevPrint}
+                        </div>
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                        <thead>
+                            <tr>
+                                <th style="border:1px solid #cbd5e1; padding:6px; background:#e2e8f0;">${currentLang === 'ar' ? 'النوع' : 'Type'}</th>
+                                <th style="border:1px solid #cbd5e1; padding:6px; background:#e2e8f0;">${currentLang === 'ar' ? 'عدد' : 'Count'}</th>
+                                <th style="border:1px solid #cbd5e1; padding:6px; background:#e2e8f0;">USD ${currentLang === 'ar' ? 'حالي' : 'Cur'}</th>
+                                <th style="border:1px solid #cbd5e1; padding:6px; background:#e2e8f0;">USD ${currentLang === 'ar' ? 'سابق' : 'Prev'}</th>
+                                <th style="border:1px solid #cbd5e1; padding:6px; background:#e2e8f0;">Δ USD (%)</th>
+                                <th style="border:1px solid #cbd5e1; padding:6px; background:#e2e8f0;">IQD ${currentLang === 'ar' ? 'حالي' : 'Cur'}</th>
+                                <th style="border:1px solid #cbd5e1; padding:6px; background:#e2e8f0;">IQD ${currentLang === 'ar' ? 'سابق' : 'Prev'}</th>
+                                <th style="border:1px solid #cbd5e1; padding:6px; background:#e2e8f0;">Δ IQD (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${summaryRows.map(r => `
+                                <tr>
+                                    <td style="border:1px solid #cbd5e1; padding:6px; font-weight: 800;">${r.label}</td>
+                                    <td style="border:1px solid #cbd5e1; padding:6px;">${r.cur.count}</td>
+                                    <td style="border:1px solid #cbd5e1; padding:6px;">${formatCurrency(r.cur.usd)}</td>
+                                    <td style="border:1px solid #cbd5e1; padding:6px;">${formatCurrency(r.prev.usd)}</td>
+                                    <td style="border:1px solid #cbd5e1; padding:6px;">${fmtDelta(r.cur.usd - r.prev.usd, r.prev.usd)}</td>
+                                    <td style="border:1px solid #cbd5e1; padding:6px;">${formatCurrency(r.cur.iqd)}</td>
+                                    <td style="border:1px solid #cbd5e1; padding:6px;">${formatCurrency(r.prev.iqd)}</td>
+                                    <td style="border:1px solid #cbd5e1; padding:6px;">${fmtDelta(r.cur.iqd - r.prev.iqd, r.prev.iqd)}</td>
+                                </tr>
+                            `).join('')}
+                            <tr>
+                                <td style="border:1px solid #94a3b8; padding:6px; font-weight: 900; background:#fef3c7;">${currentLang === 'ar' ? 'الإجمالي' : 'Total'}</td>
+                                <td style="border:1px solid #94a3b8; padding:6px; background:#fef3c7;">${curAll.count}</td>
+                                <td style="border:1px solid #94a3b8; padding:6px; background:#fef3c7;">${formatCurrency(curAll.usd)}</td>
+                                <td style="border:1px solid #94a3b8; padding:6px; background:#fef3c7;">${formatCurrency(prevAll.usd)}</td>
+                                <td style="border:1px solid #94a3b8; padding:6px; background:#fef3c7;">${fmtDelta(curAll.usd - prevAll.usd, prevAll.usd)}</td>
+                                <td style="border:1px solid #94a3b8; padding:6px; background:#fef3c7;">${formatCurrency(curAll.iqd)}</td>
+                                <td style="border:1px solid #94a3b8; padding:6px; background:#fef3c7;">${formatCurrency(prevAll.iqd)}</td>
+                                <td style="border:1px solid #94a3b8; padding:6px; background:#fef3c7;">${fmtDelta(curAll.iqd - prevAll.iqd, prevAll.iqd)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 6px; font-size: 9px; color: #64748b;">
+                        ${currentLang === 'ar'
+                            ? 'ملاحظة: الحساب يتم بعد التحويل باستخدام سعر الصرف لكل موظف (USD و IQD).'
+                            : 'Note: totals are calculated after conversion using each employee exchange rate (USD & IQD).'}
+                    </div>
+                </div>
+            `;
             
             const currentDate = new Date().toLocaleDateString('ar-EG');
             
@@ -22300,15 +22737,65 @@ function renderProjectView() {
             html += '<button class="print-btn" onclick="window.close()" style="background: #6c757d;">❌ إغلاق</button>';
             html += '</div>';
             
+            // إدراج ملخص المقارنة قبل الجداول (للمعاينة)
+            html += summaryHTML;
+            
+            // ==================== ترتيب المعاينة ليطابق ترتيب الجداول ====================
+            function getBaseSalaryInUSDForPreviewSort(emp) {
+                const salary = Number(emp.salary) || 0;
+                const rate = Number(emp.exchangeRate) || 1;
+                const curr = emp.salaryCurrency || 'IQD';
+                if (curr === 'USD') return salary;
+                // نفترض أن exchangeRate يمثل عدد الدنانير لكل 1 دولار
+                return rate ? (salary / rate) : salary;
+            }
+            const typeOrderForPreview = { monthly: 1, external: 2, daily: 3, vehicle: 4, machinery: 5 };
+            
+            // إذا كانت المعاينة من عرض الشهر: نطبق نفس ترتيب واجهة الأشهر (مشروع → نوع → راتب بعد التحويل)
+            if (currentView !== 'project') {
+                filteredEmployees.sort((a, b) => {
+                    const projA = projects[a.project] || a.project || '';
+                    const projB = projects[b.project] || b.project || '';
+                    const projCmp = projA.localeCompare(projB, currentLang === 'ar' ? 'ar' : 'en', { sensitivity: 'base' });
+                    if (projCmp !== 0) return projCmp;
+                    
+                    const orderA = typeOrderForPreview[a.employeeType] || 99;
+                    const orderB = typeOrderForPreview[b.employeeType] || 99;
+                    if (orderA !== orderB) return orderA - orderB;
+                    
+                    const salA = getBaseSalaryInUSDForPreviewSort(a);
+                    const salB = getBaseSalaryInUSDForPreviewSort(b);
+                    return salB - salA;
+                });
+            }
+            
             // تقسيم الموظفين حسب النوع
             const monthlyEmps = filteredEmployees.filter(emp => emp.employeeType === 'monthly');
+            const externalEmps = filteredEmployees.filter(emp => emp.employeeType === 'external');
             const dailyEmps = filteredEmployees.filter(emp => emp.employeeType === 'daily');
             const vehicleEmps = filteredEmployees.filter(emp => emp.employeeType === 'vehicle');
+            const machineryEmps = filteredEmployees.filter(emp => emp.employeeType === 'machinery');
+            
+            // إذا كانت المعاينة من عرض المشاريع: نطابق ترتيب جداول المشاريع (داخل كل نوع: أعلى راتب بعد التحويل)
+            if (currentView === 'project') {
+                const cmpBySalaryUSD = (a, b) => getBaseSalaryInUSDForPreviewSort(b) - getBaseSalaryInUSDForPreviewSort(a);
+                monthlyEmps.sort(cmpBySalaryUSD);
+                externalEmps.sort(cmpBySalaryUSD);
+                dailyEmps.sort(cmpBySalaryUSD);
+                vehicleEmps.sort(cmpBySalaryUSD);
+                machineryEmps.sort(cmpBySalaryUSD);
+            }
             
             // طباعة الموظفين الشهريين
             if (monthlyEmps.length > 0 && (settings.reportType === 'all' || settings.reportType === 'monthly')) {
                 html += '<div class="section-title">الموظفون الشهريون</div>';
                 html += generatePreviewTable(monthlyEmps, 'monthly', settings);
+            }
+
+            // طباعة الموظفين الخارجيين
+            if (externalEmps.length > 0 && (settings.reportType === 'all' || settings.reportType === 'external')) {
+                html += '<div class="section-title">الموظفون الخارجيون</div>';
+                html += generatePreviewTable(externalEmps, 'external', settings);
             }
             
             // طباعة الموظفين اليوميين
@@ -22321,6 +22808,12 @@ function renderProjectView() {
             if (vehicleEmps.length > 0 && (settings.reportType === 'all' || settings.reportType === 'vehicle')) {
                 html += '<div class="section-title">السيارات</div>';
                 html += generatePreviewTable(vehicleEmps, 'vehicle', settings);
+            }
+
+            // طباعة الآليات
+            if (machineryEmps.length > 0 && (settings.reportType === 'all' || settings.reportType === 'machinery')) {
+                html += '<div class="section-title">الآليات</div>';
+                html += generatePreviewTable(machineryEmps, 'machinery', settings);
             }
             
             // التوقيعات من الإعدادات
@@ -22514,6 +23007,8 @@ function renderProjectView() {
                     if (settings.reportType === 'monthly') return emp.employeeType === 'monthly';
                     if (settings.reportType === 'daily') return emp.employeeType === 'daily';
                     if (settings.reportType === 'vehicle') return emp.employeeType === 'vehicle';
+                    if (settings.reportType === 'machinery') return emp.employeeType === 'machinery';
+                    if (settings.reportType === 'external') return emp.employeeType === 'external';
                     return true;
                 });
             }
@@ -22539,6 +23034,165 @@ function renderProjectView() {
                 showNotification('warning', 'تحذير', 'لا توجد بيانات للطباعة');
                 return;
             }
+
+            // ==================== ملخص مقارنة (الحالي vs السابق) وفق نفس فلاتر الطباعة ====================
+            const monthKeyCurrentPrint = (currentView === 'project') ? (selectedProjectMonth || currentMonth) : currentMonth;
+            const yearKeyCurrentPrint = currentYear;
+            const currentMonthIndexPrint = months.indexOf(monthKeyCurrentPrint);
+            const prevMonthIndexPrint = currentMonthIndexPrint > 0 ? currentMonthIndexPrint - 1 : 11;
+            const monthKeyPrevPrint = months[prevMonthIndexPrint];
+            const yearKeyPrevPrint = currentMonthIndexPrint > 0 ? yearKeyCurrentPrint : yearKeyCurrentPrint - 1;
+
+            function applyPrintFilters(list) {
+                let out = list || [];
+
+                // reportType
+                if (settings.reportType && settings.reportType !== 'all') {
+                    out = out.filter(emp => {
+                        if (settings.reportType === 'monthly') return emp.employeeType === 'monthly';
+                        if (settings.reportType === 'daily') return emp.employeeType === 'daily';
+                        if (settings.reportType === 'vehicle') return emp.employeeType === 'vehicle';
+                        if (settings.reportType === 'machinery') return emp.employeeType === 'machinery';
+                        return true;
+                    });
+                }
+
+                // paymentStatus
+                if (settings.paymentStatus && settings.paymentStatus !== 'all') {
+                    out = out.filter(emp => {
+                        if (settings.paymentStatus === 'paid') return emp.isPaid === true;
+                        if (settings.paymentStatus === 'unpaid') return !emp.isPaid;
+                        return true;
+                    });
+                }
+
+                // paymentMethod
+                if (settings.paymentMethod && settings.paymentMethod !== 'all') {
+                    out = out.filter(emp => (emp.paymentMethod || 'cash') === settings.paymentMethod);
+                }
+
+                return out;
+            }
+
+            function calcUSD_IQD_Totals(empArray, monthKey, yearKey) {
+                let usd = 0, iqd = 0;
+                (empArray || []).forEach(emp => {
+                    const net = calculateNetSalary(emp, monthKey, yearKey); // بعملة الدفع
+                    const rate = parseFloat(emp.exchangeRate) || 1;
+                    if (emp.paymentCurrency === 'USD') {
+                        usd += net;
+                        iqd += net * rate;
+                    } else {
+                        iqd += net;
+                        usd += net / rate;
+                    }
+                });
+                return { count: (empArray || []).length, usd, iqd };
+            }
+
+            function fmtDelta(value, base) {
+                const v = Number(value) || 0;
+                const b = Number(base) || 0;
+                const color = v > 0 ? '#047857' : v < 0 ? '#b91c1c' : '#334155';
+                const sign = v > 0 ? '+' : '';
+                const pct = b !== 0 ? ((v / b) * 100).toFixed(1) + '%' : '--';
+                return `<span style="color:${color}; font-weight: 800;">${sign}${formatCurrency(v)} (${pct})</span>`;
+            }
+
+            // جمع موظفي الشهر السابق بنفس نطاق المشروع/الاختيار
+            let prevEmployeesBase = [];
+            if (employeeData[yearKeyPrevPrint] && employeeData[yearKeyPrevPrint][monthKeyPrevPrint]) {
+                prevEmployeesBase = employeeData[yearKeyPrevPrint][monthKeyPrevPrint];
+            }
+            if (currentView === 'project') {
+                prevEmployeesBase = prevEmployeesBase.filter(emp => emp.project === currentProject);
+            } else if (settings.selectedProject && settings.selectedProject !== 'all') {
+                prevEmployeesBase = prevEmployeesBase.filter(emp => emp.project === settings.selectedProject);
+            }
+
+            const filteredEmployeesPrev = applyPrintFilters(prevEmployeesBase);
+
+            // تقسيم حسب النوع للحالي والسابق
+            const typesToShow = (settings.reportType && settings.reportType !== 'all')
+                ? [settings.reportType]
+                : ['monthly', 'external', 'daily', 'vehicle', 'machinery'];
+
+            const typeLabels = {
+                monthly: '📅 ' + (currentLang === 'ar' ? 'شهري' : 'Monthly'),
+                external: '🌍 ' + (currentLang === 'ar' ? 'خارجي' : 'External'),
+                daily: '⏰ ' + (currentLang === 'ar' ? 'يومي' : 'Daily'),
+                vehicle: '🚗 ' + (currentLang === 'ar' ? 'سيارات' : 'Vehicles'),
+                machinery: '🚜 ' + (currentLang === 'ar' ? 'آليات' : 'Machinery')
+            };
+
+            const summaryRows = typesToShow.map(typeKey => {
+                const curType = filteredEmployees.filter(emp => emp.employeeType === typeKey);
+                const prevType = filteredEmployeesPrev.filter(emp => emp.employeeType === typeKey);
+                const curT = calcUSD_IQD_Totals(curType, monthKeyCurrentPrint, yearKeyCurrentPrint);
+                const prevT = calcUSD_IQD_Totals(prevType, monthKeyPrevPrint, yearKeyPrevPrint);
+                return { typeKey, label: typeLabels[typeKey] || typeKey, cur: curT, prev: prevT };
+            });
+
+            const curAll = calcUSD_IQD_Totals(filteredEmployees, monthKeyCurrentPrint, yearKeyCurrentPrint);
+            const prevAll = calcUSD_IQD_Totals(filteredEmployeesPrev, monthKeyPrevPrint, yearKeyPrevPrint);
+
+            const summaryHTML = `
+                <div style="margin: 10px 0 18px 0; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; page-break-inside: avoid;">
+                    <div style="display:flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px;">
+                        <div style="font-weight: 900; color: #0f172a;">
+                            ${currentLang === 'ar' ? '📌 مقارنة الحالي vs السابق (حسب الفلاتر)' : '📌 Current vs Previous (filtered)'}
+                        </div>
+                        <div style="font-size: 11px; color: #334155; font-weight: 700;">
+                            ${translations[currentLang].monthNames[monthKeyCurrentPrint]} ${yearKeyCurrentPrint}
+                            <span style="margin: 0 8px;">↔</span>
+                            ${translations[currentLang].monthNames[monthKeyPrevPrint]} ${yearKeyPrevPrint}
+                        </div>
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                        <thead>
+                            <tr>
+                                <th style="border:1px solid #cbd5e1; padding:6px; background:#e2e8f0;">${currentLang === 'ar' ? 'النوع' : 'Type'}</th>
+                                <th style="border:1px solid #cbd5e1; padding:6px; background:#e2e8f0;">${currentLang === 'ar' ? 'عدد' : 'Count'}</th>
+                                <th style="border:1px solid #cbd5e1; padding:6px; background:#e2e8f0;">USD ${currentLang === 'ar' ? 'حالي' : 'Cur'}</th>
+                                <th style="border:1px solid #cbd5e1; padding:6px; background:#e2e8f0;">USD ${currentLang === 'ar' ? 'سابق' : 'Prev'}</th>
+                                <th style="border:1px solid #cbd5e1; padding:6px; background:#e2e8f0;">Δ USD (%)</th>
+                                <th style="border:1px solid #cbd5e1; padding:6px; background:#e2e8f0;">IQD ${currentLang === 'ar' ? 'حالي' : 'Cur'}</th>
+                                <th style="border:1px solid #cbd5e1; padding:6px; background:#e2e8f0;">IQD ${currentLang === 'ar' ? 'سابق' : 'Prev'}</th>
+                                <th style="border:1px solid #cbd5e1; padding:6px; background:#e2e8f0;">Δ IQD (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${summaryRows.map(r => `
+                                <tr>
+                                    <td style="border:1px solid #cbd5e1; padding:6px; font-weight: 800;">${r.label}</td>
+                                    <td style="border:1px solid #cbd5e1; padding:6px;">${r.cur.count}</td>
+                                    <td style="border:1px solid #cbd5e1; padding:6px;">${formatCurrency(r.cur.usd)}</td>
+                                    <td style="border:1px solid #cbd5e1; padding:6px;">${formatCurrency(r.prev.usd)}</td>
+                                    <td style="border:1px solid #cbd5e1; padding:6px;">${fmtDelta(r.cur.usd - r.prev.usd, r.prev.usd)}</td>
+                                    <td style="border:1px solid #cbd5e1; padding:6px;">${formatCurrency(r.cur.iqd)}</td>
+                                    <td style="border:1px solid #cbd5e1; padding:6px;">${formatCurrency(r.prev.iqd)}</td>
+                                    <td style="border:1px solid #cbd5e1; padding:6px;">${fmtDelta(r.cur.iqd - r.prev.iqd, r.prev.iqd)}</td>
+                                </tr>
+                            `).join('')}
+                            <tr>
+                                <td style="border:1px solid #94a3b8; padding:6px; font-weight: 900; background:#fef3c7;">${currentLang === 'ar' ? 'الإجمالي' : 'Total'}</td>
+                                <td style="border:1px solid #94a3b8; padding:6px; background:#fef3c7;">${curAll.count}</td>
+                                <td style="border:1px solid #94a3b8; padding:6px; background:#fef3c7;">${formatCurrency(curAll.usd)}</td>
+                                <td style="border:1px solid #94a3b8; padding:6px; background:#fef3c7;">${formatCurrency(prevAll.usd)}</td>
+                                <td style="border:1px solid #94a3b8; padding:6px; background:#fef3c7;">${fmtDelta(curAll.usd - prevAll.usd, prevAll.usd)}</td>
+                                <td style="border:1px solid #94a3b8; padding:6px; background:#fef3c7;">${formatCurrency(curAll.iqd)}</td>
+                                <td style="border:1px solid #94a3b8; padding:6px; background:#fef3c7;">${formatCurrency(prevAll.iqd)}</td>
+                                <td style="border:1px solid #94a3b8; padding:6px; background:#fef3c7;">${fmtDelta(curAll.iqd - prevAll.iqd, prevAll.iqd)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 6px; font-size: 9px; color: #64748b;">
+                        ${currentLang === 'ar'
+                            ? 'ملاحظة: الحساب يتم بعد التحويل باستخدام سعر الصرف لكل موظف (USD و IQD).'
+                            : 'Note: totals are calculated after conversion using each employee exchange rate (USD & IQD).'}
+                    </div>
+                </div>
+            `;
             
             // إنشاء نافذة طباعة بسيطة
             const printWindow = window.open('', '_blank');
@@ -22645,16 +23299,67 @@ function renderProjectView() {
             }
             html += '<p style="font-size: 11px; margin: 5px 0; color: #666;">' + (isArabic ? 'تاريخ الطباعة: ' : 'Print Date: ') + currentDate + '</p>';
             html += '</div>';
+
+            // إدراج ملخص المقارنة قبل الجداول
+            html += summaryHTML;
             
+            // ==================== ترتيب الطباعة ليطابق ترتيب الجداول ====================
+            function getBaseSalaryInUSDForPrintSort(emp) {
+                const salary = Number(emp.salary) || 0;
+                const rate = Number(emp.exchangeRate) || 1;
+                const curr = emp.salaryCurrency || 'IQD';
+                if (curr === 'USD') return salary;
+                // نفترض أن exchangeRate يمثل عدد الدنانير لكل 1 دولار
+                return rate ? (salary / rate) : salary;
+            }
+
+            const typeOrderForPrint = { monthly: 1, external: 2, daily: 3, vehicle: 4, machinery: 5 };
+
+            // إذا كانت الطباعة من عرض الشهر: نطبق نفس ترتيب واجهة الأشهر (مشروع → نوع → راتب بعد التحويل)
+            if (currentView !== 'project') {
+                filteredEmployees.sort((a, b) => {
+                    const projA = projects[a.project] || a.project || '';
+                    const projB = projects[b.project] || b.project || '';
+                    const projCmp = projA.localeCompare(projB, currentLang === 'ar' ? 'ar' : 'en', { sensitivity: 'base' });
+                    if (projCmp !== 0) return projCmp;
+
+                    const orderA = typeOrderForPrint[a.employeeType] || 99;
+                    const orderB = typeOrderForPrint[b.employeeType] || 99;
+                    if (orderA !== orderB) return orderA - orderB;
+
+                    const salA = getBaseSalaryInUSDForPrintSort(a);
+                    const salB = getBaseSalaryInUSDForPrintSort(b);
+                    return salB - salA;
+                });
+            }
+
             // تقسيم الموظفين حسب النوع
             const monthlyEmps = filteredEmployees.filter(emp => emp.employeeType === 'monthly');
+            const externalEmps = filteredEmployees.filter(emp => emp.employeeType === 'external');
             const dailyEmps = filteredEmployees.filter(emp => emp.employeeType === 'daily');
             const vehicleEmps = filteredEmployees.filter(emp => emp.employeeType === 'vehicle');
+            const machineryEmps = filteredEmployees.filter(emp => emp.employeeType === 'machinery');
+
+            // إذا كانت الطباعة من عرض المشاريع: نطابق ترتيب جداول المشاريع (داخل كل نوع: أعلى راتب بعد التحويل)
+            if (currentView === 'project') {
+                const cmpBySalaryUSD = (a, b) => getBaseSalaryInUSDForPrintSort(b) - getBaseSalaryInUSDForPrintSort(a);
+                monthlyEmps.sort(cmpBySalaryUSD);
+                externalEmps.sort(cmpBySalaryUSD);
+                dailyEmps.sort(cmpBySalaryUSD);
+                vehicleEmps.sort(cmpBySalaryUSD);
+                machineryEmps.sort(cmpBySalaryUSD);
+            }
             
             // طباعة الموظفين الشهريين
             if (monthlyEmps.length > 0 && (settings.reportType === 'all' || settings.reportType === 'monthly')) {
                 html += '<div class="section-title">الموظفون الشهريون</div>';
                 html += generateSimpleTable(monthlyEmps, 'monthly', settings);
+            }
+
+            // طباعة الموظفين الخارجيين
+            if (externalEmps.length > 0 && (settings.reportType === 'all' || settings.reportType === 'external')) {
+                html += '<div class="section-title">الموظفون الخارجيون</div>';
+                html += generateSimpleTable(externalEmps, 'external', settings);
             }
             
             // طباعة الموظفين اليوميين
@@ -22667,6 +23372,12 @@ function renderProjectView() {
             if (vehicleEmps.length > 0 && (settings.reportType === 'all' || settings.reportType === 'vehicle')) {
                 html += '<div class="section-title">السيارات</div>';
                 html += generateSimpleTable(vehicleEmps, 'vehicle', settings);
+            }
+
+            // طباعة الآليات
+            if (machineryEmps.length > 0 && (settings.reportType === 'all' || settings.reportType === 'machinery')) {
+                html += '<div class="section-title">الآليات</div>';
+                html += generateSimpleTable(machineryEmps, 'machinery', settings);
             }
             
             // تذييل مكرر بالتوقيعات في جميع الصفحات
@@ -25285,10 +25996,16 @@ function renderProjectView() {
             html += '<th rowspan="2" style="padding: 10px; border: 1px solid #ddd; text-align: center;">' + (isArabic ? 'المشروع' : 'Project') + '</th>';
             html += '<th rowspan="2" style="padding: 10px; border: 1px solid #ddd; text-align: center;">' + (isArabic ? 'عدد الموظفين' : 'Total Employees') + '</th>';
             html += '<th colspan="2" style="padding: 10px; border: 1px solid #ddd; text-align: center;">' + (isArabic ? 'شهري' : 'Monthly') + '</th>';
+            html += '<th colspan="2" style="padding: 10px; border: 1px solid #ddd; text-align: center;">' + (isArabic ? 'خارجي' : 'External') + '</th>';
             html += '<th colspan="2" style="padding: 10px; border: 1px solid #ddd; text-align: center;">' + (isArabic ? 'يومي' : 'Daily') + '</th>';
             html += '<th colspan="2" style="padding: 10px; border: 1px solid #ddd; text-align: center;">' + (isArabic ? 'سيارات' : 'Vehicles') + '</th>';
+            html += '<th colspan="2" style="padding: 10px; border: 1px solid #ddd; text-align: center;">' + (isArabic ? 'الآليات' : 'Machinery') + '</th>';
             html += '<th colspan="2" style="padding: 10px; border: 1px solid #ddd; text-align: center;">' + (isArabic ? 'الإجمالي' : 'Total') + '</th>';
             html += '</tr><tr style="background: #667eea; color: white;">';
+            html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">USD</th>';
+            html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">IQD</th>';
+            html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">USD</th>';
+            html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">IQD</th>';
             html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">USD</th>';
             html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">IQD</th>';
             html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">USD</th>';
@@ -25302,8 +26019,10 @@ function renderProjectView() {
             let grandTotalUSD = 0, grandTotalIQD = 0, grandTotalEmps = 0;
             let typeTotals = {
                 monthly: {USD: 0, IQD: 0, count: 0},
+                external: {USD: 0, IQD: 0, count: 0},
                 daily: {USD: 0, IQD: 0, count: 0},
-                vehicle: {USD: 0, IQD: 0, count: 0}
+                vehicle: {USD: 0, IQD: 0, count: 0},
+                machinery: {USD: 0, IQD: 0, count: 0}
             };
             
             Object.entries(projects).forEach(([code, name]) => {
@@ -25316,8 +26035,10 @@ function renderProjectView() {
                 // حساب المبالغ حسب نوع الموظف وعملة الدفع
                 const projectStats = {
                     monthly: {USD: 0, IQD: 0, count: 0},
+                    external: {USD: 0, IQD: 0, count: 0},
                     daily: {USD: 0, IQD: 0, count: 0},
-                    vehicle: {USD: 0, IQD: 0, count: 0}
+                    vehicle: {USD: 0, IQD: 0, count: 0},
+                    machinery: {USD: 0, IQD: 0, count: 0}
                 };
                 
                 emps.forEach(emp => {
@@ -25337,19 +26058,29 @@ function renderProjectView() {
                     }
                 });
                 
-                const projectTotalUSD = projectStats.monthly.USD + projectStats.daily.USD + projectStats.vehicle.USD;
-                const projectTotalIQD = projectStats.monthly.IQD + projectStats.daily.IQD + projectStats.vehicle.IQD;
+                const projectTotalUSD =
+                    projectStats.monthly.USD + projectStats.external.USD + projectStats.daily.USD + projectStats.vehicle.USD + projectStats.machinery.USD;
+                const projectTotalIQD =
+                    projectStats.monthly.IQD + projectStats.external.IQD + projectStats.daily.IQD + projectStats.vehicle.IQD + projectStats.machinery.IQD;
                 
                 // تحديث الإجماليات
                 typeTotals.monthly.USD += projectStats.monthly.USD;
                 typeTotals.monthly.IQD += projectStats.monthly.IQD;
                 typeTotals.monthly.count += projectStats.monthly.count;
+                
+                typeTotals.external.USD += projectStats.external.USD;
+                typeTotals.external.IQD += projectStats.external.IQD;
+                typeTotals.external.count += projectStats.external.count;
                 typeTotals.daily.USD += projectStats.daily.USD;
                 typeTotals.daily.IQD += projectStats.daily.IQD;
                 typeTotals.daily.count += projectStats.daily.count;
                 typeTotals.vehicle.USD += projectStats.vehicle.USD;
                 typeTotals.vehicle.IQD += projectStats.vehicle.IQD;
                 typeTotals.vehicle.count += projectStats.vehicle.count;
+                
+                typeTotals.machinery.USD += projectStats.machinery.USD;
+                typeTotals.machinery.IQD += projectStats.machinery.IQD;
+                typeTotals.machinery.count += projectStats.machinery.count;
                 
                 grandTotalUSD += projectTotalUSD;
                 grandTotalIQD += projectTotalIQD;
@@ -25360,10 +26091,14 @@ function renderProjectView() {
                 html += '<td style="text-align: center; border: 1px solid #e5e7eb;">' + emps.length + '</td>';
                 html += '<td style="text-align: right; border: 1px solid #e5e7eb;">' + formatCurrency(projectStats.monthly.USD) + '</td>';
                 html += '<td style="text-align: right; border: 1px solid #e5e7eb;">' + formatCurrency(projectStats.monthly.IQD) + '</td>';
+                html += '<td style="text-align: right; border: 1px solid #e5e7eb;">' + formatCurrency(projectStats.external.USD) + '</td>';
+                html += '<td style="text-align: right; border: 1px solid #e5e7eb;">' + formatCurrency(projectStats.external.IQD) + '</td>';
                 html += '<td style="text-align: right; border: 1px solid #e5e7eb;">' + formatCurrency(projectStats.daily.USD) + '</td>';
                 html += '<td style="text-align: right; border: 1px solid #e5e7eb;">' + formatCurrency(projectStats.daily.IQD) + '</td>';
                 html += '<td style="text-align: right; border: 1px solid #e5e7eb;">' + formatCurrency(projectStats.vehicle.USD) + '</td>';
                 html += '<td style="text-align: right; border: 1px solid #e5e7eb;">' + formatCurrency(projectStats.vehicle.IQD) + '</td>';
+                html += '<td style="text-align: right; border: 1px solid #e5e7eb;">' + formatCurrency(projectStats.machinery.USD) + '</td>';
+                html += '<td style="text-align: right; border: 1px solid #e5e7eb;">' + formatCurrency(projectStats.machinery.IQD) + '</td>';
                 html += '<td style="text-align: right; font-weight: 600; border: 1px solid #e5e7eb;">' + formatCurrency(projectTotalUSD) + '</td>';
                 html += '<td style="text-align: right; font-weight: 600; border: 1px solid #e5e7eb;">' + formatCurrency(projectTotalIQD) + '</td>';
                 html += '</tr>';
@@ -25375,19 +26110,36 @@ function renderProjectView() {
             html += '<td style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">' + typeTotals.monthly.count + '</td>';
             html += '<td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">' + formatCurrency(typeTotals.monthly.USD) + '</td>';
             html += '<td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">' + formatCurrency(typeTotals.monthly.IQD) + '</td>';
-            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>';
-            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>';
+            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>'; // external
+            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>'; // daily
+            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>'; // vehicles
+            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>'; // machinery
             html += '<td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">' + formatCurrency(typeTotals.monthly.USD) + '</td>';
             html += '<td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">' + formatCurrency(typeTotals.monthly.IQD) + '</td>';
+            html += '</tr>';
+            
+            html += '<tr style="background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); font-weight: 700;">';
+            html += '<td style="padding: 12px; border: 1px solid #0ea5e9;">' + (isArabic ? 'إجمالي خارجي' : 'External Total') + '</td>';
+            html += '<td style="padding: 12px; text-align: center; border: 1px solid #0ea5e9;">' + typeTotals.external.count + '</td>';
+            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #0ea5e9;">-</td>'; // monthly
+            html += '<td style="padding: 12px; text-align: right; border: 1px solid #0ea5e9;">' + formatCurrency(typeTotals.external.USD) + '</td>';
+            html += '<td style="padding: 12px; text-align: right; border: 1px solid #0ea5e9;">' + formatCurrency(typeTotals.external.IQD) + '</td>';
+            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #0ea5e9;">-</td>'; // daily
+            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #0ea5e9;">-</td>'; // vehicles
+            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #0ea5e9;">-</td>'; // machinery
+            html += '<td style="padding: 12px; text-align: right; border: 1px solid #0ea5e9;">' + formatCurrency(typeTotals.external.USD) + '</td>';
+            html += '<td style="padding: 12px; text-align: right; border: 1px solid #0ea5e9;">' + formatCurrency(typeTotals.external.IQD) + '</td>';
             html += '</tr>';
             
             html += '<tr style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); font-weight: 700;">';
             html += '<td style="padding: 12px; border: 1px solid #f59e0b;">' + (isArabic ? 'إجمالي يومي' : 'Daily Total') + '</td>';
             html += '<td style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">' + typeTotals.daily.count + '</td>';
-            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>';
+            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>'; // monthly
+            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>'; // external
             html += '<td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">' + formatCurrency(typeTotals.daily.USD) + '</td>';
             html += '<td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">' + formatCurrency(typeTotals.daily.IQD) + '</td>';
-            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>';
+            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>'; // vehicles
+            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>'; // machinery
             html += '<td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">' + formatCurrency(typeTotals.daily.USD) + '</td>';
             html += '<td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">' + formatCurrency(typeTotals.daily.IQD) + '</td>';
             html += '</tr>';
@@ -25395,18 +26147,34 @@ function renderProjectView() {
             html += '<tr style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); font-weight: 700;">';
             html += '<td style="padding: 12px; border: 1px solid #f59e0b;">' + (isArabic ? 'إجمالي سيارات' : 'Vehicles Total') + '</td>';
             html += '<td style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">' + typeTotals.vehicle.count + '</td>';
-            html += '<td colspan="4" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>';
+            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>'; // monthly
+            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>'; // external
+            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>'; // daily
             html += '<td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">' + formatCurrency(typeTotals.vehicle.USD) + '</td>';
             html += '<td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">' + formatCurrency(typeTotals.vehicle.IQD) + '</td>';
+            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>'; // machinery
             html += '<td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">' + formatCurrency(typeTotals.vehicle.USD) + '</td>';
             html += '<td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">' + formatCurrency(typeTotals.vehicle.IQD) + '</td>';
+            html += '</tr>';
+            
+            html += '<tr style="background: linear-gradient(135deg, #f5d0fe 0%, #ddd6fe 100%); font-weight: 700;">';
+            html += '<td style="padding: 12px; border: 1px solid #a855f7;">' + (isArabic ? 'إجمالي الآليات' : 'Machinery Total') + '</td>';
+            html += '<td style="padding: 12px; text-align: center; border: 1px solid #a855f7;">' + typeTotals.machinery.count + '</td>';
+            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #a855f7;">-</td>'; // monthly
+            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #a855f7;">-</td>'; // external
+            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #a855f7;">-</td>'; // daily
+            html += '<td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #a855f7;">-</td>'; // vehicles
+            html += '<td style="padding: 12px; text-align: right; border: 1px solid #a855f7;">' + formatCurrency(typeTotals.machinery.USD) + '</td>';
+            html += '<td style="padding: 12px; text-align: right; border: 1px solid #a855f7;">' + formatCurrency(typeTotals.machinery.IQD) + '</td>';
+            html += '<td style="padding: 12px; text-align: right; border: 1px solid #a855f7;">' + formatCurrency(typeTotals.machinery.USD) + '</td>';
+            html += '<td style="padding: 12px; text-align: right; border: 1px solid #a855f7;">' + formatCurrency(typeTotals.machinery.IQD) + '</td>';
             html += '</tr>';
 
             // الإجمالي النهائي
             html += '<tr style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); font-weight: 700; border-top: 2px solid #10b981;">';
             html += '<td style="padding: 12px; color: white; font-weight: bold; border: 1px solid #10b981;">' + (isArabic ? 'الإجمالي النهائي' : 'Grand Total') + '</td>';
             html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotalEmps + '</td>';
-            html += '<td colspan="6" style="padding: 12px; text-align: center; color: white; border: 1px solid #10b981;">-</td>';
+            html += '<td colspan="10" style="padding: 12px; text-align: center; color: white; border: 1px solid #10b981;">-</td>';
             html += '<td style="padding: 12px; text-align: right; color: white; font-weight: bold; border: 1px solid #10b981;">' + formatCurrency(grandTotalUSD) + '</td>';
             html += '<td style="padding: 12px; text-align: right; color: white; font-weight: bold; border: 1px solid #10b981;">' + formatCurrency(grandTotalIQD) + '</td>';
             html += '</tr>';
@@ -25419,24 +26187,30 @@ function renderProjectView() {
         function generateProjectsComparisonTable(month1, month2, isArabic) {
             let html = '<table style="width: 100%; font-size: 12px; border-collapse: collapse; margin-top: 15px;"><thead><tr style="background: #667eea; color: white;">';
             html += '<th rowspan="2" style="padding: 10px; border: 1px solid #ddd; text-align: center;">' + (isArabic ? 'المشروع' : 'Project') + '</th>';
-            html += '<th colspan="4" style="padding: 10px; border: 1px solid #ddd; text-align: center;">' + t('monthNames')[month1] + '</th>';
-            html += '<th colspan="4" style="padding: 10px; border: 1px solid #ddd; text-align: center;">' + t('monthNames')[month2] + '</th>';
+            html += '<th colspan="7" style="padding: 10px; border: 1px solid #ddd; text-align: center;">' + t('monthNames')[month1] + '</th>';
+            html += '<th colspan="7" style="padding: 10px; border: 1px solid #ddd; text-align: center;">' + t('monthNames')[month2] + '</th>';
             html += '<th colspan="2" style="padding: 10px; border: 1px solid #ddd; text-align: center;">' + (isArabic ? 'الفرق' : 'Difference') + '</th>';
             html += '</tr><tr style="background: #667eea; color: white;">';
             html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">' + (isArabic ? 'شهري' : 'Monthly') + '</th>';
+            html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">' + (isArabic ? 'خارجي' : 'External') + '</th>';
             html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">' + (isArabic ? 'يومي' : 'Daily') + '</th>';
+            html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">' + (isArabic ? 'سيارات' : 'Vehicles') + '</th>';
+            html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">' + (isArabic ? 'الآليات' : 'Machinery') + '</th>';
             html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">USD</th>';
             html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">IQD</th>';
             html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">' + (isArabic ? 'شهري' : 'Monthly') + '</th>';
+            html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">' + (isArabic ? 'خارجي' : 'External') + '</th>';
             html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">' + (isArabic ? 'يومي' : 'Daily') + '</th>';
+            html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">' + (isArabic ? 'سيارات' : 'Vehicles') + '</th>';
+            html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">' + (isArabic ? 'الآليات' : 'Machinery') + '</th>';
             html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">USD</th>';
             html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">IQD</th>';
             html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">USD</th>';
             html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px;">IQD</th>';
             html += '</tr></thead><tbody>';
             
-            let grandTotal1 = {monthlyCount: 0, dailyCount: 0, totalUSD: 0, totalIQD: 0, emps: 0};
-            let grandTotal2 = {monthlyCount: 0, dailyCount: 0, totalUSD: 0, totalIQD: 0, emps: 0};
+            let grandTotal1 = {monthlyCount: 0, externalCount: 0, dailyCount: 0, vehicleCount: 0, machineryCount: 0, totalUSD: 0, totalIQD: 0, emps: 0};
+            let grandTotal2 = {monthlyCount: 0, externalCount: 0, dailyCount: 0, vehicleCount: 0, machineryCount: 0, totalUSD: 0, totalIQD: 0, emps: 0};
             
             Object.entries(projects).forEach(([code, name]) => {
                 const emps1 = (employeeData[currentYear] && employeeData[currentYear][month1])
@@ -25446,12 +26220,25 @@ function renderProjectView() {
                     ? employeeData[currentYear][month2].filter(emp => emp.project === code)
                     : [];
                 
-                const stats1 = {monthly: {USD: 0, IQD: 0, count: 0}, daily: {USD: 0, IQD: 0, count: 0}, vehicle: {USD: 0, IQD: 0, count: 0}};
-                const stats2 = {monthly: {USD: 0, IQD: 0, count: 0}, daily: {USD: 0, IQD: 0, count: 0}, vehicle: {USD: 0, IQD: 0, count: 0}};
+                const stats1 = {
+                    monthly: {USD: 0, IQD: 0, count: 0},
+                    external: {USD: 0, IQD: 0, count: 0},
+                    daily: {USD: 0, IQD: 0, count: 0},
+                    vehicle: {USD: 0, IQD: 0, count: 0},
+                    machinery: {USD: 0, IQD: 0, count: 0}
+                };
+                const stats2 = {
+                    monthly: {USD: 0, IQD: 0, count: 0},
+                    external: {USD: 0, IQD: 0, count: 0},
+                    daily: {USD: 0, IQD: 0, count: 0},
+                    vehicle: {USD: 0, IQD: 0, count: 0},
+                    machinery: {USD: 0, IQD: 0, count: 0}
+                };
                 
                 emps1.forEach(emp => {
                     const netSalary = calculateNetSalary(emp, month1, currentYear);
                     const type = emp.employeeType;
+                    if (!stats1[type]) stats1[type] = {USD: 0, IQD: 0, count: 0};
                     const exchangeRate = emp.exchangeRate || 1420;
                     if (emp.paymentCurrency === 'USD') {
                         stats1[type].USD += netSalary;
@@ -25466,6 +26253,7 @@ function renderProjectView() {
                 emps2.forEach(emp => {
                     const netSalary = calculateNetSalary(emp, month2, currentYear);
                     const type = emp.employeeType;
+                    if (!stats2[type]) stats2[type] = {USD: 0, IQD: 0, count: 0};
                     const exchangeRate = emp.exchangeRate || 1420;
                     if (emp.paymentCurrency === 'USD') {
                         stats2[type].USD += netSalary;
@@ -25477,19 +26265,25 @@ function renderProjectView() {
                     stats2[type].count++;
                 });
                 
-                const totalUSD1 = stats1.monthly.USD + stats1.daily.USD + stats1.vehicle.USD;
-                const totalIQD1 = stats1.monthly.IQD + stats1.daily.IQD + stats1.vehicle.IQD;
-                const totalUSD2 = stats2.monthly.USD + stats2.daily.USD + stats2.vehicle.USD;
-                const totalIQD2 = stats2.monthly.IQD + stats2.daily.IQD + stats2.vehicle.IQD;
+                const totalUSD1 = stats1.monthly.USD + stats1.external.USD + stats1.daily.USD + stats1.vehicle.USD + stats1.machinery.USD;
+                const totalIQD1 = stats1.monthly.IQD + stats1.external.IQD + stats1.daily.IQD + stats1.vehicle.IQD + stats1.machinery.IQD;
+                const totalUSD2 = stats2.monthly.USD + stats2.external.USD + stats2.daily.USD + stats2.vehicle.USD + stats2.machinery.USD;
+                const totalIQD2 = stats2.monthly.IQD + stats2.external.IQD + stats2.daily.IQD + stats2.vehicle.IQD + stats2.machinery.IQD;
                 
                 grandTotal1.monthlyCount += stats1.monthly.count;
+                grandTotal1.externalCount += stats1.external.count;
                 grandTotal1.dailyCount += stats1.daily.count;
+                grandTotal1.vehicleCount += stats1.vehicle.count;
+                grandTotal1.machineryCount += stats1.machinery.count;
                 grandTotal1.totalUSD += totalUSD1;
                 grandTotal1.totalIQD += totalIQD1;
                 grandTotal1.emps += emps1.length;
                 
                 grandTotal2.monthlyCount += stats2.monthly.count;
+                grandTotal2.externalCount += stats2.external.count;
                 grandTotal2.dailyCount += stats2.daily.count;
+                grandTotal2.vehicleCount += stats2.vehicle.count;
+                grandTotal2.machineryCount += stats2.machinery.count;
                 grandTotal2.totalUSD += totalUSD2;
                 grandTotal2.totalIQD += totalIQD2;
                 grandTotal2.emps += emps2.length;
@@ -25502,11 +26296,17 @@ function renderProjectView() {
                 html += '<tr style="border-bottom: 1px solid #e5e7eb;">';
                 html += '<td style="font-weight: 600; text-align: right; border: 1px solid #e5e7eb; padding: 10px;">' + name + '</td>';
                 html += '<td style="text-align: center; border: 1px solid #e5e7eb; padding: 10px;">' + stats1.monthly.count + '</td>';
+                html += '<td style="text-align: center; border: 1px solid #e5e7eb; padding: 10px;">' + stats1.external.count + '</td>';
                 html += '<td style="text-align: center; border: 1px solid #e5e7eb; padding: 10px;">' + stats1.daily.count + '</td>';
+                html += '<td style="text-align: center; border: 1px solid #e5e7eb; padding: 10px;">' + stats1.vehicle.count + '</td>';
+                html += '<td style="text-align: center; border: 1px solid #e5e7eb; padding: 10px;">' + stats1.machinery.count + '</td>';
                 html += '<td style="text-align: right; border: 1px solid #e5e7eb; padding: 10px;">' + formatCurrency(totalUSD1) + '</td>';
                 html += '<td style="text-align: right; border: 1px solid #e5e7eb; padding: 10px;">' + formatCurrency(totalIQD1) + '</td>';
                 html += '<td style="text-align: center; border: 1px solid #e5e7eb; padding: 10px;">' + stats2.monthly.count + '</td>';
+                html += '<td style="text-align: center; border: 1px solid #e5e7eb; padding: 10px;">' + stats2.external.count + '</td>';
                 html += '<td style="text-align: center; border: 1px solid #e5e7eb; padding: 10px;">' + stats2.daily.count + '</td>';
+                html += '<td style="text-align: center; border: 1px solid #e5e7eb; padding: 10px;">' + stats2.vehicle.count + '</td>';
+                html += '<td style="text-align: center; border: 1px solid #e5e7eb; padding: 10px;">' + stats2.machinery.count + '</td>';
                 html += '<td style="text-align: right; border: 1px solid #e5e7eb; padding: 10px;">' + formatCurrency(totalUSD2) + '</td>';
                 html += '<td style="text-align: right; border: 1px solid #e5e7eb; padding: 10px;">' + formatCurrency(totalIQD2) + '</td>';
                 html += '<td style="text-align: right; color: ' + diffColorUSD + '; font-weight: 700; border: 1px solid #e5e7eb; padding: 10px;">' + (diffUSD >= 0 ? '+' : '') + formatCurrency(Math.abs(diffUSD)) + '</td>';
@@ -25522,11 +26322,17 @@ function renderProjectView() {
             html += '<tr style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); font-weight: 700; border-top: 2px solid #10b981;">';
             html += '<td style="padding: 12px; color: white; font-weight: bold; border: 1px solid #10b981;">' + (isArabic ? 'المجموع الكلي' : 'Grand Total') + '</td>';
             html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotal1.monthlyCount + '</td>';
+            html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotal1.externalCount + '</td>';
             html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotal1.dailyCount + '</td>';
+            html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotal1.vehicleCount + '</td>';
+            html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotal1.machineryCount + '</td>';
             html += '<td style="padding: 12px; text-align: right; color: white; font-weight: bold; border: 1px solid #10b981;">' + formatCurrency(grandTotal1.totalUSD) + '</td>';
             html += '<td style="padding: 12px; text-align: right; color: white; font-weight: bold; border: 1px solid #10b981;">' + formatCurrency(grandTotal1.totalIQD) + '</td>';
             html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotal2.monthlyCount + '</td>';
+            html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotal2.externalCount + '</td>';
             html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotal2.dailyCount + '</td>';
+            html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotal2.vehicleCount + '</td>';
+            html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotal2.machineryCount + '</td>';
             html += '<td style="padding: 12px; text-align: right; color: white; font-weight: bold; border: 1px solid #10b981;">' + formatCurrency(grandTotal2.totalUSD) + '</td>';
             html += '<td style="padding: 12px; text-align: right; color: white; font-weight: bold; border: 1px solid #10b981;">' + formatCurrency(grandTotal2.totalIQD) + '</td>';
             html += '<td style="padding: 12px; text-align: right; color: ' + totalDiffColorUSD + '; font-weight: bold; border: 1px solid #10b981;">' + (totalDiffUSD >= 0 ? '+' : '') + formatCurrency(Math.abs(totalDiffUSD)) + '</td>';
@@ -25556,11 +26362,13 @@ function renderProjectView() {
                 ? employeeData[currentYear][month1].filter(emp => emp.project === projectCode)
                 : [];
             
-            const types = ['monthly', 'daily', 'vehicle'];
+            const types = ['monthly', 'external', 'daily', 'vehicle', 'machinery'];
             const typeLabels = {
                 monthly: isArabic ? 'شهري' : 'Monthly',
+                external: isArabic ? 'خارجي' : 'External',
                 daily: isArabic ? 'يومي' : 'Daily',
-                vehicle: isArabic ? 'سيارات' : 'Vehicles'
+                vehicle: isArabic ? 'سيارات' : 'Vehicles',
+                machinery: isArabic ? 'الآليات' : 'Machinery'
             };
             
             let totalUSD1 = 0, totalIQD1 = 0;
@@ -25640,10 +26448,16 @@ function renderProjectView() {
                     <th rowspan="2" style="padding: 12px; text-align: left; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">${t('project')}</th>
                     <th rowspan="2" style="padding: 12px; text-align: center; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">${t('totalEmployees')}</th>
                     <th colspan="2" style="padding: 12px; text-align: center; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">${isArabic ? 'شهري' : 'Monthly'}</th>
+                    <th colspan="2" style="padding: 12px; text-align: center; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">${isArabic ? 'خارجي' : 'External'}</th>
                     <th colspan="2" style="padding: 12px; text-align: center; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">${isArabic ? 'يومي' : 'Daily'}</th>
                     <th colspan="2" style="padding: 12px; text-align: center; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">${isArabic ? 'سيارات' : 'Vehicles'}</th>
+                    <th colspan="2" style="padding: 12px; text-align: center; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">${isArabic ? 'الآليات' : 'Machinery'}</th>
                     <th colspan="2" style="padding: 12px; text-align: center; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">${isArabic ? 'الإجمالي' : 'Total'}</th>
                 </tr><tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">USD</th>
+                    <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">IQD</th>
+                    <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">USD</th>
+                    <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">IQD</th>
                     <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">USD</th>
                     <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">IQD</th>
                     <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">USD</th>
@@ -25658,8 +26472,10 @@ function renderProjectView() {
             let grandTotalUSD = 0, grandTotalIQD = 0, grandTotalEmps = 0;
             let typeTotals = {
                 monthly: {USD: 0, IQD: 0, count: 0},
+                external: {USD: 0, IQD: 0, count: 0},
                 daily: {USD: 0, IQD: 0, count: 0},
-                vehicle: {USD: 0, IQD: 0, count: 0}
+                vehicle: {USD: 0, IQD: 0, count: 0},
+                machinery: {USD: 0, IQD: 0, count: 0}
             };
 
             Object.entries(projects).forEach(([code, name]) => {
@@ -25672,8 +26488,10 @@ function renderProjectView() {
                 // حساب المبالغ حسب نوع الموظف وعملة الدفع
                 const projectStats = {
                     monthly: {USD: 0, IQD: 0, count: 0},
+                    external: {USD: 0, IQD: 0, count: 0},
                     daily: {USD: 0, IQD: 0, count: 0},
-                    vehicle: {USD: 0, IQD: 0, count: 0}
+                    vehicle: {USD: 0, IQD: 0, count: 0},
+                    machinery: {USD: 0, IQD: 0, count: 0}
                 };
                 
                 emps.forEach(emp => {
@@ -25693,14 +26511,14 @@ function renderProjectView() {
                 });
                 
                 // تحديث الإجماليات
-                ['monthly', 'daily', 'vehicle'].forEach(type => {
+                ['monthly', 'external', 'daily', 'vehicle', 'machinery'].forEach(type => {
                     typeTotals[type].USD += projectStats[type].USD;
                     typeTotals[type].IQD += projectStats[type].IQD;
                     typeTotals[type].count += projectStats[type].count;
                 });
                 
-                const projectTotalUSD = projectStats.monthly.USD + projectStats.daily.USD + projectStats.vehicle.USD;
-                const projectTotalIQD = projectStats.monthly.IQD + projectStats.daily.IQD + projectStats.vehicle.IQD;
+                const projectTotalUSD = projectStats.monthly.USD + projectStats.external.USD + projectStats.daily.USD + projectStats.vehicle.USD + projectStats.machinery.USD;
+                const projectTotalIQD = projectStats.monthly.IQD + projectStats.external.IQD + projectStats.daily.IQD + projectStats.vehicle.IQD + projectStats.machinery.IQD;
                 grandTotalUSD += projectTotalUSD;
                 grandTotalIQD += projectTotalIQD;
                 grandTotalEmps += emps.length;
@@ -25712,10 +26530,14 @@ function renderProjectView() {
                     <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">${emps.length}</td>
                     <td style="padding: 10px; text-align: right; border: 1px solid #e5e7eb;">${formatCurrency(projectStats.monthly.USD)}</td>
                     <td style="padding: 10px; text-align: right; border: 1px solid #e5e7eb;">${formatCurrency(projectStats.monthly.IQD)}</td>
+                    <td style="padding: 10px; text-align: right; border: 1px solid #e5e7eb;">${formatCurrency(projectStats.external.USD)}</td>
+                    <td style="padding: 10px; text-align: right; border: 1px solid #e5e7eb;">${formatCurrency(projectStats.external.IQD)}</td>
                     <td style="padding: 10px; text-align: right; border: 1px solid #e5e7eb;">${formatCurrency(projectStats.daily.USD)}</td>
                     <td style="padding: 10px; text-align: right; border: 1px solid #e5e7eb;">${formatCurrency(projectStats.daily.IQD)}</td>
                     <td style="padding: 10px; text-align: right; border: 1px solid #e5e7eb;">${formatCurrency(projectStats.vehicle.USD)}</td>
                     <td style="padding: 10px; text-align: right; border: 1px solid #e5e7eb;">${formatCurrency(projectStats.vehicle.IQD)}</td>
+                    <td style="padding: 10px; text-align: right; border: 1px solid #e5e7eb;">${formatCurrency(projectStats.machinery.USD)}</td>
+                    <td style="padding: 10px; text-align: right; border: 1px solid #e5e7eb;">${formatCurrency(projectStats.machinery.IQD)}</td>
                     <td style="padding: 10px; text-align: right; font-weight: 600; border: 1px solid #e5e7eb;">${formatCurrency(projectTotalUSD)}</td>
                     <td style="padding: 10px; text-align: right; font-weight: 600; border: 1px solid #e5e7eb;">${formatCurrency(projectTotalIQD)}</td>
                 </tr>`;
@@ -25729,16 +26551,33 @@ function renderProjectView() {
                 <td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">${formatCurrency(typeTotals.monthly.IQD)}</td>
                 <td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>
                 <td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>
+                <td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>
+                <td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>
                 <td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">${formatCurrency(typeTotals.monthly.USD)}</td>
                 <td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">${formatCurrency(typeTotals.monthly.IQD)}</td>
+            </tr>`;
+
+            html += `<tr style="background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); font-weight: 700;">
+                <td style="padding: 12px; border: 1px solid #0ea5e9;">${isArabic ? 'إجمالي خارجي' : 'External Total'}</td>
+                <td style="padding: 12px; text-align: center; border: 1px solid #0ea5e9;">${typeTotals.external.count}</td>
+                <td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #0ea5e9;">-</td>
+                <td style="padding: 12px; text-align: right; border: 1px solid #0ea5e9;">${formatCurrency(typeTotals.external.USD)}</td>
+                <td style="padding: 12px; text-align: right; border: 1px solid #0ea5e9;">${formatCurrency(typeTotals.external.IQD)}</td>
+                <td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #0ea5e9;">-</td>
+                <td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #0ea5e9;">-</td>
+                <td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #0ea5e9;">-</td>
+                <td style="padding: 12px; text-align: right; border: 1px solid #0ea5e9;">${formatCurrency(typeTotals.external.USD)}</td>
+                <td style="padding: 12px; text-align: right; border: 1px solid #0ea5e9;">${formatCurrency(typeTotals.external.IQD)}</td>
             </tr>`;
             
             html += `<tr style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); font-weight: 700;">
                 <td style="padding: 12px; border: 1px solid #f59e0b;">${isArabic ? 'إجمالي يومي' : 'Daily Total'}</td>
                 <td style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">${typeTotals.daily.count}</td>
                 <td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>
+                <td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>
                 <td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">${formatCurrency(typeTotals.daily.USD)}</td>
                 <td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">${formatCurrency(typeTotals.daily.IQD)}</td>
+                <td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>
                 <td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>
                 <td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">${formatCurrency(typeTotals.daily.USD)}</td>
                 <td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">${formatCurrency(typeTotals.daily.IQD)}</td>
@@ -25747,18 +26586,29 @@ function renderProjectView() {
             html += `<tr style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); font-weight: 700;">
                 <td style="padding: 12px; border: 1px solid #f59e0b;">${isArabic ? 'إجمالي سيارات' : 'Vehicles Total'}</td>
                 <td style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">${typeTotals.vehicle.count}</td>
-                <td colspan="4" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>
+                <td colspan="6" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>
                 <td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">${formatCurrency(typeTotals.vehicle.USD)}</td>
                 <td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">${formatCurrency(typeTotals.vehicle.IQD)}</td>
+                <td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #f59e0b;">-</td>
                 <td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">${formatCurrency(typeTotals.vehicle.USD)}</td>
                 <td style="padding: 12px; text-align: right; border: 1px solid #f59e0b;">${formatCurrency(typeTotals.vehicle.IQD)}</td>
+            </tr>`;
+
+            html += `<tr style="background: linear-gradient(135deg, #f5d0fe 0%, #ddd6fe 100%); font-weight: 700;">
+                <td style="padding: 12px; border: 1px solid #a855f7;">${isArabic ? 'إجمالي الآليات' : 'Machinery Total'}</td>
+                <td style="padding: 12px; text-align: center; border: 1px solid #a855f7;">${typeTotals.machinery.count}</td>
+                <td colspan="8" style="padding: 12px; text-align: center; border: 1px solid #a855f7;">-</td>
+                <td style="padding: 12px; text-align: right; border: 1px solid #a855f7;">${formatCurrency(typeTotals.machinery.USD)}</td>
+                <td style="padding: 12px; text-align: right; border: 1px solid #a855f7;">${formatCurrency(typeTotals.machinery.IQD)}</td>
+                <td style="padding: 12px; text-align: right; border: 1px solid #a855f7;">${formatCurrency(typeTotals.machinery.USD)}</td>
+                <td style="padding: 12px; text-align: right; border: 1px solid #a855f7;">${formatCurrency(typeTotals.machinery.IQD)}</td>
             </tr>`;
 
             // الإجمالي النهائي
             html += `<tr style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); font-weight: 700; border-top: 2px solid #10b981;">
                 <td style="padding: 12px; color: white; font-weight: bold; border: 1px solid #10b981;">${isArabic ? 'الإجمالي النهائي' : 'Grand Total'}</td>
                 <td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">${grandTotalEmps}</td>
-                <td colspan="6" style="padding: 12px; text-align: center; color: white; border: 1px solid #10b981;">-</td>
+                <td colspan="10" style="padding: 12px; text-align: center; color: white; border: 1px solid #10b981;">-</td>
                 <td style="padding: 12px; text-align: right; color: white; font-weight: bold; border: 1px solid #10b981;">${formatCurrency(grandTotalUSD)}</td>
                 <td style="padding: 12px; text-align: right; color: white; font-weight: bold; border: 1px solid #10b981;">${formatCurrency(grandTotalIQD)}</td>
             </tr></tbody></table></div></div>`;
@@ -25772,24 +26622,30 @@ function renderProjectView() {
                 <div style="overflow-x: auto; max-width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                 <table id="comparisonTable" style="width: 100%; font-size: 12px; border-collapse: collapse; min-width: 900px;"><thead><tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                     <th rowspan="2" style="padding: 12px; text-align: left; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">${t('project')}</th>
-                    <th colspan="4" style="padding: 12px; text-align: center; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">${t('monthNames')[month1]}</th>
-                    <th colspan="4" style="padding: 12px; text-align: center; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">${t('monthNames')[month2]}</th>
+                    <th colspan="7" style="padding: 12px; text-align: center; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">${t('monthNames')[month1]}</th>
+                    <th colspan="7" style="padding: 12px; text-align: center; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">${t('monthNames')[month2]}</th>
                     <th colspan="2" style="padding: 12px; text-align: center; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">${isArabic ? 'الفرق' : 'Difference'}</th>
                 </tr><tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                     <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">${isArabic ? 'شهري' : 'Monthly'}</th>
+                    <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">${isArabic ? 'خارجي' : 'External'}</th>
                     <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">${isArabic ? 'يومي' : 'Daily'}</th>
+                    <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">${isArabic ? 'سيارات' : 'Vehicles'}</th>
+                    <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">${isArabic ? 'الآليات' : 'Machinery'}</th>
                     <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">USD</th>
                     <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">IQD</th>
                     <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">${isArabic ? 'شهري' : 'Monthly'}</th>
+                    <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">${isArabic ? 'خارجي' : 'External'}</th>
                     <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">${isArabic ? 'يومي' : 'Daily'}</th>
+                    <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">${isArabic ? 'سيارات' : 'Vehicles'}</th>
+                    <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">${isArabic ? 'الآليات' : 'Machinery'}</th>
                     <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">USD</th>
                     <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">IQD</th>
                     <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">USD</th>
                     <th style="padding: 8px; text-align: center; font-weight: 500; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">IQD</th>
                 </tr></thead><tbody>`;
 
-            let grandTotal1 = {monthlyUSD: 0, dailyUSD: 0, totalUSD: 0, totalIQD: 0, monthlyCount: 0, dailyCount: 0, emps: 0};
-            let grandTotal2 = {monthlyUSD: 0, dailyUSD: 0, totalUSD: 0, totalIQD: 0, monthlyCount: 0, dailyCount: 0, emps: 0};
+            let grandTotal1 = {monthlyCount: 0, externalCount: 0, dailyCount: 0, vehicleCount: 0, machineryCount: 0, totalUSD: 0, totalIQD: 0, emps: 0};
+            let grandTotal2 = {monthlyCount: 0, externalCount: 0, dailyCount: 0, vehicleCount: 0, machineryCount: 0, totalUSD: 0, totalIQD: 0, emps: 0};
             
             Object.entries(projects).forEach(([code, name]) => {
                 const emps1 = (employeeData[currentYear] && employeeData[currentYear][month1])
@@ -25799,12 +26655,25 @@ function renderProjectView() {
                     ? employeeData[currentYear][month2].filter(emp => emp.project === code)
                     : [];
                 
-                const stats1 = {monthly: {USD: 0, IQD: 0, count: 0}, daily: {USD: 0, IQD: 0, count: 0}, vehicle: {USD: 0, IQD: 0, count: 0}};
-                const stats2 = {monthly: {USD: 0, IQD: 0, count: 0}, daily: {USD: 0, IQD: 0, count: 0}, vehicle: {USD: 0, IQD: 0, count: 0}};
+                const stats1 = {
+                    monthly: {USD: 0, IQD: 0, count: 0},
+                    external: {USD: 0, IQD: 0, count: 0},
+                    daily: {USD: 0, IQD: 0, count: 0},
+                    vehicle: {USD: 0, IQD: 0, count: 0},
+                    machinery: {USD: 0, IQD: 0, count: 0}
+                };
+                const stats2 = {
+                    monthly: {USD: 0, IQD: 0, count: 0},
+                    external: {USD: 0, IQD: 0, count: 0},
+                    daily: {USD: 0, IQD: 0, count: 0},
+                    vehicle: {USD: 0, IQD: 0, count: 0},
+                    machinery: {USD: 0, IQD: 0, count: 0}
+                };
                 
                 emps1.forEach(emp => {
                     const netSalary = calculateNetSalary(emp, month1, currentYear);
                     const type = emp.employeeType;
+                    if (!stats1[type]) stats1[type] = {USD: 0, IQD: 0, count: 0};
                     if (emp.paymentCurrency === 'USD') {
                         stats1[type].USD += netSalary;
                         stats1[type].IQD += netSalary * (emp.exchangeRate || 1420);
@@ -25818,6 +26687,7 @@ function renderProjectView() {
                 emps2.forEach(emp => {
                     const netSalary = calculateNetSalary(emp, month2, currentYear);
                     const type = emp.employeeType;
+                    if (!stats2[type]) stats2[type] = {USD: 0, IQD: 0, count: 0};
                     if (emp.paymentCurrency === 'USD') {
                         stats2[type].USD += netSalary;
                         stats2[type].IQD += netSalary * (emp.exchangeRate || 1420);
@@ -25828,25 +26698,27 @@ function renderProjectView() {
                     stats2[type].count++;
                 });
                 
-                const totalUSD1 = stats1.monthly.USD + stats1.daily.USD + stats1.vehicle.USD;
-                const totalIQD1 = stats1.monthly.IQD + stats1.daily.IQD + stats1.vehicle.IQD;
-                const totalUSD2 = stats2.monthly.USD + stats2.daily.USD + stats2.vehicle.USD;
-                const totalIQD2 = stats2.monthly.IQD + stats2.daily.IQD + stats2.vehicle.IQD;
+                const totalUSD1 = stats1.monthly.USD + stats1.external.USD + stats1.daily.USD + stats1.vehicle.USD + stats1.machinery.USD;
+                const totalIQD1 = stats1.monthly.IQD + stats1.external.IQD + stats1.daily.IQD + stats1.vehicle.IQD + stats1.machinery.IQD;
+                const totalUSD2 = stats2.monthly.USD + stats2.external.USD + stats2.daily.USD + stats2.vehicle.USD + stats2.machinery.USD;
+                const totalIQD2 = stats2.monthly.IQD + stats2.external.IQD + stats2.daily.IQD + stats2.vehicle.IQD + stats2.machinery.IQD;
                 
-                grandTotal1.monthlyUSD += stats1.monthly.USD;
-                grandTotal1.dailyUSD += stats1.daily.USD;
                 grandTotal1.totalUSD += totalUSD1;
                 grandTotal1.totalIQD += totalIQD1;
                 grandTotal1.monthlyCount += stats1.monthly.count;
+                grandTotal1.externalCount += stats1.external.count;
                 grandTotal1.dailyCount += stats1.daily.count;
+                grandTotal1.vehicleCount += stats1.vehicle.count;
+                grandTotal1.machineryCount += stats1.machinery.count;
                 grandTotal1.emps += emps1.length;
                 
-                grandTotal2.monthlyUSD += stats2.monthly.USD;
-                grandTotal2.dailyUSD += stats2.daily.USD;
                 grandTotal2.totalUSD += totalUSD2;
                 grandTotal2.totalIQD += totalIQD2;
                 grandTotal2.monthlyCount += stats2.monthly.count;
+                grandTotal2.externalCount += stats2.external.count;
                 grandTotal2.dailyCount += stats2.daily.count;
+                grandTotal2.vehicleCount += stats2.vehicle.count;
+                grandTotal2.machineryCount += stats2.machinery.count;
                 grandTotal2.emps += emps2.length;
                 
                 const diffUSD = totalUSD2 - totalUSD1;
@@ -25859,11 +26731,17 @@ function renderProjectView() {
                     onmouseout="this.style.backgroundColor='';">
                     <td style="padding: 10px; font-weight: 600; border: 1px solid #e5e7eb;">${name}</td>
                     <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">${stats1.monthly.count}</td>
+                    <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">${stats1.external.count}</td>
                     <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">${stats1.daily.count}</td>
+                    <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">${stats1.vehicle.count}</td>
+                    <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">${stats1.machinery.count}</td>
                     <td style="padding: 10px; text-align: right; border: 1px solid #e5e7eb;">${formatCurrency(totalUSD1)}</td>
                     <td style="padding: 10px; text-align: right; border: 1px solid #e5e7eb;">${formatCurrency(totalIQD1)}</td>
                     <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">${stats2.monthly.count}</td>
+                    <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">${stats2.external.count}</td>
                     <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">${stats2.daily.count}</td>
+                    <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">${stats2.vehicle.count}</td>
+                    <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">${stats2.machinery.count}</td>
                     <td style="padding: 10px; text-align: right; border: 1px solid #e5e7eb;">${formatCurrency(totalUSD2)}</td>
                     <td style="padding: 10px; text-align: right; border: 1px solid #e5e7eb;">${formatCurrency(totalIQD2)}</td>
                     <td style="padding: 10px; text-align: right; color: ${diffColorUSD}; font-weight: 700; border: 1px solid #e5e7eb;">${diffUSD >= 0 ? '+' : ''}${formatCurrency(Math.abs(diffUSD))}</td>
@@ -25879,11 +26757,17 @@ function renderProjectView() {
             html += `<tr style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); font-weight: 700; border-top: 2px solid #10b981;">
                 <td style="padding: 12px; border: 1px solid #10b981;">${t('total')}</td>
                 <td style="padding: 12px; text-align: center; border: 1px solid #10b981;">${grandTotal1.monthlyCount}</td>
+                <td style="padding: 12px; text-align: center; border: 1px solid #10b981;">${grandTotal1.externalCount}</td>
                 <td style="padding: 12px; text-align: center; border: 1px solid #10b981;">${grandTotal1.dailyCount}</td>
+                <td style="padding: 12px; text-align: center; border: 1px solid #10b981;">${grandTotal1.vehicleCount}</td>
+                <td style="padding: 12px; text-align: center; border: 1px solid #10b981;">${grandTotal1.machineryCount}</td>
                 <td style="padding: 12px; text-align: right; border: 1px solid #10b981;">${formatCurrency(grandTotal1.totalUSD)}</td>
                 <td style="padding: 12px; text-align: right; border: 1px solid #10b981;">${formatCurrency(grandTotal1.totalIQD)}</td>
                 <td style="padding: 12px; text-align: center; border: 1px solid #10b981;">${grandTotal2.monthlyCount}</td>
+                <td style="padding: 12px; text-align: center; border: 1px solid #10b981;">${grandTotal2.externalCount}</td>
                 <td style="padding: 12px; text-align: center; border: 1px solid #10b981;">${grandTotal2.dailyCount}</td>
+                <td style="padding: 12px; text-align: center; border: 1px solid #10b981;">${grandTotal2.vehicleCount}</td>
+                <td style="padding: 12px; text-align: center; border: 1px solid #10b981;">${grandTotal2.machineryCount}</td>
                 <td style="padding: 12px; text-align: right; border: 1px solid #10b981;">${formatCurrency(grandTotal2.totalUSD)}</td>
                 <td style="padding: 12px; text-align: right; border: 1px solid #10b981;">${formatCurrency(grandTotal2.totalIQD)}</td>
                 <td style="padding: 12px; text-align: right; color: ${totalDiffColorUSD}; border: 1px solid #10b981;">${totalDiffUSD >= 0 ? '+' : ''}${formatCurrency(Math.abs(totalDiffUSD))}</td>
@@ -25901,9 +26785,9 @@ function renderProjectView() {
             }
 
             let totalUSD = 0, totalIQD = 0;
-            const typeCount = { monthly: 0, daily: 0, vehicle: 0 };
+            const typeCount = { monthly: 0, external: 0, daily: 0, vehicle: 0, machinery: 0 };
             employees.forEach(emp => {
-                typeCount[emp.employeeType]++;
+                typeCount[emp.employeeType] = (typeCount[emp.employeeType] || 0) + 1;
                 const netSalary = calculateNetSalary(emp, month, currentYear);
                 const exchangeRate = emp.exchangeRate || 1420;
                 if (emp.paymentCurrency === 'USD') {
@@ -25920,8 +26804,10 @@ function renderProjectView() {
                 <div class="total-grid">
                     <div class="total-item"><div class="label">${t('totalEmployees')}</div><div class="value">${employees.length}</div></div>
                     <div class="total-item"><div class="label">${t('monthly')}</div><div class="value">${typeCount.monthly}</div></div>
+                    <div class="total-item"><div class="label">${t('external')}</div><div class="value">${typeCount.external}</div></div>
                     <div class="total-item"><div class="label">${t('daily')}</div><div class="value">${typeCount.daily}</div></div>
                     <div class="total-item"><div class="label">${t('vehicle')}</div><div class="value">${typeCount.vehicle}</div></div>
+                    <div class="total-item"><div class="label">${t('machinery')}</div><div class="value">${typeCount.machinery}</div></div>
                     <div class="total-item"><div class="label">${t('total')} USD</div><div class="value">${formatCurrency(totalUSD)}</div></div>
                     <div class="total-item"><div class="label">${t('total')} IQD</div><div class="value">${formatCurrency(totalIQD)}</div></div>
                 </div></div>`;
@@ -25934,8 +26820,8 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 ? employeeData[currentYear][month2].filter(emp => emp.project === projectCode)
                 : [];
 
-            let stats1 = { totalUSD: 0, totalIQD: 0, count: employees1.length, monthly: 0, daily: 0, vehicle: 0 };
-            let stats2 = { totalUSD: 0, totalIQD: 0, count: employees2.length, monthly: 0, daily: 0, vehicle: 0 };
+            let stats1 = { totalUSD: 0, totalIQD: 0, count: employees1.length, monthly: 0, external: 0, daily: 0, vehicle: 0, machinery: 0 };
+            let stats2 = { totalUSD: 0, totalIQD: 0, count: employees2.length, monthly: 0, external: 0, daily: 0, vehicle: 0, machinery: 0 };
 
             employees1.forEach(emp => {
                 stats1[emp.employeeType]++;
@@ -26002,8 +26888,10 @@ function generateComparisonSummary(projectCode, month1, month2) {
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             <div class="comparison-stat-row"><span>${t('totalEmployees')}</span><strong>${stats1.count}</strong></div>
                             <div class="comparison-stat-row"><span>${t('monthly')}</span><strong>${stats1.monthly}</strong></div>
+                            <div class="comparison-stat-row"><span>${t('external')}</span><strong>${stats1.external}</strong></div>
                             <div class="comparison-stat-row"><span>${t('daily')}</span><strong>${stats1.daily}</strong></div>
                             <div class="comparison-stat-row"><span>${t('vehicle')}</span><strong>${stats1.vehicle}</strong></div>
+                            <div class="comparison-stat-row"><span>${t('machinery')}</span><strong>${stats1.machinery}</strong></div>
                             <div class="comparison-stat-row"><span>${t('total')} USD</span><strong>${formatCurrency(stats1.totalUSD)}</strong></div>
                             <div class="comparison-stat-row"><span>${t('total')} IQD</span><strong>${formatCurrency(stats1.totalIQD)}</strong></div>
                         </div>
@@ -26013,8 +26901,10 @@ function generateComparisonSummary(projectCode, month1, month2) {
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             <div class="comparison-stat-row"><span>${t('totalEmployees')}</span><strong>${stats2.count} <span style="color: ${diffColorText}; font-size: 12px;">(${diffCountSign}${diffCount})</span></strong></div>
                             <div class="comparison-stat-row"><span>${t('monthly')}</span><strong>${stats2.monthly}</strong></div>
+                            <div class="comparison-stat-row"><span>${t('external')}</span><strong>${stats2.external}</strong></div>
                             <div class="comparison-stat-row"><span>${t('daily')}</span><strong>${stats2.daily}</strong></div>
                             <div class="comparison-stat-row"><span>${t('vehicle')}</span><strong>${stats2.vehicle}</strong></div>
+                            <div class="comparison-stat-row"><span>${t('machinery')}</span><strong>${stats2.machinery}</strong></div>
                             <div class="comparison-stat-row"><span>${t('total')} USD</span><strong>${formatCurrency(stats2.totalUSD)}</strong></div>
                             <div class="comparison-stat-row"><span>${t('total')} IQD</span><strong>${formatCurrency(stats2.totalIQD)}</strong></div>
                         </div>
