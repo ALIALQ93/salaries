@@ -3570,6 +3570,13 @@
                         <option value="external">خارجي</option>
                     </select>
                 </div>
+                <div class="form-group" id="machinerySalaryBasisGroup" style="display:none;">
+                    <label>للآليات: أساس الأجر</label>
+                    <select id="machinerySalaryBasis" onchange="updateSalaryLabelByType('salary')">
+                        <option value="monthly">شهري</option>
+                        <option value="daily">يومي</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label>المشروع</label>
                     <select id="project" required></select>
@@ -3747,6 +3754,13 @@
                         <option value="daily">يومي</option>
                         <option value="vehicle">سيارة</option>
                         <option value="machinery">الآليات</option>
+                    </select>
+                </div>
+                <div class="form-group" id="editMachinerySalaryBasisGroup" style="display:none;">
+                    <label>للآليات: أساس الأجر</label>
+                    <select id="editMachinerySalaryBasis" onchange="updateSalaryLabelByType('editSalary')">
+                        <option value="monthly">شهري</option>
+                        <option value="daily">يومي</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -9886,9 +9900,19 @@
         }
 
         // ========== Calculation Functions ==========
+        function isDailyLikeEmployee(emp) {
+            if (!emp) return false;
+            if (emp.employeeType === 'daily') return true;
+            if (emp.employeeType === 'machinery') {
+                const basis = emp.machinerySalaryBasis || 'monthly';
+                return basis === 'daily';
+            }
+            return false;
+        }
+
         function calculateDailySalary(emp, monthKey = null, year = null) {
                 // للموظف اليومي: الراتب هو أجر اليوم مباشرة
-            if (emp.employeeType === 'daily') {
+            if (emp.employeeType === 'daily' || isDailyLikeEmployee(emp)) {
                 let dailyWageUSD = emp.salary;
                 const exchangeRate = parseFloat(emp.exchangeRate) || 1;
                 if (emp.salaryCurrency === 'IQD') dailyWageUSD = emp.salary / exchangeRate;
@@ -9966,9 +9990,12 @@
                 } else if (dayData.type === 'half') {
                     totalDays += 0.5;
                 } else if (dayData.type === 'paid-leave') {
-                    // للموظف اليومي: لا إجازة مدفوعة
-                    if (emp.employeeType !== 'daily') {
-                        totalDays += 1;
+                    // للموظف اليومي/الآليات اليومية: لا إجازة مدفوعة
+                    if (!isDailyLikeEmployee(emp)) {
+                        const paidLeaveCalc = emp.paidLeaveCalculation || 'full';
+                        if (paidLeaveCalc === 'full') totalDays += 1;
+                        else if (paidLeaveCalc === 'half') totalDays += 0.5;
+                        // none => 0
                     }
                 } else if (dayData.type === 'custom-hours') {
                     // حساب الساعات من الفترات المتقطعة
@@ -14469,6 +14496,11 @@ function renderProjectView() {
                 if (!typeSelect) return;
                 
                 const employeeType = typeSelect.value;
+                const machineryBasisGroupId = fieldPrefix === 'salary' ? 'machinerySalaryBasisGroup' : 'editMachinerySalaryBasisGroup';
+                const machineryBasisSelectId = fieldPrefix === 'salary' ? 'machinerySalaryBasis' : 'editMachinerySalaryBasis';
+                const machineryBasisGroup = document.getElementById(machineryBasisGroupId);
+                const machineryBasisSelect = document.getElementById(machineryBasisSelectId);
+                const machineryBasis = machineryBasisSelect?.value || 'monthly';
                 
                 // البحث عن label الراتب
                 let salaryLabel = null;
@@ -14499,12 +14531,24 @@ function renderProjectView() {
                 if (employeeType === 'daily') {
                     salaryLabel.innerHTML = '💵 أجر اليوم <span style="color: #10b981; font-size: 11px;">(المبلغ المدفوع لكل يوم عمل)</span>';
                     if (attendanceSection) attendanceSection.style.display = 'none';
+                    if (machineryBasisGroup) machineryBasisGroup.style.display = 'none';
                 } else if (employeeType === 'monthly' || employeeType === 'external') {
                     salaryLabel.innerHTML = '💰 الراتب الشهري <span style="color: #6366f1; font-size: 11px;">(الراتب الشهري الأساسي)</span>';
                     if (attendanceSection) attendanceSection.style.display = 'block';
+                    if (machineryBasisGroup) machineryBasisGroup.style.display = 'none';
                 } else if (employeeType === 'vehicle') {
                     salaryLabel.innerHTML = '🚗 راتب السيارة <span style="color: #f59e0b; font-size: 11px;">(التكلفة الشهرية)</span>';
                     if (attendanceSection) attendanceSection.style.display = 'block';
+                    if (machineryBasisGroup) machineryBasisGroup.style.display = 'none';
+                } else if (employeeType === 'machinery') {
+                    if (machineryBasisGroup) machineryBasisGroup.style.display = 'block';
+                    if (machineryBasis === 'daily') {
+                        salaryLabel.innerHTML = '💵 أجر اليوم <span style="color: #10b981; font-size: 11px;">(للآليات - المبلغ المدفوع لكل يوم عمل)</span>';
+                        if (attendanceSection) attendanceSection.style.display = 'none';
+                    } else {
+                        salaryLabel.innerHTML = '💰 الراتب الشهري <span style="color: #6366f1; font-size: 11px;">(للآليات - الراتب الشهري الأساسي)</span>';
+                        if (attendanceSection) attendanceSection.style.display = 'block';
+                    }
                 }
             } catch (error) {
                 console.error('Error in updateSalaryLabelByType:', error);
@@ -15513,6 +15557,12 @@ function renderProjectView() {
                     document.getElementById('editSalaryCurrency').value = emp.salaryCurrency || 'USD';
                     document.getElementById('editPaymentCurrency').value = emp.paymentCurrency || 'IQD';
                     document.getElementById('editExchangeRate').value = emp.exchangeRate || 1420;
+
+                    // تحميل أساس الأجر للآليات (يومي/شهري)
+                    const mbSelect = document.getElementById('editMachinerySalaryBasis');
+                    if (mbSelect) {
+                        mbSelect.value = emp.machinerySalaryBasis || 'monthly';
+                    }
                     
                     // ✅ حقل المشروع - التعيين المباشر بعد ملء القائمة
                     const projectSelect = document.getElementById('editProject');
@@ -16329,7 +16379,7 @@ function renderProjectView() {
                 if (isWeekend && dayData.type === 'not-set') dayDiv.classList.add('weekend');
                 
                 // تحديد الخيارات حسب نوع الموظف
-                const isDailyEmployee = currentAttendanceEmployee.employeeType === 'daily';
+                const isDailyEmployee = isDailyLikeEmployee(currentAttendanceEmployee);
                 const paidLeaveOption = isDailyEmployee ? '' : `<option value="paid-leave" ${dayData.type === 'paid-leave' ? 'selected' : ''}>💚 إجازة مدفوعة</option>`;
                 
                 // عرض الفترات المتقطعة
@@ -16499,6 +16549,7 @@ function renderProjectView() {
             
             const dailyWorkHours = parseFloat(currentAttendanceEmployee.dailyWorkHours || 8);
             const overtimeMultiplier = parseFloat(currentAttendanceEmployee.overtimeMultiplier || 1.5);
+            const isDailyLike = isDailyLikeEmployee(currentAttendanceEmployee);
             
             Object.values(attendanceData).forEach(dayData => {
                 if (dayData.type === 'full') {
@@ -16508,10 +16559,12 @@ function renderProjectView() {
                     halfDays++;
                     totalRegularHours += dailyWorkHours / 2;
                 } else if (dayData.type === 'paid-leave') {
-                    paidLeaveDays++;
-                    const paidLeaveCalc = currentAttendanceEmployee.paidLeaveCalculation || 'full';
-                    if (paidLeaveCalc === 'full') totalRegularHours += dailyWorkHours;
-                    else if (paidLeaveCalc === 'half') totalRegularHours += dailyWorkHours / 2;
+                    if (!isDailyLike) {
+                        paidLeaveDays++;
+                        const paidLeaveCalc = currentAttendanceEmployee.paidLeaveCalculation || 'full';
+                        if (paidLeaveCalc === 'full') totalRegularHours += dailyWorkHours;
+                        else if (paidLeaveCalc === 'half') totalRegularHours += dailyWorkHours / 2;
+                    }
                 } else if (dayData.type === 'absent') {
                     absentDays++;
                 } else if (dayData.type === 'custom-hours') {
@@ -16597,14 +16650,15 @@ function renderProjectView() {
             const monthIndex = months.indexOf(monthKey);
             const actualDaysInMonth = monthIndex === -1 ? 30 : new Date(yearKey, monthIndex + 1, 0).getDate();
             const divisor = monthCalculationMethod === '30' ? 30 : actualDaysInMonth;
+            const isDailyLike = isDailyLikeEmployee(emp);
             
             if (attendanceSystem === 'fixed') {
                 // راتب ثابت - بدون النظر للدوام
-                return salary;
+                return isDailyLike ? salary * divisor : salary;
             } else {
                 // بالساعات - مع الأوفر تايم والخصومات
                 const expectedMonthlyHours = divisor * dailyWorkHours;
-                const hourlyRate = salary / expectedMonthlyHours;
+                const hourlyRate = isDailyLike ? (salary / dailyWorkHours) : (salary / expectedMonthlyHours);
                 
                 // الراتب = (ساعات عادية × أجر الساعة) + (ساعات أوفر تايم × أجر الساعة)
                 // ملاحظة: ساعات الأوفر تايم مضروبة مسبقاً بالمعامل
@@ -16619,6 +16673,7 @@ function renderProjectView() {
             const daysInMonth = monthIndex === -1 ? 30 : new Date(yearKey, monthIndex + 1, 0).getDate();
             const workDaysOfWeek = currentAttendanceEmployee.workDaysOfWeek || [true, true, true, true, true, false, true];
             const employeeType = currentAttendanceEmployee.employeeType || 'monthly';
+            const machineryBasis = currentAttendanceEmployee.machinerySalaryBasis || 'monthly';
             
             for (let day = 1; day <= daysInMonth; day++) {
                 const dayOfWeek = new Date(yearKey, monthIndex, day).getDay();
@@ -16631,7 +16686,7 @@ function renderProjectView() {
                     // ليس يوم عمل (عطلة أسبوعية)
                     // للموظف الشهري والسيارة: إجازة مدفوعة
                     // للموظف اليومي: لا شيء (لا راتب)
-                    if (employeeType === 'monthly' || employeeType === 'external' || employeeType === 'vehicle') {
+                    if (employeeType === 'monthly' || employeeType === 'external' || employeeType === 'vehicle' || (employeeType === 'machinery' && machineryBasis !== 'daily')) {
                         attendanceData[day] = { type: 'paid-leave' };
                     } else {
                         attendanceData[day] = { type: 'not-set' };
@@ -16662,6 +16717,7 @@ function renderProjectView() {
             const monthIndex = months.indexOf(currentMonth);
             const daysInMonth = new Date(currentYear, monthIndex + 1, 0).getDate();
             const workDaysOfWeek = currentAttendanceEmployee.workDaysOfWeek || [true, true, true, true, true, false, true];
+            const machineryBasis = currentAttendanceEmployee.machinerySalaryBasis || 'monthly';
             
             for (let day = 1; day <= daysInMonth; day++) {
                 const dayOfWeek = new Date(currentYear, monthIndex, day).getDay();
@@ -16672,7 +16728,7 @@ function renderProjectView() {
                     attendanceData[day] = { type: 'full' };
                 } else {
                     // عطلة مدفوعة الأجر (للموظف الشهري فقط)
-                    if (currentAttendanceEmployee.employeeType === 'monthly' || currentAttendanceEmployee.employeeType === 'external' || currentAttendanceEmployee.employeeType === 'vehicle') {
+                    if (currentAttendanceEmployee.employeeType === 'monthly' || currentAttendanceEmployee.employeeType === 'external' || currentAttendanceEmployee.employeeType === 'vehicle' || (currentAttendanceEmployee.employeeType === 'machinery' && machineryBasis !== 'daily')) {
                         attendanceData[day] = { type: 'paid-leave' };
                     } else {
                         attendanceData[day] = { type: 'not-set' };
@@ -27891,6 +27947,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 salaryIncreaseCurrency: 'IQD',
                 ceoBonus: 0,
                 ceoBonusCurrency: 'IQD',
+                machinerySalaryBasis: document.getElementById('machinerySalaryBasis')?.value || 'monthly',
                 // إعدادات الدوام
                 attendanceSystem: document.getElementById('attendanceSystem').value || 'hours',
                 dailyWorkHours: parseFloat(document.getElementById('dailyWorkHours').value) || 8,
@@ -28024,6 +28081,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
                     document.getElementById('editWorkDay_6')?.checked === true
                 ],
                 paidLeaveCalculation: document.getElementById('editPaidLeaveCalculation').value || 'full',
+                machinerySalaryBasis: document.getElementById('editMachinerySalaryBasis')?.value || 'monthly',
                 paymentMethod: document.getElementById('editPaymentMethod').value || 'cash',
                 mastercardNumber: document.getElementById('editPaymentMethod').value === 'mastercard' 
                     ? (document.getElementById('editMastercardNumber').value || '').trim() || null 
