@@ -2042,16 +2042,39 @@
             border-radius: 10px;
         }
         
-        /* إخفاء شريط التمرير العمودي (مع بقاء التمرير يعمل) */
-        #summaryModal .modal-body,
-        #employeeReportModal .modal-body {
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE/Old Edge */
+        /* إظهار شريط التمرير في تقارير الأدوات (ملخص المشاريع) */
+        #summaryModal .modal-body {
+            scrollbar-width: auto; /* Firefox */
+            -ms-overflow-style: auto; /* IE/Old Edge */
         }
-        #summaryModal .modal-body::-webkit-scrollbar,
-        #employeeReportModal .modal-body::-webkit-scrollbar {
-            width: 0;
-            height: 0;
+        #summaryModal .modal-body::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        /* حاوية جداول التقارير: تمرير أفقي/عمودي + رأس ثابت */
+        .report-table-container {
+            width: 100%;
+            overflow: auto;
+            max-height: min(65vh, 720px);
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            background: #fff;
+        }
+        .report-table-container table {
+            width: max-content;
+            min-width: 100%;
+            border-collapse: collapse;
+        }
+        .report-table-container thead th {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+        .report-table-container tfoot td {
+            position: sticky;
+            bottom: 0;
+            z-index: 4;
         }
 
         .form-row {
@@ -2534,6 +2557,19 @@
             @page {
                 size: A3 landscape; /* تغيير إلى A3 للطباعة على ورق أكبر */
                 margin: 10mm 8mm 30mm 8mm; /* زيادة الهامش السفلي للتذييل الثابت بشكل أكبر */
+            }
+
+            /* طباعة أبيض/أسود: إلغاء الألوان والتدرجات قدر الإمكان */
+            * {
+                -webkit-print-color-adjust: economy !important;
+                print-color-adjust: economy !important;
+                box-shadow: none !important;
+                text-shadow: none !important;
+                filter: none !important;
+            }
+            body, body * {
+                color: #000 !important;
+                background: transparent !important;
             }
             
             /* إعادة تعيين الخلفية والتباعد */
@@ -3409,6 +3445,10 @@
                                 <span>🎫</span>
                                 <span id="navVouchersText">قسائم الراتب</span>
                             </div>
+                            <div class="nav-dropdown-item" onclick="showTab('salaryChangeReport'); closeNavToolsDropdown();">
+                                <span>📈</span>
+                                <span id="navSalaryChangesText">تتبع الرواتب</span>
+                            </div>
                         </div>
                     </div>
                     <div class="nav-item" onclick="showTab('bulkEdit')" id="navBulkEdit" role="button" tabindex="0">
@@ -3481,6 +3521,9 @@
                 </button>
                 <button class="tab-btn" onclick="showTab('bulkEdit')">
                     <span id="bulkEditTab">✏️ تعديل متعدد</span>
+                </button>
+                <button type="button" class="tab-btn" id="salaryChangeReportTabBtn" onclick="showTab('salaryChangeReport')">
+                    <span id="salaryChangeReportTab">📈 تتبع الرواتب</span>
                 </button>
                 <div class="dropdown">
                     <button class="tab-btn" onclick="toggleDropdown('monthsDropdown')">
@@ -4319,6 +4362,8 @@
                         <option value="monthly">شهري</option>
                         <option value="daily">يومي</option>
                         <option value="vehicle">مركبة</option>
+                        <option value="external">خارجي</option>
+                        <option value="machinery">الآليات</option>
                     </select>
                 </div>
                 
@@ -8579,6 +8624,7 @@
             elements['summaryBtn'] = currentLang === 'ar' ? '📊 الملخصات والمقارنات' : '📊 Summaries & Comparisons';
             elements['navActivityLogText'] = currentLang === 'ar' ? 'سجل التعديلات' : 'Activity Log';
             elements['navVouchersText'] = currentLang === 'ar' ? 'قسائم الراتب' : 'Salary Vouchers';
+            elements['navSalaryChangesText'] = currentLang === 'ar' ? 'تتبع الرواتب' : 'Salary tracking';
             elements['excelText'] = 'Excel';
             elements['printText'] = currentLang === 'ar' ? 'طباعة' : 'Print';
             elements['jsonText'] = 'JSON';
@@ -8589,6 +8635,11 @@
             elements['monthsTab'] = currentLang === 'ar' ? '📆 الأشهر ▼' : '📆 Months ▼';
             elements['projectsTab'] = currentLang === 'ar' ? '🏗 المشاريع ▼' : '🏗 Projects ▼';
             elements['bulkEditTab'] = currentLang === 'ar' ? '✏️ تعديل متعدد' : '✏️ Bulk Edit';
+            elements['salaryChangeReportTab'] = currentLang === 'ar' ? '📈 تتبع الرواتب' : '📈 Salary tracking';
+            elements['salaryChangeReportPageTitle'] = currentLang === 'ar' ? '📈 تتبع الرواتب عبر فترة' : '📈 Salary tracking (period)';
+            elements['salaryChangeReportPageSubtitle'] = currentLang === 'ar'
+                ? 'صفوف = الموظفون، أعمدة = الأشهر داخل الفترة. لكل شهر: الراتب الأساسي، المكافآت، مكافأة CEO، زيادة CEO.'
+                : 'Rows = employees, columns = months in the range. Per month: base salary, bonuses, CEO bonus, CEO increase.';
             elements['appearanceBtn'] = currentLang === 'ar' ? 'التحكم في المظهر' : 'Appearance Control';
             
             // تحديث عناصر نافذة الملخصات
@@ -8605,6 +8656,56 @@
                 const placeholder = summaryMonth2Select.querySelector('#summaryMonth2Placeholder');
                 if (placeholder) placeholder.textContent = elements.summaryMonth2Placeholder || (currentLang === 'ar' ? 'بدون مقارنة' : 'No Comparison');
             }
+
+            // Salary change report page (labels + options; body may be absent if tab not rendered)
+
+            const scFromMonthLabel = document.getElementById('scFromMonthLabel');
+            if (scFromMonthLabel) scFromMonthLabel.textContent = currentLang === 'ar' ? 'من (الشهر)' : 'From (Month)';
+            const scFromYearLabel = document.getElementById('scFromYearLabel');
+            if (scFromYearLabel) scFromYearLabel.textContent = currentLang === 'ar' ? 'من (السنة)' : 'From (Year)';
+            const scToMonthLabel = document.getElementById('scToMonthLabel');
+            if (scToMonthLabel) scToMonthLabel.textContent = currentLang === 'ar' ? 'إلى (الشهر)' : 'To (Month)';
+            const scToYearLabel = document.getElementById('scToYearLabel');
+            if (scToYearLabel) scToYearLabel.textContent = currentLang === 'ar' ? 'إلى (السنة)' : 'To (Year)';
+            const scProjectLabel = document.getElementById('scProjectLabel');
+            if (scProjectLabel) scProjectLabel.textContent = currentLang === 'ar' ? 'المشروع' : 'Project';
+            const scEmployeeTypeLabel = document.getElementById('scEmployeeTypeLabel');
+            if (scEmployeeTypeLabel) scEmployeeTypeLabel.textContent = currentLang === 'ar' ? 'نوع الموظف' : 'Employee Type';
+
+            const scProjectAll = document.getElementById('scProjectAllOption');
+            if (scProjectAll) scProjectAll.textContent = currentLang === 'ar' ? 'جميع المشاريع' : 'All Projects';
+
+            const scEmpAll = document.getElementById('scEmployeeTypeAll');
+            if (scEmpAll) scEmpAll.textContent = currentLang === 'ar' ? 'الكل' : 'All';
+            const scEmpMonthly = document.getElementById('scEmployeeTypeMonthly');
+            if (scEmpMonthly) scEmpMonthly.textContent = currentLang === 'ar' ? 'شهري' : 'Monthly';
+            const scEmpDaily = document.getElementById('scEmployeeTypeDaily');
+            if (scEmpDaily) scEmpDaily.textContent = currentLang === 'ar' ? 'يومي' : 'Daily';
+            const scEmpVehicle = document.getElementById('scEmployeeTypeVehicle');
+            if (scEmpVehicle) scEmpVehicle.textContent = currentLang === 'ar' ? 'مركبة' : 'Vehicle';
+            const scEmpExternal = document.getElementById('scEmployeeTypeExternal');
+            if (scEmpExternal) scEmpExternal.textContent = currentLang === 'ar' ? 'خارجي' : 'External';
+            const scEmpMachinery = document.getElementById('scEmployeeTypeMachinery');
+            if (scEmpMachinery) scEmpMachinery.textContent = currentLang === 'ar' ? 'الآليات' : 'Machinery';
+
+            const scGenBtn = document.getElementById('scGenerateBtn');
+            if (scGenBtn) scGenBtn.textContent = currentLang === 'ar' ? 'عرض التقرير' : 'Generate report';
+            const scPrintBtn = document.getElementById('scPrintBtn');
+            if (scPrintBtn) scPrintBtn.textContent = currentLang === 'ar' ? '🖨️ طباعة' : '🖨️ Print';
+
+            // Refresh month names inside selects if modal was opened before
+            ['scFromMonth', 'scToMonth'].forEach(selectId => {
+                const sel = document.getElementById(selectId);
+                if (!sel) return;
+                const prev = sel.value;
+                Array.from(sel.options).forEach(opt => {
+                    const m = opt.value;
+                    if (m && translations[currentLang]?.monthNames?.[m]) {
+                        opt.textContent = translations[currentLang].monthNames[m];
+                    }
+                });
+                if (prev) sel.value = prev;
+            });
             
             Object.entries(elements).forEach(([id, text]) => {
                 const element = document.getElementById(id);
@@ -8653,6 +8754,10 @@
             updateNavigation(currentView);
             
             populateDropdowns();
+
+            if (typeof currentView !== 'undefined' && currentView === 'salaryChangeReport' && typeof initSalaryChangeReportViewControls === 'function') {
+                initSalaryChangeReportViewControls();
+            }
         }
 // ========== Firebase Functions ==========
 
@@ -10419,6 +10524,9 @@
                 // البحث عن زر التعديل المتعدد
                 const bulkEditBtn = Array.from(tabButtons).find(btn => btn.textContent.includes('تعديل متعدد') || btn.textContent.includes('Bulk Edit'));
                 if (bulkEditBtn) bulkEditBtn.classList.add('active');
+            } else if (tab === 'salaryChangeReport') {
+                const scTabBtn = document.getElementById('salaryChangeReportTabBtn');
+                if (scTabBtn) scTabBtn.classList.add('active');
             }
             renderContent();
         }
@@ -10664,6 +10772,66 @@
         window.showProjectMonthYearModal = showProjectMonthYearModal;
         window.confirmProjectMonthYear = confirmProjectMonthYear;
 
+        function renderSalaryChangeReportView() {
+            const isAr = currentLang === 'ar';
+            return `
+                <div class="salary-change-report-page" style="max-width: 100%; margin: 0 auto; padding: 10px 8px 40px;">
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <h2 id="salaryChangeReportPageTitle" style="color: var(--primary); font-size: 28px; margin-bottom: 8px;">📈 ${isAr ? 'تتبع الرواتب عبر فترة' : 'Salary tracking (period)'}</h2>
+                        <p id="salaryChangeReportPageSubtitle" style="color: var(--gray); font-size: 15px; max-width: 900px; margin: 0 auto; line-height: 1.6;">
+                            ${isAr ? 'صفوف = الموظفون، أعمدة = الأشهر داخل الفترة. لكل شهر: الراتب الأساسي، المكافآت، مكافأة CEO، زيادة CEO.' : 'Rows = employees, columns = months in the range. Per month: base salary, bonuses, CEO bonus, CEO increase.'}
+                        </p>
+                    </div>
+                    <div class="card" style="margin: 0 auto 20px; max-width: 1200px;">
+                        <div class="card-body" style="padding: 20px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px;">
+                                <div class="form-group" style="margin: 0;">
+                                    <label id="scFromMonthLabel" for="scFromMonth" style="font-weight: 700;">من (الشهر)</label>
+                                    <select id="scFromMonth" style="width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 10px;"></select>
+                                </div>
+                                <div class="form-group" style="margin: 0;">
+                                    <label id="scFromYearLabel" for="scFromYear" style="font-weight: 700;">من (السنة)</label>
+                                    <select id="scFromYear" style="width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 10px;"></select>
+                                </div>
+                                <div class="form-group" style="margin: 0;">
+                                    <label id="scToMonthLabel" for="scToMonth" style="font-weight: 700;">إلى (الشهر)</label>
+                                    <select id="scToMonth" style="width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 10px;"></select>
+                                </div>
+                                <div class="form-group" style="margin: 0;">
+                                    <label id="scToYearLabel" for="scToYear" style="font-weight: 700;">إلى (السنة)</label>
+                                    <select id="scToYear" style="width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 10px;"></select>
+                                </div>
+                                <div class="form-group" style="margin: 0;">
+                                    <label id="scProjectLabel" for="scProject" style="font-weight: 700;">المشروع</label>
+                                    <select id="scProject" style="width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 10px;">
+                                        <option value="all" id="scProjectAllOption">جميع المشاريع</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="margin: 0;">
+                                    <label id="scEmployeeTypeLabel" for="scEmployeeType" style="font-weight: 700;">نوع الموظف</label>
+                                    <select id="scEmployeeType" style="width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 10px;">
+                                        <option value="all" id="scEmployeeTypeAll">الكل</option>
+                                        <option value="monthly" id="scEmployeeTypeMonthly">شهري</option>
+                                        <option value="daily" id="scEmployeeTypeDaily">يومي</option>
+                                        <option value="vehicle" id="scEmployeeTypeVehicle">مركبة</option>
+                                        <option value="external" id="scEmployeeTypeExternal">خارجي</option>
+                                        <option value="machinery" id="scEmployeeTypeMachinery">الآليات</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:10px; flex-wrap: wrap;">
+                                <button class="btn btn-primary" type="button" onclick="generateSalaryChangeReport()" id="scGenerateBtn">${isAr ? 'عرض التقرير' : 'Generate report'}</button>
+                                <button class="btn btn-success" type="button" onclick="printSalaryChangeReport()" id="scPrintBtn" style="display:inline-flex;">🖨️ ${isAr ? 'طباعة' : 'Print'}</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="salaryChangeReportResults" class="salary-change-report-results" style="min-height: 160px; padding: 0 4px;">
+                        <p style="text-align:center;opacity:.65;padding:24px;">${isAr ? 'اضغط «عرض التقرير» لإنشاء الجدول.' : 'Click «Generate report» to build the table.'}</p>
+                    </div>
+                </div>
+            `;
+        }
+
         async function renderContent() {
             const content = document.getElementById('mainContent');
             if (currentView === 'dashboard') {
@@ -10685,6 +10853,11 @@
                 renderSettingsView();
             } else if (currentView === 'bulkEdit') {
                 renderBulkEditView();
+            } else if (currentView === 'salaryChangeReport') {
+                setHTML(content, renderSalaryChangeReportView());
+                if (typeof initSalaryChangeReportViewControls === 'function') {
+                    initSalaryChangeReportViewControls();
+                }
             }
             
             // تفعيل تغيير حجم الأعمدة بعد رسم المحتوى
@@ -10703,11 +10876,11 @@
                             applyPinnedColumns('employeeTable', 'month');
                         }
                     } else if (currentView === 'project') {
-                        const projectTables = document.querySelectorAll('[id^="projectSectionTable"]');
+                        // تطبيق التثبيت/الصف المثبت على جميع جداول المشاريع (Monthly/Daily/...)
+                        const projectTables = document.querySelectorAll('.table-container table[id]');
                         projectTables.forEach(table => {
-                            if (table) {
-                                applyPinnedColumns(table.id, 'project');
-                            }
+                            const id = table && table.id;
+                            if (id) applyPinnedColumns(id, 'project');
                         });
                     }
                 }, 100);
@@ -13736,8 +13909,8 @@ function renderProjectView() {
                         body { font-family: Arial; padding: 20px; }
                         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
                         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
-                        th { background: #667eea; color: white; font-weight: bold; }
-                        .total { background: #f0f9ff; font-weight: bold; }
+                        th { background: #efefef; color: #000; font-weight: bold; }
+                        .total { background: #f5f5f5; font-weight: bold; }
                     </style>
                 </head>
                 <body>
@@ -13931,8 +14104,8 @@ function renderProjectView() {
             
             // جدول البيانات الشهرية
             reportHTML += `
-                <div style="overflow-x: auto; margin-bottom: 30px;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div class="report-table-container" style="margin-bottom: 30px;">
+                    <table style="font-size: 12px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                         <thead>
                             <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                                 <th style="padding: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">الشهر</th>
@@ -14114,11 +14287,11 @@ function renderProjectView() {
                             @page { size: A4 landscape; margin: 15mm; }
                         }
                         body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; direction: rtl; }
-                        h1 { color: #667eea; margin-bottom: 20px; }
+                        h1 { color: #000; margin-bottom: 20px; }
                         table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 11px; }
                         th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-                        th { background: #667eea; color: white; font-weight: bold; }
-                        tfoot { background: #1f2937; color: white; font-weight: bold; }
+                        th { background: #efefef; color: #000; font-weight: bold; }
+                        tfoot { background: #f5f5f5; color: #000; font-weight: bold; }
                         .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 30px; }
                         .stat-box { padding: 15px; border-radius: 8px; border: 2px solid; }
                     </style>
@@ -22540,7 +22713,9 @@ function renderProjectView() {
             const monthKeyPrevPrint = months[prevMonthIndexPrint];
             const yearKeyPrevPrint = currentMonthIndexPrint > 0 ? yearKeyCurrentPrint : yearKeyCurrentPrint - 1;
 
-            function applyPrintFilters(list) {
+            // ملاحظة: فلتر حالة الدفع يُستخدم لطباعة القوائم فقط،
+            // لكن "المقارنة الحالي vs السابق" يجب ألا تتأثر بـ paid/unpaid حتى تكون مقارنة عادلة بين الأشهر.
+            function applyComparisonFilters(list) {
                 let out = list || [];
 
                 // reportType
@@ -22550,15 +22725,6 @@ function renderProjectView() {
                         if (settings.reportType === 'daily') return emp.employeeType === 'daily';
                         if (settings.reportType === 'vehicle') return emp.employeeType === 'vehicle';
                         if (settings.reportType === 'machinery') return emp.employeeType === 'machinery';
-                        return true;
-                    });
-                }
-
-                // paymentStatus
-                if (settings.paymentStatus && settings.paymentStatus !== 'all') {
-                    out = out.filter(emp => {
-                        if (settings.paymentStatus === 'paid') return emp.isPaid === true;
-                        if (settings.paymentStatus === 'unpaid') return !emp.isPaid;
                         return true;
                     });
                 }
@@ -22607,7 +22773,7 @@ function renderProjectView() {
                 prevEmployeesBase = prevEmployeesBase.filter(emp => emp.project === settings.selectedProject);
             }
 
-            const filteredEmployeesPrev = applyPrintFilters(prevEmployeesBase);
+            const filteredEmployeesPrev = applyComparisonFilters(prevEmployeesBase);
 
             // تقسيم حسب النوع للحالي والسابق
             const typesToShow = (settings.reportType && settings.reportType !== 'all')
@@ -22623,14 +22789,14 @@ function renderProjectView() {
             };
 
             const summaryRows = typesToShow.map(typeKey => {
-                const curType = filteredEmployees.filter(emp => emp.employeeType === typeKey);
+                const curType = applyComparisonFilters(filteredEmployees).filter(emp => emp.employeeType === typeKey);
                 const prevType = filteredEmployeesPrev.filter(emp => emp.employeeType === typeKey);
                 const curT = calcUSD_IQD_Totals(curType, monthKeyCurrentPrint, yearKeyCurrentPrint);
                 const prevT = calcUSD_IQD_Totals(prevType, monthKeyPrevPrint, yearKeyPrevPrint);
                 return { typeKey, label: typeLabels[typeKey] || typeKey, cur: curT, prev: prevT };
             });
 
-            const curAll = calcUSD_IQD_Totals(filteredEmployees, monthKeyCurrentPrint, yearKeyCurrentPrint);
+            const curAll = calcUSD_IQD_Totals(applyComparisonFilters(filteredEmployees), monthKeyCurrentPrint, yearKeyCurrentPrint);
             const prevAll = calcUSD_IQD_Totals(filteredEmployeesPrev, monthKeyPrevPrint, yearKeyPrevPrint);
 
             const summaryHTML = `
@@ -23099,7 +23265,9 @@ function renderProjectView() {
             const monthKeyPrevPrint = months[prevMonthIndexPrint];
             const yearKeyPrevPrint = currentMonthIndexPrint > 0 ? yearKeyCurrentPrint : yearKeyCurrentPrint - 1;
 
-            function applyPrintFilters(list) {
+            // ملاحظة: فلتر حالة الدفع يُستخدم لطباعة القوائم فقط،
+            // لكن "المقارنة الحالي vs السابق" يجب ألا تتأثر بـ paid/unpaid حتى تكون مقارنة عادلة بين الأشهر.
+            function applyComparisonFilters(list) {
                 let out = list || [];
 
                 // reportType
@@ -23109,15 +23277,6 @@ function renderProjectView() {
                         if (settings.reportType === 'daily') return emp.employeeType === 'daily';
                         if (settings.reportType === 'vehicle') return emp.employeeType === 'vehicle';
                         if (settings.reportType === 'machinery') return emp.employeeType === 'machinery';
-                        return true;
-                    });
-                }
-
-                // paymentStatus
-                if (settings.paymentStatus && settings.paymentStatus !== 'all') {
-                    out = out.filter(emp => {
-                        if (settings.paymentStatus === 'paid') return emp.isPaid === true;
-                        if (settings.paymentStatus === 'unpaid') return !emp.isPaid;
                         return true;
                     });
                 }
@@ -23166,7 +23325,7 @@ function renderProjectView() {
                 prevEmployeesBase = prevEmployeesBase.filter(emp => emp.project === settings.selectedProject);
             }
 
-            const filteredEmployeesPrev = applyPrintFilters(prevEmployeesBase);
+            const filteredEmployeesPrev = applyComparisonFilters(prevEmployeesBase);
 
             // تقسيم حسب النوع للحالي والسابق
             const typesToShow = (settings.reportType && settings.reportType !== 'all')
@@ -23182,14 +23341,14 @@ function renderProjectView() {
             };
 
             const summaryRows = typesToShow.map(typeKey => {
-                const curType = filteredEmployees.filter(emp => emp.employeeType === typeKey);
+                const curType = applyComparisonFilters(filteredEmployees).filter(emp => emp.employeeType === typeKey);
                 const prevType = filteredEmployeesPrev.filter(emp => emp.employeeType === typeKey);
                 const curT = calcUSD_IQD_Totals(curType, monthKeyCurrentPrint, yearKeyCurrentPrint);
                 const prevT = calcUSD_IQD_Totals(prevType, monthKeyPrevPrint, yearKeyPrevPrint);
                 return { typeKey, label: typeLabels[typeKey] || typeKey, cur: curT, prev: prevT };
             });
 
-            const curAll = calcUSD_IQD_Totals(filteredEmployees, monthKeyCurrentPrint, yearKeyCurrentPrint);
+            const curAll = calcUSD_IQD_Totals(applyComparisonFilters(filteredEmployees), monthKeyCurrentPrint, yearKeyCurrentPrint);
             const prevAll = calcUSD_IQD_Totals(filteredEmployeesPrev, monthKeyPrevPrint, yearKeyPrevPrint);
 
             const summaryHTML = `
@@ -24670,6 +24829,456 @@ function renderProjectView() {
             
             openModal('salaryVouchersModal');
         }
+
+        // ========== تقرير تتبع الرواتب عبر فترة ==========
+        // المعلومات المهمة لكل شهر (كما طُلب): الراتب الأساسي - المكافآت - مكافأة CEO - زيادة CEO
+        const SALARY_CHANGE_TRACKED_FIELDS = [
+            { key: 'salary', labelAr: 'الراتب الأساسي', labelEn: 'Base salary', type: 'money', moneyCurrencyKey: 'salaryCurrency' },
+            { key: 'bonus', labelAr: 'المكافآت', labelEn: 'Bonuses', type: 'money', moneyCurrencyKey: 'bonusCurrency' },
+            { key: 'ceoBonus', labelAr: 'مكافأة CEO', labelEn: 'CEO bonus', type: 'money', moneyCurrencyKey: 'ceoBonusCurrency' },
+            { key: 'salaryIncrease', labelAr: 'زيادة CEO', labelEn: 'CEO increase', type: 'money', moneyCurrencyKey: 'salaryIncreaseCurrency' }
+        ];
+
+        function scNormalizeString(v) {
+            return (v === null || v === undefined) ? '' : String(v).trim();
+        }
+
+        function scNormalizeNumber(v) {
+            const n = parseFloat(v);
+            return isNaN(n) ? 0 : n;
+        }
+
+        function scNumbersClose(a, b, eps = 0.001) {
+            return Math.abs(a - b) <= eps;
+        }
+
+        function scFormatEmployeeType(empType) {
+            if (currentLang === 'ar') {
+                return empType === 'monthly' ? 'شهري' :
+                    empType === 'daily' ? 'يومي' :
+                    empType === 'vehicle' ? 'سيارة' :
+                    empType === 'external' ? 'خارجي' :
+                    empType === 'machinery' ? 'آليات' :
+                    (empType || '');
+            }
+            return empType === 'monthly' ? 'Monthly' :
+                empType === 'daily' ? 'Daily' :
+                empType === 'vehicle' ? 'Vehicle' :
+                empType === 'external' ? 'External' :
+                empType === 'machinery' ? 'Machinery' :
+                (empType || '');
+        }
+
+        function scFormatMachineryBasis(basis) {
+            const b = basis || 'monthly';
+            if (currentLang === 'ar') return b === 'daily' ? 'يومي' : 'شهري';
+            return b === 'daily' ? 'Daily' : 'Monthly';
+        }
+
+        function scFormatSnapshotValue(fieldMeta, snapshot) {
+            const key = fieldMeta.key;
+            const raw = snapshot ? snapshot[key] : '';
+
+            if (fieldMeta.type === 'money') {
+                const curKey = fieldMeta.moneyCurrencyKey || 'salaryCurrency';
+                const cur = scNormalizeString(snapshot?.[curKey] || 'IQD') || 'IQD';
+                return `${formatCurrency(scNormalizeNumber(raw))} ${cur}`;
+            }
+            if (fieldMeta.type === 'number') {
+                return String(scNormalizeNumber(raw));
+            }
+            if (fieldMeta.type === 'employeeType') {
+                return scFormatEmployeeType(raw);
+            }
+            if (fieldMeta.type === 'machineryBasis') {
+                return scFormatMachineryBasis(raw);
+            }
+            if (fieldMeta.type === 'project') {
+                const code = scNormalizeString(raw);
+                if (!code) return '';
+                return `${code} - ${projects[code] || code}`;
+            }
+            return scNormalizeString(raw);
+        }
+
+        function scBuildEmployeeSnapshot(emp) {
+            return {
+                salary: scNormalizeNumber(emp.salary),
+                salaryCurrency: scNormalizeString(emp.salaryCurrency || 'USD') || 'USD',
+                bonus: scNormalizeNumber(emp.bonus || 0),
+                bonusCurrency: scNormalizeString(emp.bonusCurrency || 'IQD') || 'IQD',
+                ceoBonus: scNormalizeNumber(emp.ceoBonus || 0),
+                ceoBonusCurrency: scNormalizeString(emp.ceoBonusCurrency || 'IQD') || 'IQD',
+                salaryIncrease: scNormalizeNumber(emp.salaryIncrease || 0),
+                salaryIncreaseCurrency: scNormalizeString(emp.salaryIncreaseCurrency || 'IQD') || 'IQD'
+            };
+        }
+
+        function scSnapshotsEqual(fieldMeta, a, b) {
+            const va = a ? a[fieldMeta.key] : undefined;
+            const vb = b ? b[fieldMeta.key] : undefined;
+
+            if (fieldMeta.type === 'money' || fieldMeta.type === 'number') {
+                return scNumbersClose(scNormalizeNumber(va), scNormalizeNumber(vb));
+            }
+            return scNormalizeString(va) === scNormalizeString(vb);
+        }
+
+        function scStableEmployeeKey(emp) {
+            const code = scNormalizeString(emp.employeeCode);
+            if (code) return `code:${code}`;
+            const ar = scNormalizeString(emp.nameAr).toLowerCase();
+            const en = scNormalizeString(emp.nameEn).toLowerCase();
+            if (ar && en) return `name:${ar}||${en}`;
+            if (ar) return `namear:${ar}`;
+            if (en) return `nameen:${en}`;
+            return `fb:${scNormalizeString(emp.firebaseId) || Math.random().toString(16).slice(2)}`;
+        }
+
+        function scFindEmployeeInMonth(identity, year, month) {
+            const list = employeeData?.[year]?.[month];
+            if (!Array.isArray(list) || list.length === 0) return null;
+
+            if (identity.matchType === 'code') {
+                return list.find(e => scNormalizeString(e.employeeCode) === identity.code) || null;
+            }
+
+            const ar = identity.nameArNorm;
+            const en = identity.nameEnNorm;
+            if (ar && en) {
+                const hit = list.find(e =>
+                    scNormalizeString(e.nameAr).toLowerCase() === ar &&
+                    scNormalizeString(e.nameEn).toLowerCase() === en
+                );
+                if (hit) return hit;
+            }
+            if (ar) {
+                const hit2 = list.find(e => scNormalizeString(e.nameAr).toLowerCase() === ar);
+                if (hit2) return hit2;
+            }
+            if (en) {
+                const hit3 = list.find(e => scNormalizeString(e.nameEn).toLowerCase() === en);
+                if (hit3) return hit3;
+            }
+            return null;
+        }
+
+        function scIteratePeriodsInclusive(fromYear, fromMonthKey, toYear, toMonthKey) {
+            const out = [];
+            let y = parseInt(fromYear);
+            let mIdx = months.indexOf(fromMonthKey);
+            const endY = parseInt(toYear);
+            let endIdx = months.indexOf(toMonthKey);
+
+            if (mIdx < 0 || endIdx < 0 || isNaN(y) || isNaN(endY)) {
+                return [];
+            }
+
+            // إذا كانت الفترة معكوسة، نعكسها تلقائياً
+            const startTs = y * 12 + mIdx;
+            const endTs = endY * 12 + endIdx;
+            if (startTs > endTs) {
+                return scIteratePeriodsInclusive(toYear, toMonthKey, fromYear, fromMonthKey);
+            }
+
+            while (y * 12 + mIdx <= endY * 12 + endIdx) {
+                out.push({ year: y, monthKey: months[mIdx] });
+                mIdx++;
+                if (mIdx >= months.length) {
+                    mIdx = 0;
+                    y++;
+                }
+            }
+            return out;
+        }
+
+        function scDisplayEmployeeName(emp) {
+            return currentLang === 'ar'
+                ? (emp.nameAr || emp.nameEn || emp.name || '')
+                : (emp.nameEn || emp.nameAr || emp.name || '');
+        }
+
+        function initSalaryChangeReportViewControls() {
+            const fillMonths = (selectId) => {
+                const sel = document.getElementById(selectId);
+                if (!sel) return;
+                const prev = sel.value;
+                sel.innerHTML = '';
+                months.forEach(m => {
+                    const option = document.createElement('option');
+                    option.value = m;
+                    option.textContent = translations[currentLang].monthNames[m];
+                    sel.appendChild(option);
+                });
+                if (prev && months.includes(prev)) sel.value = prev;
+            };
+
+            fillMonths('scFromMonth');
+            fillMonths('scToMonth');
+
+            const fillYears = (selectId) => {
+                const sel = document.getElementById(selectId);
+                if (!sel) return;
+                const prev = String(sel.value || '');
+                sel.innerHTML = '';
+                (availableYears || []).forEach(y => {
+                    const option = document.createElement('option');
+                    option.value = String(y);
+                    option.textContent = String(y);
+                    sel.appendChild(option);
+                });
+                if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
+            };
+
+            fillYears('scFromYear');
+            fillYears('scToYear');
+
+            const fromM = document.getElementById('scFromMonth');
+            const toM = document.getElementById('scToMonth');
+            const fromY = document.getElementById('scFromYear');
+            const toY = document.getElementById('scToYear');
+            if (fromM && !fromM.value) fromM.value = currentMonth;
+            if (toM && !toM.value) toM.value = currentMonth;
+            if (fromY && !fromY.value) fromY.value = String(currentYear);
+            if (toY && !toY.value) toY.value = String(currentYear);
+
+            const projectSelect = document.getElementById('scProject');
+            if (projectSelect) {
+                const allowedProjects = getAllowedProjects();
+                const filteredProjects = allowedProjects === null ? projects :
+                    Object.fromEntries(Object.entries(projects).filter(([code]) => allowedProjects.includes(code)));
+
+                const prev = projectSelect.value || 'all';
+                projectSelect.innerHTML = '';
+                const allOpt = document.createElement('option');
+                allOpt.value = 'all';
+                allOpt.id = 'scProjectAllOption';
+                allOpt.textContent = currentLang === 'ar' ? 'جميع المشاريع' : 'All Projects';
+                projectSelect.appendChild(allOpt);
+
+                Object.entries(filteredProjects).forEach(([code, name]) => {
+                    const option = document.createElement('option');
+                    option.value = code;
+                    option.textContent = `${code} - ${name}`;
+                    projectSelect.appendChild(option);
+                });
+
+                if ([...projectSelect.options].some(o => o.value === prev)) {
+                    projectSelect.value = prev;
+                } else {
+                    projectSelect.value = 'all';
+                }
+            }
+        }
+
+        function scCollectIdentitiesForPeriod(periods, projectFilter, employeeTypeFilter) {
+            const map = new Map();
+
+            periods.forEach(({ year, monthKey }) => {
+                const list = employeeData?.[year]?.[monthKey];
+                if (!Array.isArray(list)) return;
+
+                list.forEach(emp => {
+                    if (!emp) return;
+                    if (!hasProjectAccess(emp.project)) return;
+                    if (projectFilter !== 'all' && emp.project !== projectFilter) return;
+                    if (employeeTypeFilter !== 'all' && emp.employeeType !== employeeTypeFilter) return;
+
+                    const key = scStableEmployeeKey(emp);
+                    if (map.has(key)) return;
+
+                    const code = scNormalizeString(emp.employeeCode);
+                    const identity = code
+                        ? { key, matchType: 'code', code, displayName: scDisplayEmployeeName(emp) }
+                        : {
+                            key,
+                            matchType: 'name',
+                            nameArNorm: scNormalizeString(emp.nameAr).toLowerCase(),
+                            nameEnNorm: scNormalizeString(emp.nameEn).toLowerCase(),
+                            displayName: scDisplayEmployeeName(emp)
+                        };
+
+                    map.set(key, identity);
+                });
+            });
+
+            return [...map.values()].sort((a, b) => (a.displayName || '').localeCompare(b.displayName || '', currentLang === 'ar' ? 'ar' : 'en', { sensitivity: 'base' }));
+        }
+
+        function scEscapeHtml(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function scFormatSnapshotBlockHTML(snap) {
+            if (!snap) return '';
+            return SALARY_CHANGE_TRACKED_FIELDS.map(field => {
+                const lab = currentLang === 'ar' ? field.labelAr : field.labelEn;
+                const val = scFormatSnapshotValue(field, snap);
+                return `<div style="margin:0 0 3px 0;"><span style="opacity:.78;font-size:10px;">${scEscapeHtml(lab)}:</span> <span style="font-weight:600;">${scEscapeHtml(val)}</span></div>`;
+            }).join('');
+        }
+
+        function scRenderMatrixReport(identities, periods, meta) {
+            const isAr = currentLang === 'ar';
+            const title = isAr ? 'جدول الرواتب حسب الأشهر' : 'Salary data by month';
+            const emptyMark = '—';
+            const stickySide = isAr ? 'right' : 'left';
+
+            let headerHtml = `<div style="margin-bottom:12px;color:var(--text);">`;
+            headerHtml += `<div style="font-weight:800;font-size:17px;">${title}</div>`;
+            headerHtml += `<div style="opacity:.85;margin-top:4px;font-size:13px;">${meta.rangeText}</div>`;
+            headerHtml += `<div style="opacity:.85;font-size:13px;margin-top:2px;">${isAr ? 'الموظفون' : 'Employees'}: <strong>${identities.length}</strong> — ${isAr ? 'الأشهر' : 'Months'}: <strong>${periods.length}</strong></div>`;
+            headerHtml += `</div>`;
+
+            let tableHtml = `<div class="report-table-container salary-change-matrix-wrap" style="overflow:auto;max-height:72vh;border:1px solid var(--border);border-radius:10px;">`;
+            tableHtml += `<table class="report-table salary-change-matrix" style="border-collapse:collapse;min-width:max(100%,720px);">`;
+            tableHtml += `<thead><tr>`;
+            tableHtml += `<th style="position:sticky;top:0;${stickySide}:0;z-index:3;background:var(--card-bg,#fff);min-width:170px;max-width:220px;padding:10px;border-bottom:2px solid var(--border);text-align:${isAr ? 'right' : 'left'};vertical-align:bottom;">${isAr ? 'الموظف' : 'Employee'}</th>`;
+            periods.forEach(({ year, monthKey }) => {
+                const mn = translations[currentLang].monthNames[monthKey];
+                tableHtml += `<th style="position:sticky;top:0;z-index:2;background:var(--card-bg,#fff);min-width:150px;padding:8px;border-bottom:2px solid var(--border);text-align:center;vertical-align:bottom;font-size:12px;line-height:1.25;">${scEscapeHtml(mn)}<br><span style="opacity:.75;font-weight:600;">${year}</span></th>`;
+            });
+            tableHtml += `</tr></thead><tbody>`;
+
+            if (identities.length === 0) {
+                tableHtml += `<tr><td colspan="${periods.length + 1}" style="padding:18px;text-align:center;opacity:.8;">${isAr ? 'لا يوجد موظفون ضمن المرشحات في هذه الفترة.' : 'No employees match the filters for this period.'}</td></tr>`;
+            } else {
+                identities.forEach(id => {
+                    const codeLine = id.matchType === 'code' && id.code
+                        ? `<div style="opacity:.75;font-size:11px;margin-top:2px;">${scEscapeHtml(id.code)}</div>`
+                        : '';
+                    tableHtml += `<tr>`;
+                    tableHtml += `<td style="position:sticky;${stickySide}:0;z-index:1;background:var(--card-bg,#f9fafb);padding:8px;border-bottom:1px solid var(--border);vertical-align:top;font-weight:700;">${scEscapeHtml(id.displayName || '')}${codeLine}</td>`;
+                    periods.forEach(({ year, monthKey }) => {
+                        const emp = scFindEmployeeInMonth(id, year, monthKey);
+                        if (!emp) {
+                            tableHtml += `<td style="padding:6px;border-bottom:1px solid var(--border);vertical-align:top;color:#9ca3af;font-size:12px;text-align:center;">${emptyMark}</td>`;
+                        } else {
+                            if (!id.displayName) id.displayName = scDisplayEmployeeName(emp);
+                            const snap = scBuildEmployeeSnapshot(emp);
+                            tableHtml += `<td style="padding:6px;border-bottom:1px solid var(--border);vertical-align:top;font-size:11px;line-height:1.3;text-align:${isAr ? 'right' : 'left'};">${scFormatSnapshotBlockHTML(snap)}</td>`;
+                        }
+                    });
+                    tableHtml += `</tr>`;
+                });
+            }
+
+            tableHtml += `</tbody></table></div>`;
+            const printInner = `${headerHtml}${tableHtml}`;
+            const wrapper = `<div class="salary-change-matrix-root">${printInner}</div>`;
+            return { wrapper, printInner };
+        }
+
+        function scBuildPrintableHtml(innerTableHtml, meta) {
+            const isAr = currentLang === 'ar';
+            const dir = isAr ? 'rtl' : 'ltr';
+            const lang = isAr ? 'ar' : 'en';
+            const title = isAr ? 'تتبع الرواتب' : 'Salary tracking';
+
+            return `<!DOCTYPE html>
+<html lang="${lang}" dir="${dir}">
+<head>
+  <meta charset="UTF-8" />
+  <title>${title}</title>
+  <style>
+    @page { size: A4 landscape; margin: 8mm; }
+    body { font-family: Segoe UI, Tahoma, Arial, sans-serif; color: #111; font-size: 10px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 4px; vertical-align: top; }
+    th { background: #f3f4f6; }
+    .meta { margin-bottom: 8px; font-size: 11px; color: #333; }
+  </style>
+</head>
+<body>
+  <div class="meta"><strong>${title}</strong> — ${meta.rangeText} — ${meta.summaryLine || ''}</div>
+  ${innerTableHtml}
+  <script>
+    window.onload = function() {
+      setTimeout(function() { window.print(); }, 500);
+    };
+  <\/script>
+</body>
+</html>`;
+        }
+
+        async function generateSalaryChangeReport() {
+            const isAr = currentLang === 'ar';
+            try {
+                const fromMonth = document.getElementById('scFromMonth')?.value;
+                const toMonth = document.getElementById('scToMonth')?.value;
+                const fromYear = parseInt(document.getElementById('scFromYear')?.value || currentYear);
+                const toYear = parseInt(document.getElementById('scToYear')?.value || currentYear);
+                const projectFilter = document.getElementById('scProject')?.value || 'all';
+                const employeeTypeFilter = document.getElementById('scEmployeeType')?.value || 'all';
+
+                if (!fromMonth || !toMonth) {
+                    showNotification('warning', isAr ? 'تنبيه' : 'Warning', isAr ? 'يرجى اختيار الشهر.' : 'Please select months.');
+                    return;
+                }
+
+                const periods = scIteratePeriodsInclusive(fromYear, fromMonth, toYear, toMonth);
+                if (!periods.length) {
+                    showNotification('error', isAr ? 'خطأ' : 'Error', isAr ? 'فترة غير صالحة.' : 'Invalid period.');
+                    return;
+                }
+
+                if (getStorageMode() === 'firebase' && typeof db !== 'undefined' && db && typeof loadEmployeesFromFirebase === 'function') {
+                    const years = [...new Set(periods.map(p => p.year))];
+                    for (const y of years) {
+                        await loadEmployeesFromFirebase(y);
+                    }
+                }
+
+                const identities = scCollectIdentitiesForPeriod(periods, projectFilter, employeeTypeFilter);
+
+                const rangeText = isAr
+                    ? `الفترة: ${translations.ar.monthNames[fromMonth]} ${fromYear} → ${translations.ar.monthNames[toMonth]} ${toYear}`
+                    : `Period: ${translations.en.monthNames[fromMonth]} ${fromYear} → ${translations.en.monthNames[toMonth]} ${toYear}`;
+                const summaryLine = isAr
+                    ? `الموظفون: ${identities.length} — الأشهر: ${periods.length}`
+                    : `Employees: ${identities.length} — Months: ${periods.length}`;
+
+                const rendered = scRenderMatrixReport(identities, periods, { rangeText });
+
+                const results = document.getElementById('salaryChangeReportResults');
+                if (results) {
+                    results.innerHTML = rendered.wrapper;
+                    results.dataset.printHtml = scBuildPrintableHtml(rendered.printInner, { rangeText, summaryLine });
+                }
+
+                showNotification(
+                    'success',
+                    isAr ? 'تم' : 'Done',
+                    isAr
+                        ? `تم توليد الجدول (${identities.length} موظف × ${periods.length} شهر).`
+                        : `Table generated (${identities.length} employees × ${periods.length} months).`
+                );
+            } catch (e) {
+                console.error(e);
+                showNotification('error', isAr ? 'خطأ' : 'Error', isAr ? 'تعذر توليد التقرير.' : 'Could not generate the report.');
+            }
+        }
+
+        function printSalaryChangeReport() {
+            const results = document.getElementById('salaryChangeReportResults');
+            const html = results?.dataset?.printHtml;
+            if (!html) {
+                showNotification('warning', currentLang === 'ar' ? 'تنبيه' : 'Warning', currentLang === 'ar' ? 'لا يوجد تقرير للطباعة. اضغط "عرض التقرير" أولاً.' : 'Nothing to print. Generate the report first.');
+                return;
+            }
+
+            const printWindow = window.open('', '_blank', 'width=1200,height=800');
+            if (!printWindow) {
+                showNotification('error', 'خطأ', 'تعذر فتح نافذة الطباعة. تأكد من السماح بالنوافذ المنبثقة.');
+                return;
+            }
+            printWindow.document.write(html);
+            printWindow.document.close();
+        }
         
         function printSalaryVouchers() {
             const month = document.getElementById('voucherMonthSelect')?.value || currentMonth;
@@ -24721,8 +25330,9 @@ function renderProjectView() {
         function generateSalaryVouchersHTML(employees, month, year) {
             const monthName = translations[currentLang].monthNames[month];
             const companyName = companySettings.companyNameAr || companySettings.companyNameEn || 'الشركة';
+            const companyLogo = companySettings.companyLogo || '';
             
-            // تقسيم الموظفين إلى مجموعات من 24 (صفحة واحدة)
+            // تقسيم الموظفين إلى مجموعات من 24 (صفحة واحدة) - كما في النسخة القديمة
             const vouchersPerPage = 24; // 4 صفوف × 6 أعمدة
             const pages = [];
             
@@ -24785,6 +25395,20 @@ function renderProjectView() {
             border-bottom: 1.5px solid #333;
             padding-bottom: 2mm;
             margin-bottom: 2mm;
+        }
+
+        .voucher-logo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 10mm;
+            height: 10mm;
+            margin: 0 auto 1mm auto;
+        }
+        .voucher-logo img {
+            max-width: 10mm;
+            max-height: 10mm;
+            object-fit: contain;
         }
         
         .voucher-company {
@@ -24905,10 +25529,7 @@ function renderProjectView() {
         }
         
         @media print {
-            body {
-                margin: 0;
-                padding: 0;
-            }
+            body { margin: 0; padding: 0; }
             
             .voucher {
                 -webkit-print-color-adjust: exact;
@@ -24959,12 +25580,17 @@ function renderProjectView() {
                     const totalDeductions = deductions + advance;
                     
                     // نوع الموظف
-                    const employeeTypeText = emp.employeeType === 'monthly' ? 'شهري' : 
-                                           emp.employeeType === 'daily' ? 'يومي' : 
-                                           emp.employeeType === 'vehicle' ? 'سيارة' : 'غير محدد';
+                    const employeeTypeText = emp.employeeType === 'monthly' ? 'شهري' :
+                                           emp.employeeType === 'daily' ? 'يومي' :
+                                           emp.employeeType === 'vehicle' ? 'سيارة' :
+                                           emp.employeeType === 'external' ? 'خارجي' :
+                                           emp.employeeType === 'machinery'
+                                               ? ('آليات' + ((emp.machinerySalaryBasis || 'monthly') === 'daily' ? ' (يومي)' : ' (شهري)'))
+                                               : 'غير محدد';
                     
                     html += '<div class="voucher">';
                     html += '<div class="voucher-header">';
+                    html += (companyLogo ? ('<div class="voucher-logo"><img src="' + companyLogo + '" alt="" onerror="this.style.display=\\\'none\\\'"></div>') : '');
                     html += '<div class="voucher-company">' + companyName + '</div>';
                     html += '<div class="voucher-title">قسيمة ملخص الراتب - ' + monthName + ' ' + year + '</div>';
                     html += '</div>';
@@ -25122,6 +25748,9 @@ function renderProjectView() {
         // تصدير الوظائف للاستخدام العالمي
         window.openSalaryVouchersModal = openSalaryVouchersModal;
         window.printSalaryVouchers = printSalaryVouchers;
+        window.initSalaryChangeReportViewControls = initSalaryChangeReportViewControls;
+        window.generateSalaryChangeReport = generateSalaryChangeReport;
+        window.printSalaryChangeReport = printSalaryChangeReport;
 
         function executePrintNow(htmlContent, settings) {
             const printWindow = window.open('', '_blank', 'width=1200,height=800');
@@ -25838,6 +26467,21 @@ function renderProjectView() {
         }
         
         // ========== Summary Functions ==========
+        function enhanceReportTables(container) {
+            if (!container) return;
+            const tables = container.querySelectorAll('table');
+            tables.forEach(table => {
+                if (table.closest('.report-table-container')) return;
+                const wrapper = document.createElement('div');
+                wrapper.className = 'report-table-container';
+                wrapper.style.marginBottom = '20px';
+                const parent = table.parentNode;
+                if (!parent) return;
+                parent.insertBefore(wrapper, table);
+                wrapper.appendChild(table);
+            });
+        }
+
         function generateSummary() {
             const project = document.getElementById('summaryProject').value;
             const month1 = document.getElementById('summaryMonth1').value;
@@ -25873,6 +26517,7 @@ function renderProjectView() {
                     }
                     
                     setHTML(resultsDiv, summaryHTML);
+                    enhanceReportTables(resultsDiv);
                     
                     // إظهار زر الطباعة بعد إنشاء الملخص
                     const printBtn = document.getElementById('printSummaryBtn');
@@ -25937,48 +26582,54 @@ function renderProjectView() {
             html += '@media print {';
             html += '@page { size: ' + pageSize + ' ' + orientation + '; margin: 0.5cm 0.8cm 2.5cm 0.8cm; }';
             html += 'body { padding-bottom: 140px !important; }';
-            html += '.print-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 120px; background: white; border-top: 2px solid #667eea; padding: 10px; page-break-inside: avoid; }';
+            html += '.print-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 120px; background: white; border-top: 2px solid #999; padding: 10px; page-break-inside: avoid; }';
             html += '.signature-section { position: fixed; bottom: 0; left: 0; right: 0; height: 120px; background: white; padding: 10px 20px; page-break-inside: avoid; }';
+            html += '* { -webkit-print-color-adjust: economy; print-color-adjust: economy; box-shadow: none !important; text-shadow: none !important; filter: none !important; }';
             html += '}';
             
             html += '* { margin: 0; padding: 0; box-sizing: border-box; }';
             html += 'body { font-family: "Arial", "Tahoma", sans-serif; font-size: 13px; margin: 0; padding: 8px; direction: rtl; }';
             
-            // رأس التقرير
-            html += '.print-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 12px 15px; text-align: center; border-radius: 8px; margin-bottom: 10px; page-break-inside: avoid; page-break-after: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
-            html += '.print-header h1 { color: white; font-size: 18px; font-weight: bold; margin: 4px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }';
-            html += '.print-header h2 { color: rgba(255,255,255,0.95); font-size: 13px; margin: 2px 0; font-weight: 600; }';
-            html += '.print-header .company-name { color: rgba(255,255,255,0.9); font-size: 11px; margin: 2px 0; font-weight: 700; }';
-            html += '.print-header .company-info { color: rgba(255,255,255,0.8); font-size: 10px; margin: 1px 0; font-weight: 500; }';
+            // رأس التقرير (نصوص وصورة يمين/يسار لتوفير المساحة)
+            html += '.print-header { background: #f2f2f2; padding: 10px 12px; border-radius: 8px; margin-bottom: 10px; page-break-inside: avoid; page-break-after: avoid; border: 1px solid #999; }';
+            html += '.print-header-grid { display: flex; align-items: center; justify-content: space-between; gap: 12px; }';
+            html += '.print-header-logo { width: 56px; min-width: 56px; display: flex; align-items: center; justify-content: center; }';
+            html += '.print-header-logo img { max-width: 52px; max-height: 52px; object-fit: contain; border-radius: 8px; background: #fff; padding: 4px; border: 1px solid #ddd; }';
+            html += '.print-header-text { flex: 1; text-align: right; }';
+            html += '.print-header-meta { min-width: 220px; text-align: left; font-size: 10px; font-weight: 600; }';
+            html += '.print-header h1 { color: #000; font-size: 16px; font-weight: bold; margin: 2px 0; }';
+            html += '.print-header h2 { color: #000; font-size: 12px; margin: 2px 0; font-weight: 600; }';
+            html += '.print-header .company-name { color: #000; font-size: 11px; margin: 1px 0; font-weight: 700; }';
+            html += '.print-header .company-info { color: #000; font-size: 10px; margin: 1px 0; font-weight: 500; }';
             
             // الجداول
             html += 'table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 12px; page-break-inside: auto; }';
-            html += 'thead { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
-            html += 'thead th { color: white; padding: 10px 8px; text-align: center; font-weight: 700; font-size: 12px; border: 1px solid rgba(255,255,255,0.3); }';
+            html += 'thead { background: #efefef; }';
+            html += 'thead th { color: #000; padding: 10px 8px; text-align: center; font-weight: 700; font-size: 12px; border: 1px solid #999; }';
             html += 'tbody td { padding: 10px 8px; text-align: center; border: 1px solid #e5e7eb; font-size: 12px; }';
             html += 'tbody tr:nth-child(even) { background: #f9fafb; }';
-            html += 'tfoot tr, tr[style*="background"] { background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
-            html += 'tfoot td { color: white; padding: 10px 8px; font-size: 13px; }';
+            html += 'tfoot tr, tr[style*="background"] { background: #f5f5f5 !important; font-weight: bold; }';
+            html += 'tfoot td { color: #000; padding: 10px 8px; font-size: 13px; border: 1px solid #999; }';
             
             // العنوان
-            html += '.section-title { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 10px 15px; border-radius: 8px; margin: 15px 0 10px 0; font-size: 14px; font-weight: 700; text-align: center; -webkit-print-color-adjust: exact; print-color-adjust: exact; page-break-after: avoid; }';
+            html += '.section-title { background: #efefef; color: #000; padding: 10px 15px; border-radius: 8px; margin: 15px 0 10px 0; font-size: 14px; font-weight: 700; text-align: center; border: 1px solid #999; page-break-after: avoid; }';
             
             // التذييل
-            html += '.print-footer { margin-top: 20px; text-align: center; padding-top: 8px; border-top: 2px solid #667eea; font-size: 12px; color: #6b7280; page-break-inside: avoid; }';
+            html += '.print-footer { margin-top: 20px; text-align: center; padding-top: 8px; border-top: 2px solid #999; font-size: 12px; color: #000; page-break-inside: avoid; }';
             html += '.signature-section { display: flex; justify-content: space-around; margin-top: 20px; page-break-inside: avoid; page-break-before: avoid; }';
             html += '.signature-box { text-align: center; width: 200px; }';
             html += '.signature-line { border-top: 2px solid #000; margin-top: 40px; padding-top: 6px; font-weight: bold; font-size: 13px; }';
             html += '</style></head><body>';
             
             // رأس التقرير
-            html += '<div class="print-header">';
+            html += '<div class="print-header"><div class="print-header-grid">';
             const logo = companyLogo || '';
-            if (logo && typeof logo === 'string' && logo.trim() && logo !== 'undefined' && logo !== 'null' && logo.length > 0) {
-                html += '<div style="margin-bottom: 8px;"><img src="' + logo + '" style="max-width: 60px; max-height: 60px; object-fit: contain; border-radius: 50%; background: rgba(255,255,255,0.9); padding: 5px;" onerror="this.style.display=\'none\'"></div>';
-            }
+            const hasLogo = !!(logo && typeof logo === 'string' && logo.trim() && logo !== 'undefined' && logo !== 'null' && logo.length > 0);
+            html += '<div class="print-header-logo">' + (hasLogo ? ('<img src="' + logo + '" onerror="this.style.display=\\\'none\\\'">') : '') + '</div>';
+            html += '<div class="print-header-text">';
             html += '<div class="company-name">' + companyNameEn + '</div>';
             if (companyNameAr) {
-                html += '<div class="company-name" style="font-size: 10px; margin-top: 2px;">' + companyNameAr + '</div>';
+                html += '<div class="company-name" style="font-size: 10px;">' + companyNameAr + '</div>';
             }
             html += '<h1>📊 ' + (isArabic ? 'تقرير ملخص المشاريع' : 'Projects Summary Report') + '</h1>';
             html += '<h2>';
@@ -25993,14 +26644,17 @@ function renderProjectView() {
             }
             html += ' ' + currentYear;
             html += '</h2>';
+            html += '</div>';
+            html += '<div class="print-header-meta">';
             if (companySettings.companyAddress) {
                 html += '<div class="company-info">📍 ' + companySettings.companyAddress + '</div>';
             }
             if (companySettings.companyPhone) {
                 html += '<div class="company-info">📞 ' + companySettings.companyPhone + '</div>';
             }
-            html += '<div class="company-info">📅 ' + currentDate + ' | 🕐 ' + currentTime + '</div>';
+            html += '<div class="company-info">📅 ' + currentDate + '<br>🕐 ' + currentTime + '</div>';
             html += '</div>';
+            html += '</div></div>';
             
             // المحتوى - إنشاء الجدول مباشرة
             html += '<div class="section-title">' + (isArabic ? '📋 ملخص المشاريع' : '📋 Projects Summary') + '</div>';
@@ -26026,10 +26680,10 @@ function renderProjectView() {
             // التذييل
             html += '<div class="print-footer">';
             html += '<p>🔒 ' + (isArabic ? 'هذا التقرير سري ومخصص للاستخدام الداخلي فقط' : 'This report is confidential and for internal use only') + '</p>';
-            html += '<p style="margin-top: 5px; font-size: 11px; color: #6366f1; font-weight: 600;">';
+            html += '<p style="margin-top: 5px; font-size: 11px; color: #000; font-weight: 600;">';
             html += '🌿 Powered by ROSEMARY | PayRose System';
             html += '</p>';
-            html += '<p style="margin-top: 3px; font-size: 10px; color: #9ca3af;">';
+            html += '<p style="margin-top: 3px; font-size: 10px; color: #000;">';
             html += '© ' + currentYear + ' ' + companyNameEn + ' - ' + (isArabic ? 'نظام الرواتب الاحترافي' : 'Professional Payroll System');
             html += '</p>';
             html += '</div>';
@@ -26048,7 +26702,7 @@ function renderProjectView() {
         
         // دالة لإنشاء جدول ملخص المشاريع للطباعة
         function generateProjectsSummaryTable(month, isArabic) {
-            let html = '<table style="width: 100%; font-size: 12px; border-collapse: collapse; margin-top: 15px;"><thead><tr style="background: #667eea; color: white;">';
+            let html = '<table style="width: 100%; font-size: 12px; border-collapse: collapse; margin-top: 15px;"><thead><tr style="background: #efefef; color: #000;">';
             html += '<th rowspan="2" style="padding: 10px; border: 1px solid #ddd; text-align: center;">' + (isArabic ? 'المشروع' : 'Project') + '</th>';
             html += '<th rowspan="2" style="padding: 10px; border: 1px solid #ddd; text-align: center;">' + (isArabic ? 'عدد الموظفين' : 'Total Employees') + '</th>';
             html += '<th colspan="2" style="padding: 10px; border: 1px solid #ddd; text-align: center;">' + (isArabic ? 'شهري' : 'Monthly') + '</th>';
@@ -26227,12 +26881,12 @@ function renderProjectView() {
             html += '</tr>';
 
             // الإجمالي النهائي
-            html += '<tr style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); font-weight: 700; border-top: 2px solid #10b981;">';
-            html += '<td style="padding: 12px; color: white; font-weight: bold; border: 1px solid #10b981;">' + (isArabic ? 'الإجمالي النهائي' : 'Grand Total') + '</td>';
-            html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotalEmps + '</td>';
-            html += '<td colspan="10" style="padding: 12px; text-align: center; color: white; border: 1px solid #10b981;">-</td>';
-            html += '<td style="padding: 12px; text-align: right; color: white; font-weight: bold; border: 1px solid #10b981;">' + formatCurrency(grandTotalUSD) + '</td>';
-            html += '<td style="padding: 12px; text-align: right; color: white; font-weight: bold; border: 1px solid #10b981;">' + formatCurrency(grandTotalIQD) + '</td>';
+            html += '<tr style="background: #f5f5f5; color: #000; font-weight: 700; border-top: 2px solid #999;">';
+            html += '<td style="padding: 12px; color: #000; font-weight: bold; border: 1px solid #999;">' + (isArabic ? 'الإجمالي النهائي' : 'Grand Total') + '</td>';
+            html += '<td style="padding: 12px; text-align: center; color: #000; font-weight: bold; border: 1px solid #999;">' + grandTotalEmps + '</td>';
+            html += '<td colspan="10" style="padding: 12px; text-align: center; color: #000; border: 1px solid #999;">-</td>';
+            html += '<td style="padding: 12px; text-align: right; color: #000; font-weight: bold; border: 1px solid #999;">' + formatCurrency(grandTotalUSD) + '</td>';
+            html += '<td style="padding: 12px; text-align: right; color: #000; font-weight: bold; border: 1px solid #999;">' + formatCurrency(grandTotalIQD) + '</td>';
             html += '</tr>';
             html += '</tbody></table>';
             
@@ -26291,9 +26945,15 @@ function renderProjectView() {
                     machinery: {USD: 0, IQD: 0, count: 0}
                 };
                 
+                const getComparisonType = (emp) => {
+                    // الآليات اليومية تُعامل كـ "يومي" في جدول المقارنة
+                    if (emp?.employeeType === 'machinery' && (emp.machinerySalaryBasis || 'monthly') === 'daily') return 'daily';
+                    return emp?.employeeType || 'monthly';
+                };
+                
                 emps1.forEach(emp => {
                     const netSalary = calculateNetSalary(emp, month1, currentYear);
-                    const type = emp.employeeType;
+                    const type = getComparisonType(emp);
                     if (!stats1[type]) stats1[type] = {USD: 0, IQD: 0, count: 0};
                     const exchangeRate = emp.exchangeRate || 1420;
                     if (emp.paymentCurrency === 'USD') {
@@ -26308,7 +26968,7 @@ function renderProjectView() {
                 
                 emps2.forEach(emp => {
                     const netSalary = calculateNetSalary(emp, month2, currentYear);
-                    const type = emp.employeeType;
+                    const type = getComparisonType(emp);
                     if (!stats2[type]) stats2[type] = {USD: 0, IQD: 0, count: 0};
                     const exchangeRate = emp.exchangeRate || 1420;
                     if (emp.paymentCurrency === 'USD') {
@@ -26375,22 +27035,22 @@ function renderProjectView() {
             const totalDiffColorUSD = totalDiffUSD >= 0 ? '#059669' : '#dc2626';
             const totalDiffColorIQD = totalDiffIQD >= 0 ? '#059669' : '#dc2626';
             
-            html += '<tr style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); font-weight: 700; border-top: 2px solid #10b981;">';
-            html += '<td style="padding: 12px; color: white; font-weight: bold; border: 1px solid #10b981;">' + (isArabic ? 'المجموع الكلي' : 'Grand Total') + '</td>';
-            html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotal1.monthlyCount + '</td>';
-            html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotal1.externalCount + '</td>';
-            html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotal1.dailyCount + '</td>';
-            html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotal1.vehicleCount + '</td>';
-            html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotal1.machineryCount + '</td>';
-            html += '<td style="padding: 12px; text-align: right; color: white; font-weight: bold; border: 1px solid #10b981;">' + formatCurrency(grandTotal1.totalUSD) + '</td>';
-            html += '<td style="padding: 12px; text-align: right; color: white; font-weight: bold; border: 1px solid #10b981;">' + formatCurrency(grandTotal1.totalIQD) + '</td>';
-            html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotal2.monthlyCount + '</td>';
-            html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotal2.externalCount + '</td>';
-            html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotal2.dailyCount + '</td>';
-            html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotal2.vehicleCount + '</td>';
-            html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + grandTotal2.machineryCount + '</td>';
-            html += '<td style="padding: 12px; text-align: right; color: white; font-weight: bold; border: 1px solid #10b981;">' + formatCurrency(grandTotal2.totalUSD) + '</td>';
-            html += '<td style="padding: 12px; text-align: right; color: white; font-weight: bold; border: 1px solid #10b981;">' + formatCurrency(grandTotal2.totalIQD) + '</td>';
+            html += '<tr style="background: #f5f5f5; color: #000; font-weight: 700; border-top: 2px solid #999;">';
+            html += '<td style="padding: 12px; color: #000; font-weight: bold; border: 1px solid #999;">' + (isArabic ? 'المجموع الكلي' : 'Grand Total') + '</td>';
+            html += '<td style="padding: 12px; text-align: center; color: #000; font-weight: bold; border: 1px solid #999;">' + grandTotal1.monthlyCount + '</td>';
+            html += '<td style="padding: 12px; text-align: center; color: #000; font-weight: bold; border: 1px solid #999;">' + grandTotal1.externalCount + '</td>';
+            html += '<td style="padding: 12px; text-align: center; color: #000; font-weight: bold; border: 1px solid #999;">' + grandTotal1.dailyCount + '</td>';
+            html += '<td style="padding: 12px; text-align: center; color: #000; font-weight: bold; border: 1px solid #999;">' + grandTotal1.vehicleCount + '</td>';
+            html += '<td style="padding: 12px; text-align: center; color: #000; font-weight: bold; border: 1px solid #999;">' + grandTotal1.machineryCount + '</td>';
+            html += '<td style="padding: 12px; text-align: right; color: #000; font-weight: bold; border: 1px solid #999;">' + formatCurrency(grandTotal1.totalUSD) + '</td>';
+            html += '<td style="padding: 12px; text-align: right; color: #000; font-weight: bold; border: 1px solid #999;">' + formatCurrency(grandTotal1.totalIQD) + '</td>';
+            html += '<td style="padding: 12px; text-align: center; color: #000; font-weight: bold; border: 1px solid #999;">' + grandTotal2.monthlyCount + '</td>';
+            html += '<td style="padding: 12px; text-align: center; color: #000; font-weight: bold; border: 1px solid #999;">' + grandTotal2.externalCount + '</td>';
+            html += '<td style="padding: 12px; text-align: center; color: #000; font-weight: bold; border: 1px solid #999;">' + grandTotal2.dailyCount + '</td>';
+            html += '<td style="padding: 12px; text-align: center; color: #000; font-weight: bold; border: 1px solid #999;">' + grandTotal2.vehicleCount + '</td>';
+            html += '<td style="padding: 12px; text-align: center; color: #000; font-weight: bold; border: 1px solid #999;">' + grandTotal2.machineryCount + '</td>';
+            html += '<td style="padding: 12px; text-align: right; color: #000; font-weight: bold; border: 1px solid #999;">' + formatCurrency(grandTotal2.totalUSD) + '</td>';
+            html += '<td style="padding: 12px; text-align: right; color: #000; font-weight: bold; border: 1px solid #999;">' + formatCurrency(grandTotal2.totalIQD) + '</td>';
             html += '<td style="padding: 12px; text-align: right; color: ' + totalDiffColorUSD + '; font-weight: bold; border: 1px solid #10b981;">' + (totalDiffUSD >= 0 ? '+' : '') + formatCurrency(Math.abs(totalDiffUSD)) + '</td>';
             html += '<td style="padding: 12px; text-align: right; color: ' + totalDiffColorIQD + '; font-weight: bold; border: 1px solid #10b981;">' + (totalDiffIQD >= 0 ? '+' : '') + formatCurrency(Math.abs(totalDiffIQD)) + '</td>';
             html += '</tr>';
@@ -26478,11 +27138,11 @@ function renderProjectView() {
                 html += '</tr>';
             });
             
-            html += '<tr style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); font-weight: 700; border-top: 2px solid #10b981;">';
-            html += '<td style="padding: 12px; color: white; font-weight: bold; border: 1px solid #10b981;">' + (isArabic ? 'المجموع' : 'Total') + '</td>';
-            html += '<td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">' + emps1.length + '</td>';
-            html += '<td style="padding: 12px; text-align: right; color: white; font-weight: bold; border: 1px solid #10b981;">' + formatCurrency(totalUSD1) + '</td>';
-            html += '<td style="padding: 12px; text-align: right; color: white; font-weight: bold; border: 1px solid #10b981;">' + formatCurrency(totalIQD1) + '</td>';
+            html += '<tr style="background: #f5f5f5; color: #000; font-weight: 700; border-top: 2px solid #999;">';
+            html += '<td style="padding: 12px; color: #000; font-weight: bold; border: 1px solid #999;">' + (isArabic ? 'المجموع' : 'Total') + '</td>';
+            html += '<td style="padding: 12px; text-align: center; color: #000; font-weight: bold; border: 1px solid #999;">' + emps1.length + '</td>';
+            html += '<td style="padding: 12px; text-align: right; color: #000; font-weight: bold; border: 1px solid #999;">' + formatCurrency(totalUSD1) + '</td>';
+            html += '<td style="padding: 12px; text-align: right; color: #000; font-weight: bold; border: 1px solid #999;">' + formatCurrency(totalIQD1) + '</td>';
             if (month2) {
                 const totalDiffUSD = totalUSD2 - totalUSD1;
                 const totalDiffIQD = totalIQD2 - totalIQD1;
@@ -26661,12 +27321,12 @@ function renderProjectView() {
             </tr>`;
 
             // الإجمالي النهائي
-            html += `<tr style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); font-weight: 700; border-top: 2px solid #10b981;">
-                <td style="padding: 12px; color: white; font-weight: bold; border: 1px solid #10b981;">${isArabic ? 'الإجمالي النهائي' : 'Grand Total'}</td>
-                <td style="padding: 12px; text-align: center; color: white; font-weight: bold; border: 1px solid #10b981;">${grandTotalEmps}</td>
-                <td colspan="10" style="padding: 12px; text-align: center; color: white; border: 1px solid #10b981;">-</td>
-                <td style="padding: 12px; text-align: right; color: white; font-weight: bold; border: 1px solid #10b981;">${formatCurrency(grandTotalUSD)}</td>
-                <td style="padding: 12px; text-align: right; color: white; font-weight: bold; border: 1px solid #10b981;">${formatCurrency(grandTotalIQD)}</td>
+            html += `<tr style="background: #f5f5f5; color: #000; font-weight: 700; border-top: 2px solid #999;">
+                <td style="padding: 12px; color: #000; font-weight: bold; border: 1px solid #999;">${isArabic ? 'الإجمالي النهائي' : 'Grand Total'}</td>
+                <td style="padding: 12px; text-align: center; color: #000; font-weight: bold; border: 1px solid #999;">${grandTotalEmps}</td>
+                <td colspan="10" style="padding: 12px; text-align: center; color: #000; border: 1px solid #999;">-</td>
+                <td style="padding: 12px; text-align: right; color: #000; font-weight: bold; border: 1px solid #999;">${formatCurrency(grandTotalUSD)}</td>
+                <td style="padding: 12px; text-align: right; color: #000; font-weight: bold; border: 1px solid #999;">${formatCurrency(grandTotalIQD)}</td>
             </tr></tbody></table></div></div>`;
             return html;
         }
@@ -26726,9 +27386,14 @@ function renderProjectView() {
                     machinery: {USD: 0, IQD: 0, count: 0}
                 };
                 
+                const getComparisonType = (emp) => {
+                    if (emp?.employeeType === 'machinery' && (emp.machinerySalaryBasis || 'monthly') === 'daily') return 'daily';
+                    return emp?.employeeType || 'monthly';
+                };
+                
                 emps1.forEach(emp => {
                     const netSalary = calculateNetSalary(emp, month1, currentYear);
-                    const type = emp.employeeType;
+                    const type = getComparisonType(emp);
                     if (!stats1[type]) stats1[type] = {USD: 0, IQD: 0, count: 0};
                     if (emp.paymentCurrency === 'USD') {
                         stats1[type].USD += netSalary;
@@ -26742,7 +27407,7 @@ function renderProjectView() {
                 
                 emps2.forEach(emp => {
                     const netSalary = calculateNetSalary(emp, month2, currentYear);
-                    const type = emp.employeeType;
+                    const type = getComparisonType(emp);
                     if (!stats2[type]) stats2[type] = {USD: 0, IQD: 0, count: 0};
                     if (emp.paymentCurrency === 'USD') {
                         stats2[type].USD += netSalary;
@@ -26843,7 +27508,8 @@ function renderProjectView() {
             let totalUSD = 0, totalIQD = 0;
             const typeCount = { monthly: 0, external: 0, daily: 0, vehicle: 0, machinery: 0 };
             employees.forEach(emp => {
-                typeCount[emp.employeeType] = (typeCount[emp.employeeType] || 0) + 1;
+                const tType = (emp?.employeeType === 'machinery' && (emp.machinerySalaryBasis || 'monthly') === 'daily') ? 'daily' : emp.employeeType;
+                typeCount[tType] = (typeCount[tType] || 0) + 1;
                 const netSalary = calculateNetSalary(emp, month, currentYear);
                 const exchangeRate = emp.exchangeRate || 1420;
                 if (emp.paymentCurrency === 'USD') {
@@ -26869,6 +27535,10 @@ function renderProjectView() {
                 </div></div>`;
         }
 function generateComparisonSummary(projectCode, month1, month2) {
+            const getComparisonType = (emp) => {
+                if (emp?.employeeType === 'machinery' && (emp.machinerySalaryBasis || 'monthly') === 'daily') return 'daily';
+                return emp?.employeeType || 'monthly';
+            };
             const employees1 = (employeeData[currentYear] && employeeData[currentYear][month1])
                 ? employeeData[currentYear][month1].filter(emp => emp.project === projectCode)
                 : [];
@@ -26880,7 +27550,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
             let stats2 = { totalUSD: 0, totalIQD: 0, count: employees2.length, monthly: 0, external: 0, daily: 0, vehicle: 0, machinery: 0 };
 
             employees1.forEach(emp => {
-                stats1[emp.employeeType]++;
+                stats1[getComparisonType(emp)]++;
                 const netSalary = calculateNetSalary(emp, month1, currentYear);
                 const exchangeRate = emp.exchangeRate || 1420;
                 if (emp.paymentCurrency === 'USD') {
@@ -26893,7 +27563,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
             });
 
             employees2.forEach(emp => {
-                stats2[emp.employeeType]++;
+                stats2[getComparisonType(emp)]++;
                 const netSalary = calculateNetSalary(emp, month2, currentYear);
                 const exchangeRate = emp.exchangeRate || 1420;
                 if (emp.paymentCurrency === 'USD') {
@@ -27151,7 +27821,8 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 'years': currentLang === 'ar' ? 'السنوات' : 'Years',
                 'users': currentLang === 'ar' ? 'المستخدمين' : 'Users',
                 'settings': currentLang === 'ar' ? 'الإعدادات' : 'Settings',
-                'bulkEdit': currentLang === 'ar' ? 'تعديل متعدد' : 'Bulk Edit'
+                'bulkEdit': currentLang === 'ar' ? 'تعديل متعدد' : 'Bulk Edit',
+                'salaryChangeReport': currentLang === 'ar' ? 'تتبع الرواتب' : 'Salary tracking'
             };
             
             const breadcrumbCurrent = document.getElementById('breadcrumbCurrent');
