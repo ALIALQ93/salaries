@@ -9405,6 +9405,17 @@
                 
                 // تهيئة بيانات الحجز للبيانات القديمة بعد التحميل
                 initializeReservationDataForOldEmployees();
+                let displayOrderPersistQueue = [];
+                if (loadSpecificYear && yearToLoad) {
+                    displayOrderPersistQueue = assignMissingDisplayOrdersInMemory(yearToLoad);
+                } else {
+                    displayOrderPersistQueue = assignMissingDisplayOrdersInMemory();
+                }
+                if (displayOrderPersistQueue.length) {
+                    persistInitialDisplayOrdersIfNeeded(displayOrderPersistQueue).catch(err => {
+                        console.warn('⚠️ تعذر حفظ ترتيب العرض الأولي:', err);
+                    });
+                }
                 
                 console.log('✅ Employees loaded successfully');
 
@@ -9581,6 +9592,12 @@
                     dataToSave.createdAt = new Date().toISOString();
                     // إضافة firebaseId للموظفين الجدد (سيتم استخدامه كمعرف الوثيقة)
                     dataToSave.firebaseId = employeeId;
+                    dataToSave.displayOrder = getNextDisplayOrder(
+                        year,
+                        month,
+                        dataToSave.project,
+                        getEmployeeTypeKey(dataToSave)
+                    );
                 } else if (employeeData.createdAt) {
                     // الحفاظ على تاريخ الإنشاء الأصلي عند التعديل
                     dataToSave.createdAt = employeeData.createdAt;
@@ -11912,6 +11929,210 @@
             return html;
         }
 
+        // ========== ترتيب العرض: مشروع → نوع → يدوي (displayOrder) ==========
+        const EMPLOYEE_TYPE_SORT_ORDER = { monthly: 1, external: 2, daily: 3, vehicle: 4, machinery: 5 };
+
+        function getEmployeeTypeKey(emp) {
+            if (!emp) return '';
+            return emp.employeeType || emp.type || '';
+        }
+
+        function getProjectSortLabel(emp) {
+            if (!emp) return '';
+            return projects[emp.project] || emp.project || '';
+        }
+
+        function getDisplayOrderValue(emp) {
+            if (!emp) return 999999;
+            if (typeof emp.displayOrder === 'number' && !isNaN(emp.displayOrder)) return emp.displayOrder;
+            const parsed = parseInt(emp.displayOrder, 10);
+            if (!isNaN(parsed)) return parsed;
+            if (emp.order !== undefined && emp.order !== null) {
+                const legacy = parseInt(emp.order, 10);
+                if (!isNaN(legacy)) return legacy * 10;
+            }
+            return 999999;
+        }
+
+        function compareEmployeesForDisplay(a, b) {
+            const projCmp = getProjectSortLabel(a).localeCompare(
+                getProjectSortLabel(b),
+                currentLang === 'ar' ? 'ar' : 'en',
+                { sensitivity: 'base' }
+            );
+            if (projCmp !== 0) return projCmp;
+
+            const orderA = EMPLOYEE_TYPE_SORT_ORDER[getEmployeeTypeKey(a)] || 99;
+            const orderB = EMPLOYEE_TYPE_SORT_ORDER[getEmployeeTypeKey(b)] || 99;
+            if (orderA !== orderB) return orderA - orderB;
+
+            const dispCmp = getDisplayOrderValue(a) - getDisplayOrderValue(b);
+            if (dispCmp !== 0) return dispCmp;
+
+            const nameA = (currentLang === 'ar' ? (a.nameAr || a.nameEn) : (a.nameEn || a.nameAr)) || '';
+            const nameB = (currentLang === 'ar' ? (b.nameAr || b.nameEn) : (b.nameEn || b.nameAr)) || '';
+            return nameA.localeCompare(nameB, currentLang === 'ar' ? 'ar' : 'en', { sensitivity: 'base' });
+        }
+
+        function sortEmployeesForDisplay(list) {
+            if (!Array.isArray(list)) return [];
+            return [...list].sort(compareEmployeesForDisplay);
+        }
+
+        function sortEmployeesByDisplayOrderOnly(list) {
+            if (!Array.isArray(list)) return [];
+            return [...list].sort((a, b) => {
+                const cmp = getDisplayOrderValue(a) - getDisplayOrderValue(b);
+                if (cmp !== 0) return cmp;
+                const nameA = (a.nameAr || a.nameEn || '').toString();
+                const nameB = (b.nameAr || b.nameEn || '').toString();
+                return nameA.localeCompare(nameB, currentLang === 'ar' ? 'ar' : 'en', { sensitivity: 'base' });
+            });
+        }
+
+        function employeesShareDisplayGroup(a, b) {
+            return !!a && !!b && a.project === b.project && getEmployeeTypeKey(a) === getEmployeeTypeKey(b);
+        }
+
+        function getMonthEmployeeList(year, month) {
+            return (employeeData[year] && employeeData[year][month]) ? employeeData[year][month] : [];
+        }
+
+        function findEmployeeStorageIndex(emp, year = currentYear, month = currentMonth) {
+            const list = getMonthEmployeeList(year, month);
+            if (!emp) return -1;
+            if (emp.firebaseId) {
+                const byId = list.findIndex(e => e.firebaseId === emp.firebaseId);
+                if (byId >= 0) return byId;
+            }
+            return list.indexOf(emp);
+        }
+
+        function assignMissingDisplayOrdersInMemory(year, month) {
+            const toPersist = [];
+
+            const processMonth = (y, m) => {
+                const list = getMonthEmployeeList(y, m);
+                if (!list.length) return;
+                const groups = {};
+                list.forEach(emp => {
+                    const key = `${emp.project || ''}::${getEmployeeTypeKey(emp)}`;
+                    if (!groups[key]) groups[key] = [];
+                    groups[key].push(emp);
+                });
+                Object.values(groups).forEach(group => {
+                    group.sort((a, b) => getDisplayOrderValue(a) - getDisplayOrderValue(b));
+                    group.forEach((emp, i) => {
+                        const needsNew = getDisplayOrderValue(emp) >= 999999;
+                        if (needsNew) {
+                            emp.displayOrder = (i + 1) * 10;
+                            if (emp.firebaseId) toPersist.push(emp);
+                        } else if (emp.order !== undefined && emp.order !== null && (emp.displayOrder === undefined || emp.displayOrder === null)) {
+                            const legacy = parseInt(emp.order, 10);
+                            emp.displayOrder = !isNaN(legacy) ? legacy * 10 : (i + 1) * 10;
+                            if (emp.firebaseId) toPersist.push(emp);
+                        }
+                    });
+                });
+            };
+
+            if (year != null && month) {
+                processMonth(year, month);
+                return toPersist;
+            }
+            if (year != null && employeeData[year]) {
+                months.forEach(m => processMonth(year, m));
+                return toPersist;
+            }
+            Object.keys(employeeData).forEach(y => {
+                const yr = parseInt(y, 10) || y;
+                if (employeeData[y]) {
+                    months.forEach(m => processMonth(yr, m));
+                }
+            });
+            return toPersist;
+        }
+
+        async function persistInitialDisplayOrdersIfNeeded(employees) {
+            if (!employees || !employees.length) return;
+            if (getStorageMode() !== 'firebase' || typeof db === 'undefined' || !db) return;
+            const updates = employees
+                .filter(emp => emp.firebaseId && typeof emp.displayOrder === 'number')
+                .map(emp => ({ id: emp.firebaseId, displayOrder: emp.displayOrder }));
+            await persistEmployeeDisplayOrders(updates);
+        }
+
+        function getMaxDisplayOrderInGroup(year, month, project, typeKey) {
+            let max = 0;
+            getMonthEmployeeList(year, month).forEach(emp => {
+                if (emp.project === project && getEmployeeTypeKey(emp) === typeKey) {
+                    const o = getDisplayOrderValue(emp);
+                    if (o < 999999 && o > max) max = o;
+                }
+            });
+            return max;
+        }
+
+        function getNextDisplayOrder(year, month, project, typeKey) {
+            return getMaxDisplayOrderInGroup(year, month, project, typeKey) + 10;
+        }
+
+        function getGroupSortedForEmployee(emp, year = currentYear, month = currentMonth) {
+            const typeKey = getEmployeeTypeKey(emp);
+            const group = getMonthEmployeeList(year, month).filter(
+                e => e.project === emp.project && getEmployeeTypeKey(e) === typeKey
+            );
+            return sortEmployeesByDisplayOrderOnly(group);
+        }
+
+        async function persistEmployeeDisplayOrders(updates) {
+            if (!updates || updates.length === 0) return;
+            if (getStorageMode() !== 'firebase' || typeof db === 'undefined' || !db) return;
+            try {
+                await Promise.all(updates.map(({ id, displayOrder }) =>
+                    updateEmployeeInFirebase(id, { displayOrder }, {
+                        skipReload: true,
+                        skipLoading: true,
+                        skipNotification: true,
+                        skipActivityLog: true
+                    })
+                ));
+            } catch (err) {
+                console.error('❌ خطأ في حفظ ترتيب العرض:', err);
+            }
+        }
+
+        async function reorderEmployeeInGroup(emp, newIndexInGroup, year = currentYear, month = currentMonth) {
+            if (!emp) return false;
+            const typeKey = getEmployeeTypeKey(emp);
+            let group = getMonthEmployeeList(year, month).filter(
+                e => e.project === emp.project && getEmployeeTypeKey(e) === typeKey
+            );
+            group = sortEmployeesByDisplayOrderOnly(group);
+
+            const currentIdx = group.findIndex(e =>
+                (emp.firebaseId && e.firebaseId === emp.firebaseId) || e === emp
+            );
+            if (currentIdx < 0) return false;
+
+            const [removed] = group.splice(currentIdx, 1);
+            const insertAt = Math.max(0, Math.min(newIndexInGroup, group.length));
+            group.splice(insertAt, 0, removed);
+
+            const updates = [];
+            group.forEach((e, i) => {
+                const newOrder = (i + 1) * 10;
+                if (Number(e.displayOrder) !== newOrder) {
+                    e.displayOrder = newOrder;
+                    if (e.firebaseId) {
+                        updates.push({ id: e.firebaseId, displayOrder: newOrder });
+                    }
+                }
+            });
+            await persistEmployeeDisplayOrders(updates);
+            return true;
+        }
+
         function renderMonthView() {
             // استخدام السنة الحالية
             let employees = (employeeData[currentYear] && employeeData[currentYear][currentMonth]) ? employeeData[currentYear][currentMonth] : [];
@@ -12005,40 +12226,9 @@
                 });
             }
 
-            // ترتيب واجهة الأشهر: المشروع → نوع الموظف → أعلى راتب أساسي بعد التحويل لعملة موحدة (USD)
-            const typeOrder = { monthly: 1, external: 2, daily: 3, vehicle: 4, machinery: 5 };
-
-            // دالة مساعدة لحساب الراتب الأساسي بالدولار اعتماداً على عملة الراتب وسعر الصرف لكل موظف
-            function getBaseSalaryInUSD(emp) {
-                const salary = Number(emp.salary) || 0;
-                const rate = Number(emp.exchangeRate) || 1;
-                const curr = emp.salaryCurrency || 'IQD';
-
-                // إذا كان الراتب أصلاً بالدولار فلا حاجة للتحويل
-                if (curr === 'USD') return salary;
-
-                // نفترض أن exchangeRate يمثل عدد الدنانير لكل 1 دولار
-                // عندها: الراتب بالدينار / سعر الصرف = الراتب بالدولار
-                return rate ? (salary / rate) : salary;
-            }
-
-            employees.sort((a, b) => {
-                // 1) المشروع بالاسم (أو الكود عند غيابه)
-                const projA = projects[a.project] || a.project || '';
-                const projB = projects[b.project] || b.project || '';
-                const projCmp = projA.localeCompare(projB, currentLang === 'ar' ? 'ar' : 'en', { sensitivity: 'base' });
-                if (projCmp !== 0) return projCmp;
-
-                // 2) نوع الموظف
-                const orderA = typeOrder[a.employeeType] || 99;
-                const orderB = typeOrder[b.employeeType] || 99;
-                if (orderA !== orderB) return orderA - orderB;
-
-                // 3) الراتب الأساسي بعد التحويل إلى دولار (الأعلى أولاً)
-                const salA = getBaseSalaryInUSD(a);
-                const salB = getBaseSalaryInUSD(b);
-                return salB - salA;
-            });
+            // ترتيب العرض: مشروع → نوع → ترتيب يدوي (displayOrder)
+            assignMissingDisplayOrdersInMemory(currentYear, currentMonth);
+            employees = sortEmployeesForDisplay(employees);
 
             const allEmployees = (employeeData[currentYear] && employeeData[currentYear][currentMonth]) ? employeeData[currentYear][currentMonth] : [];
             
@@ -12196,6 +12386,11 @@
             
             html += `<div class="actions" style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
                 ${lockMessage}
+                <p style="margin: 0 0 12px 0; font-size: 13px; color: #4b5563; background: #f0f9ff; border-right: 4px solid #6366f1; padding: 10px 14px; border-radius: 8px;">
+                    ${currentLang === 'ar'
+                        ? '↕️ الترتيب: المشروع ثم النوع (ثابت) — داخل كل مجموعة استخدم السحب أو ⬆️⬇️ لترتيب الموظفين يدوياً'
+                        : '↕️ Order: project then type (fixed) — within each group use drag or ⬆️⬇️ to set manual order'}
+                </p>
                 <button class="btn btn-success" onclick="openModal('employeeModal')" style="font-weight: 600;" ${isMonthLocked ? 'disabled' : ''}>➕ ${t('addEmployee')}</button>
                 <button class="btn btn-success" onclick="openMultipleEmployeesModal()" style="font-weight: 600;" ${isMonthLocked ? 'disabled' : ''}>➕➕ ${currentLang === 'ar' ? 'إضافة متعدد' : 'Add Multiple'}</button>
                 <button class="btn btn-primary" onclick="openCopyAllModal()" style="font-weight: 600;" ${isMonthLocked ? 'disabled' : ''}>${t('copyAll')}</button>
@@ -12368,7 +12563,7 @@
                 html += '</tr></thead><tbody id="employeeTableBody">';
 
                 employees.forEach((emp, idx) => {
-                    const index = allEmployees.indexOf(emp);
+                    const index = findEmployeeStorageIndex(emp, currentYear, currentMonth);
                     const dailySalaryUSD = calculateDailySalary(emp, selectedProjectMonth, currentYear);
                     const actualSalaryUSD = calculateActualSalary(emp, selectedProjectMonth, currentYear);
                     const actualSalaryIQD = actualSalaryUSD * emp.exchangeRate;
@@ -12666,6 +12861,7 @@
             return html;
         }
 function renderProjectView() {
+            assignMissingDisplayOrdersInMemory(currentYear, selectedProjectMonth);
             // التحقق من صلاحية الوصول للمشروع
             if (!hasProjectAccess(currentProject)) {
                 return `<div class="empty-state"><h3>❌ غير مسموح لك بالوصول لهذا المشروع</h3></div>`;
@@ -13003,22 +13199,8 @@ function renderProjectView() {
                 </div>`;
             
             if (employees.length > 0) {
-                // ترتيب جداول المشاريع: أعلى راتب أساسي بعد التحويل إلى دولار داخل كل جدول نوع
-                function getBaseSalaryInUSDForProject(emp) {
-                    const salary = Number(emp.salary) || 0;
-                    const rate = Number(emp.exchangeRate) || 1;
-                    const curr = emp.salaryCurrency || 'IQD';
-
-                    if (curr === 'USD') return salary;
-                    // نفترض أن exchangeRate يمثل عدد الدنانير لكل 1 دولار
-                    return rate ? (salary / rate) : salary;
-                }
-
-                employees.sort((a, b) => {
-                    const salA = getBaseSalaryInUSDForProject(a);
-                    const salB = getBaseSalaryInUSDForProject(b);
-                    return salB - salA;
-                });
+                // ترتيب يدوي داخل جدول النوع (displayOrder)
+                employees = sortEmployeesByDisplayOrderOnly(employees);
 
                 const projectTableId = tableId || 'projectSectionTable';
                 html += '<table id="' + projectTableId + '"><thead>';
@@ -13232,22 +13414,60 @@ function renderProjectView() {
             }
         }
 
-        function moveEmployeeUp(index) {
-            if (index > 0) {
-                const temp = employeeData[currentYear][currentMonth][index];
-                employeeData[currentYear][currentMonth][index] = employeeData[currentYear][currentMonth][index - 1];
-                employeeData[currentYear][currentMonth][index - 1] = temp;
-                renderContent();
+        async function moveEmployeeUp(index) {
+            const list = getMonthEmployeeList(currentYear, currentMonth);
+            const emp = list[index];
+            if (!emp) return;
+
+            const group = getGroupSortedForEmployee(emp);
+            const pos = group.findIndex(e =>
+                (emp.firebaseId && e.firebaseId === emp.firebaseId) || e === emp
+            );
+            if (pos <= 0) {
+                if (pos === 0) {
+                    showNotification(
+                        'warning',
+                        currentLang === 'ar' ? 'ترتيب' : 'Order',
+                        currentLang === 'ar'
+                            ? 'الموظف في أول موضع ضمن نفس المشروع والنوع'
+                            : 'Employee is already first within this project and type'
+                    );
+                }
+                return;
             }
+
+            showLoading();
+            await reorderEmployeeInGroup(emp, pos - 1);
+            hideLoading();
+            renderContent();
         }
 
-        function moveEmployeeDown(index) {
-            if (index < employeeData[currentYear][currentMonth].length - 1) {
-                const temp = employeeData[currentYear][currentMonth][index];
-                employeeData[currentYear][currentMonth][index] = employeeData[currentYear][currentMonth][index + 1];
-                employeeData[currentYear][currentMonth][index + 1] = temp;
-                renderContent();
+        async function moveEmployeeDown(index) {
+            const list = getMonthEmployeeList(currentYear, currentMonth);
+            const emp = list[index];
+            if (!emp) return;
+
+            const group = getGroupSortedForEmployee(emp);
+            const pos = group.findIndex(e =>
+                (emp.firebaseId && e.firebaseId === emp.firebaseId) || e === emp
+            );
+            if (pos < 0 || pos >= group.length - 1) {
+                if (pos >= 0 && pos === group.length - 1) {
+                    showNotification(
+                        'warning',
+                        currentLang === 'ar' ? 'ترتيب' : 'Order',
+                        currentLang === 'ar'
+                            ? 'الموظف في آخر موضع ضمن نفس المشروع والنوع'
+                            : 'Employee is already last within this project and type'
+                    );
+                }
+                return;
             }
+
+            showLoading();
+            await reorderEmployeeInGroup(emp, pos + 1);
+            hideLoading();
+            renderContent();
         }
 
         // Drag and Drop
@@ -13294,36 +13514,53 @@ function renderProjectView() {
             }
         }
 
-        function handleDrop(e) {
+        async function handleDrop(e) {
             e.preventDefault();
             e.stopPropagation();
             const targetRow = e.target.closest('tr');
             if (targetRow && targetRow.dataset.index !== undefined) {
                 const targetIndex = parseInt(targetRow.dataset.index);
                 if (draggedIndex !== null && draggedIndex !== targetIndex && draggedIndex >= 0 && targetIndex >= 0) {
-                    // التحقق من وجود البيانات
-                    if (!employeeData[currentYear] || !employeeData[currentYear][currentMonth]) {
+                    const list = getMonthEmployeeList(currentYear, currentMonth);
+                    if (!list.length) {
                         console.error('❌ لا توجد بيانات للشهر المحدد');
                         return;
                     }
-                    if (draggedIndex >= employeeData[currentYear][currentMonth].length || targetIndex >= employeeData[currentYear][currentMonth].length) {
+                    if (draggedIndex >= list.length || targetIndex >= list.length) {
                         console.error('❌ فهرس غير صحيح');
                         return;
                     }
-                    
-                    const draggedEmp = employeeData[currentYear][currentMonth][draggedIndex];
-                    employeeData[currentYear][currentMonth].splice(draggedIndex, 1);
-                    const newTargetIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
-                    employeeData[currentYear][currentMonth].splice(newTargetIndex, 0, draggedEmp);
-                    
-                    // تحديث الترتيب في Firebase إذا كان هناك firebaseId
-                    if (draggedEmp.firebaseId) {
-                        updateEmployeeInFirebase(draggedEmp.firebaseId, { order: newTargetIndex }).catch(err => {
-                            console.error('❌ خطأ في تحديث الترتيب:', err);
-                        });
+
+                    const draggedEmp = list[draggedIndex];
+                    const targetEmp = list[targetIndex];
+
+                    if (!employeesShareDisplayGroup(draggedEmp, targetEmp)) {
+                        showNotification(
+                            'warning',
+                            currentLang === 'ar' ? 'ترتيب' : 'Order',
+                            currentLang === 'ar'
+                                ? 'يمكن إعادة الترتيب فقط بين موظفي نفس المشروع ونفس النوع'
+                                : 'Reorder only within the same project and employee type'
+                        );
+                        document.querySelectorAll('#employeeTableBody tr').forEach(row => row.classList.remove('drag-over'));
+                        draggedIndex = null;
+                        return;
                     }
-                    
-                    renderContent();
+
+                    const group = getGroupSortedForEmployee(draggedEmp);
+                    const fromIdx = group.findIndex(e =>
+                        (draggedEmp.firebaseId && e.firebaseId === draggedEmp.firebaseId) || e === draggedEmp
+                    );
+                    const toIdx = group.findIndex(e =>
+                        (targetEmp.firebaseId && e.firebaseId === targetEmp.firebaseId) || e === targetEmp
+                    );
+
+                    if (fromIdx >= 0 && toIdx >= 0 && fromIdx !== toIdx) {
+                        showLoading();
+                        await reorderEmployeeInGroup(draggedEmp, toIdx);
+                        hideLoading();
+                        renderContent();
+                    }
                 }
             }
             document.querySelectorAll('#employeeTableBody tr').forEach(row => row.classList.remove('drag-over'));
@@ -23412,50 +23649,24 @@ function renderProjectView() {
             // إدراج ملخص المقارنة قبل الجداول (للمعاينة)
             html += summaryHTML;
             
-            // ==================== ترتيب المعاينة ليطابق ترتيب الجداول ====================
-            function getBaseSalaryInUSDForPreviewSort(emp) {
-                const salary = Number(emp.salary) || 0;
-                const rate = Number(emp.exchangeRate) || 1;
-                const curr = emp.salaryCurrency || 'IQD';
-                if (curr === 'USD') return salary;
-                // نفترض أن exchangeRate يمثل عدد الدنانير لكل 1 دولار
-                return rate ? (salary / rate) : salary;
-            }
-            const typeOrderForPreview = { monthly: 1, external: 2, daily: 3, vehicle: 4, machinery: 5 };
-            
-            // إذا كانت المعاينة من عرض الشهر: نطبق نفس ترتيب واجهة الأشهر (مشروع → نوع → راتب بعد التحويل)
+            // ==================== ترتيب المعاينة: مشروع → نوع → يدوي ====================
             if (currentView !== 'project') {
-                filteredEmployees.sort((a, b) => {
-                    const projA = projects[a.project] || a.project || '';
-                    const projB = projects[b.project] || b.project || '';
-                    const projCmp = projA.localeCompare(projB, currentLang === 'ar' ? 'ar' : 'en', { sensitivity: 'base' });
-                    if (projCmp !== 0) return projCmp;
-                    
-                    const orderA = typeOrderForPreview[a.employeeType] || 99;
-                    const orderB = typeOrderForPreview[b.employeeType] || 99;
-                    if (orderA !== orderB) return orderA - orderB;
-                    
-                    const salA = getBaseSalaryInUSDForPreviewSort(a);
-                    const salB = getBaseSalaryInUSDForPreviewSort(b);
-                    return salB - salA;
-                });
+                filteredEmployees = sortEmployeesForDisplay(filteredEmployees);
             }
             
             // تقسيم الموظفين حسب النوع
-            const monthlyEmps = filteredEmployees.filter(emp => emp.employeeType === 'monthly');
-            const externalEmps = filteredEmployees.filter(emp => emp.employeeType === 'external');
-            const dailyEmps = filteredEmployees.filter(emp => emp.employeeType === 'daily');
-            const vehicleEmps = filteredEmployees.filter(emp => emp.employeeType === 'vehicle');
-            const machineryEmps = filteredEmployees.filter(emp => emp.employeeType === 'machinery');
+            const monthlyEmps = filteredEmployees.filter(emp => getEmployeeTypeKey(emp) === 'monthly');
+            const externalEmps = filteredEmployees.filter(emp => getEmployeeTypeKey(emp) === 'external');
+            const dailyEmps = filteredEmployees.filter(emp => getEmployeeTypeKey(emp) === 'daily');
+            const vehicleEmps = filteredEmployees.filter(emp => getEmployeeTypeKey(emp) === 'vehicle');
+            const machineryEmps = filteredEmployees.filter(emp => getEmployeeTypeKey(emp) === 'machinery');
             
-            // إذا كانت المعاينة من عرض المشاريع: نطابق ترتيب جداول المشاريع (داخل كل نوع: أعلى راتب بعد التحويل)
             if (currentView === 'project') {
-                const cmpBySalaryUSD = (a, b) => getBaseSalaryInUSDForPreviewSort(b) - getBaseSalaryInUSDForPreviewSort(a);
-                monthlyEmps.sort(cmpBySalaryUSD);
-                externalEmps.sort(cmpBySalaryUSD);
-                dailyEmps.sort(cmpBySalaryUSD);
-                vehicleEmps.sort(cmpBySalaryUSD);
-                machineryEmps.sort(cmpBySalaryUSD);
+                monthlyEmps.sort((a, b) => getDisplayOrderValue(a) - getDisplayOrderValue(b));
+                externalEmps.sort((a, b) => getDisplayOrderValue(a) - getDisplayOrderValue(b));
+                dailyEmps.sort((a, b) => getDisplayOrderValue(a) - getDisplayOrderValue(b));
+                vehicleEmps.sort((a, b) => getDisplayOrderValue(a) - getDisplayOrderValue(b));
+                machineryEmps.sort((a, b) => getDisplayOrderValue(a) - getDisplayOrderValue(b));
             }
             
             // طباعة الموظفين الشهريين
@@ -23968,51 +24179,24 @@ function renderProjectView() {
             // إدراج ملخص المقارنة قبل الجداول
             html += summaryHTML;
             
-            // ==================== ترتيب الطباعة ليطابق ترتيب الجداول ====================
-            function getBaseSalaryInUSDForPrintSort(emp) {
-                const salary = Number(emp.salary) || 0;
-                const rate = Number(emp.exchangeRate) || 1;
-                const curr = emp.salaryCurrency || 'IQD';
-                if (curr === 'USD') return salary;
-                // نفترض أن exchangeRate يمثل عدد الدنانير لكل 1 دولار
-                return rate ? (salary / rate) : salary;
-            }
-
-            const typeOrderForPrint = { monthly: 1, external: 2, daily: 3, vehicle: 4, machinery: 5 };
-
-            // إذا كانت الطباعة من عرض الشهر: نطبق نفس ترتيب واجهة الأشهر (مشروع → نوع → راتب بعد التحويل)
+            // ==================== ترتيب الطباعة: مشروع → نوع → يدوي ====================
             if (currentView !== 'project') {
-                filteredEmployees.sort((a, b) => {
-                    const projA = projects[a.project] || a.project || '';
-                    const projB = projects[b.project] || b.project || '';
-                    const projCmp = projA.localeCompare(projB, currentLang === 'ar' ? 'ar' : 'en', { sensitivity: 'base' });
-                    if (projCmp !== 0) return projCmp;
-
-                    const orderA = typeOrderForPrint[a.employeeType] || 99;
-                    const orderB = typeOrderForPrint[b.employeeType] || 99;
-                    if (orderA !== orderB) return orderA - orderB;
-
-                    const salA = getBaseSalaryInUSDForPrintSort(a);
-                    const salB = getBaseSalaryInUSDForPrintSort(b);
-                    return salB - salA;
-                });
+                filteredEmployees = sortEmployeesForDisplay(filteredEmployees);
             }
 
             // تقسيم الموظفين حسب النوع
-            const monthlyEmps = filteredEmployees.filter(emp => emp.employeeType === 'monthly');
-            const externalEmps = filteredEmployees.filter(emp => emp.employeeType === 'external');
-            const dailyEmps = filteredEmployees.filter(emp => emp.employeeType === 'daily');
-            const vehicleEmps = filteredEmployees.filter(emp => emp.employeeType === 'vehicle');
-            const machineryEmps = filteredEmployees.filter(emp => emp.employeeType === 'machinery');
+            const monthlyEmps = filteredEmployees.filter(emp => getEmployeeTypeKey(emp) === 'monthly');
+            const externalEmps = filteredEmployees.filter(emp => getEmployeeTypeKey(emp) === 'external');
+            const dailyEmps = filteredEmployees.filter(emp => getEmployeeTypeKey(emp) === 'daily');
+            const vehicleEmps = filteredEmployees.filter(emp => getEmployeeTypeKey(emp) === 'vehicle');
+            const machineryEmps = filteredEmployees.filter(emp => getEmployeeTypeKey(emp) === 'machinery');
 
-            // إذا كانت الطباعة من عرض المشاريع: نطابق ترتيب جداول المشاريع (داخل كل نوع: أعلى راتب بعد التحويل)
             if (currentView === 'project') {
-                const cmpBySalaryUSD = (a, b) => getBaseSalaryInUSDForPrintSort(b) - getBaseSalaryInUSDForPrintSort(a);
-                monthlyEmps.sort(cmpBySalaryUSD);
-                externalEmps.sort(cmpBySalaryUSD);
-                dailyEmps.sort(cmpBySalaryUSD);
-                vehicleEmps.sort(cmpBySalaryUSD);
-                machineryEmps.sort(cmpBySalaryUSD);
+                monthlyEmps.sort((a, b) => getDisplayOrderValue(a) - getDisplayOrderValue(b));
+                externalEmps.sort((a, b) => getDisplayOrderValue(a) - getDisplayOrderValue(b));
+                dailyEmps.sort((a, b) => getDisplayOrderValue(a) - getDisplayOrderValue(b));
+                vehicleEmps.sort((a, b) => getDisplayOrderValue(a) - getDisplayOrderValue(b));
+                machineryEmps.sort((a, b) => getDisplayOrderValue(a) - getDisplayOrderValue(b));
             }
             
             // طباعة الموظفين الشهريين
