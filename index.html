@@ -993,8 +993,8 @@
             gap: 6px;
         }
 
-        .header-nav .nav-item > span:first-child:not([id]),
-        .nav-dropdown-item > span:first-child {
+        /* إخفاء أيقونات الإيموجي فقط — لا العناصر ذات id (نص القائمة) */
+        .header-nav .nav-item > span:first-child:not([id]):not(.nav-caret) {
             display: none;
         }
 
@@ -1020,7 +1020,8 @@
             pointer-events: none;
         }
 
-        .nav-dropdown-wrapper.active .nav-dropdown-menu {
+        .nav-dropdown-wrapper.active .nav-dropdown-menu,
+        .nav-dropdown-wrapper.is-open .nav-dropdown-menu {
             opacity: 1;
             visibility: visible;
             transform: translateY(0);
@@ -1034,6 +1035,13 @@
             pointer-events: auto;
         }
 
+        .nav-dropdown-wrapper.active .nav-dropdown-menu.nav-dropdown-float,
+        .nav-dropdown-wrapper.is-open .nav-dropdown-menu.nav-dropdown-float {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: translateY(0) !important;
+        }
+
         .nav-dropdown-item {
             display: flex;
             align-items: center;
@@ -1044,14 +1052,17 @@
             font-size: 13px;
             font-weight: 600;
             transition: background 0.2s;
+            white-space: nowrap;
         }
 
         .nav-dropdown-item:hover {
-            background: #f3f4f6;
+            background: var(--primary-light);
+            color: var(--primary);
         }
 
-        .nav-dropdown-item span:first-child {
-            font-size: 18px;
+        .nav-dropdown-item span[id] {
+            font-size: 13px;
+            font-weight: 600;
         }
 
         /* قوائم اختيار الأشهر/المشاريع في شريط التنقل */
@@ -3994,6 +4005,16 @@
                     <label>المنصب</label>
                     <input type="text" id="position" required>
                 </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label id="employeeDepartmentLabel">القسم</label>
+                        <select id="employeeDepartment"></select>
+                    </div>
+                    <div class="form-group">
+                        <label id="employeePhoneLabel">رقم الهاتف</label>
+                        <input type="tel" id="employeePhone" inputmode="tel" autocomplete="tel" placeholder="07xxxxxxxx">
+                    </div>
+                </div>
                 <div class="form-group">
                         <label>نوع الموظف</label>
                     <select id="employeeType" required onchange="updateSalaryLabelByType('salary')">
@@ -4179,6 +4200,16 @@
                 <div class="form-group">
                     <label>المنصب</label>
                     <input type="text" id="editPosition" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label id="editDepartmentLabel">القسم</label>
+                        <select id="editDepartment"></select>
+                    </div>
+                    <div class="form-group">
+                        <label id="editPhoneLabel">رقم الهاتف</label>
+                        <input type="tel" id="editPhone" inputmode="tel" autocomplete="tel" placeholder="07xxxxxxxx">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>نوع الموظف</label>
@@ -4603,6 +4634,7 @@
                             <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="index" checked> الرقم</label>
                             <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="name" checked> الاسم</label>
                             <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="position" checked> المنصب</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="department" checked> القسم</label>
                             <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="project" checked> المشروع</label>
                             <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="salary" checked> الراتب</label>
                             <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="salaryCurrency" checked> ع.راتب</label>
@@ -7492,7 +7524,8 @@
                 emptyNoAccess: 'غير مسموح لك بالوصول لهذا المشروع',
                 clearFilters: 'إزالة الفلاتر',
                 emptySection: 'لا يوجد موظفون في هذا القسم',
-                name: 'الاسم', position: 'المنصب', type: 'النوع', project: 'المشروع',
+                name: 'الاسم', position: 'المنصب', department: 'القسم', phoneNumber: 'رقم الهاتف',
+                type: 'النوع', project: 'المشروع',
                 salary: 'الراتب', salaryCurrency: 'عملة الراتب',
                 paymentCurrency: 'عملة الدفع', exchangeRate: 'سعر الصرف',
                 workDays: '⏰ الدوام', dailySalary: 'الراتب اليومي',
@@ -7903,7 +7936,8 @@
                 emptyNoAccess: 'You do not have access to this project',
                 clearFilters: 'Clear filters',
                 emptySection: 'No employees in this section',
-                name: 'Name', position: 'Position', type: 'Type', project: 'Project',
+                name: 'Name', position: 'Position', department: 'Department', phoneNumber: 'Phone Number',
+                type: 'Type', project: 'Project',
                 salary: 'Salary', salaryCurrency: 'Salary Currency',
                 paymentCurrency: 'Payment Currency', exchangeRate: 'Exchange Rate',
                 workDays: '⏰ Attendance', dailySalary: 'Daily Salary',
@@ -9105,7 +9139,11 @@
                 'navSettingsText': t('navSettings'),
                 'navBulkEditText': currentLang === 'ar' ? 'تعديل متعدد' : 'Bulk Edit',
                 'navReportsText': t('navReports'),
-                'navToolsText': currentLang === 'ar' ? 'أدوات' : 'Tools'
+                'navToolsText': currentLang === 'ar' ? 'أدوات' : 'Tools',
+                'employeeDepartmentLabel': t('department'),
+                'editDepartmentLabel': t('department'),
+                'employeePhoneLabel': t('phoneNumber'),
+                'editPhoneLabel': t('phoneNumber')
             };
             
             // تحديث نافذة كلمة المرور إذا كانت مفتوحة
@@ -9256,6 +9294,10 @@
                     element.textContent = text;
                 }
             });
+            const deptAddSel = document.getElementById('employeeDepartment');
+            const deptEditSel = document.getElementById('editDepartment');
+            if (deptAddSel) fillDepartmentSelect(deptAddSel, deptAddSel.value);
+            if (deptEditSel) fillDepartmentSelect(deptEditSel, deptEditSel.value);
             const mainNav = document.getElementById('mainNav');
             if (mainNav) mainNav.setAttribute('aria-label', currentLang === 'ar' ? 'التنقل الرئيسي' : 'Main navigation');
             
@@ -10380,6 +10422,48 @@
         }
 
         // ========== Helper Functions ==========
+        const EMPLOYEE_DEPARTMENTS = [
+            { value: 'engineering', ar: 'الهندسي', en: 'Engineering' },
+            { value: 'administrative', ar: 'الاداري', en: 'Administrative' },
+            { value: 'financial', ar: 'المالية', en: 'Financial' },
+            { value: 'logistics', ar: 'لوجستك', en: 'Logistics' },
+            { value: 'guard', ar: 'حرس', en: 'Guard' },
+            { value: 'service', ar: 'خدمة', en: 'Service' }
+        ];
+
+        function getDepartmentLabel(value) {
+            if (!value) return currentLang === 'ar' ? '—' : '—';
+            const d = EMPLOYEE_DEPARTMENTS.find(x => x.value === value);
+            return d ? (currentLang === 'ar' ? d.ar : d.en) : value;
+        }
+
+        function fillDepartmentSelect(selectEl, selectedValue) {
+            if (!selectEl) return;
+            const emptyLabel = currentLang === 'ar' ? '— بدون قسم —' : '— No department —';
+            selectEl.innerHTML = `<option value="">${emptyLabel}</option>` +
+                EMPLOYEE_DEPARTMENTS.map(d => {
+                    const label = currentLang === 'ar' ? d.ar : d.en;
+                    const sel = selectedValue === d.value ? ' selected' : '';
+                    return `<option value="${d.value}"${sel}>${label}</option>`;
+                }).join('');
+        }
+
+        function initEmployeeCardDepartmentSelects(selectedDepartment) {
+            fillDepartmentSelect(document.getElementById('employeeDepartment'), selectedDepartment || '');
+            fillDepartmentSelect(document.getElementById('editDepartment'), selectedDepartment || '');
+        }
+
+        function renderBulkDepartmentSelectOptions(selectedValue) {
+            const emptyLabel = currentLang === 'ar' ? '— بدون قسم —' : '— No department —';
+            let html = `<option value="">${emptyLabel}</option>`;
+            EMPLOYEE_DEPARTMENTS.forEach(d => {
+                const label = currentLang === 'ar' ? d.ar : d.en;
+                const sel = selectedValue === d.value ? ' selected' : '';
+                html += `<option value="${d.value}"${sel}>${label}</option>`;
+            });
+            return html;
+        }
+
         // دالة مساعدة لتحويل نوع الموظف إلى نص
         function getEmployeeTypeText(employeeType) {
             if (!employeeType) return currentLang === 'ar' ? 'غير محدد' : 'N/A';
@@ -13031,6 +13115,7 @@
                     { dataColumn: 'code', label: currentLang === 'ar' ? 'الرمز' : 'Code', minWidth: '80px' },
                     { dataColumn: 'name', label: t('name'), minWidth: '120px' },
                     { dataColumn: 'position', label: t('position'), minWidth: '100px' },
+                    { dataColumn: 'department', label: t('department'), minWidth: '95px' },
                     { dataColumn: 'employeeType', label: t('type'), minWidth: '80px' },
                     { dataColumn: 'project', label: t('project'), minWidth: '100px' },
                     { dataColumn: 'salary', label: t('salary'), minWidth: '90px' },
@@ -13095,7 +13180,9 @@
                             ${emp.linkedToFirebaseId ? '🔗 ' : ''}${empName}
                             ${emp.linkedToFirebaseId ? `<span style="font-size: 10px; color: #856404; display: block; margin-top: 2px;" title="${t('linkedToOriginal')}">${t('linkedDuplicate')}</span>` : ''}
                         </td>
-                        <td>${emp.position}</td><td>${empType}</td><td>${projects[emp.project] || emp.project}</td>
+                        <td>${emp.position}</td>
+                        <td>${getDepartmentLabel(emp.department)}</td>
+                        <td>${empType}</td><td>${projects[emp.project] || emp.project}</td>
                         <td>${formatCurrency(emp.salary)}</td><td>${emp.salaryCurrency}</td><td>${emp.paymentCurrency}</td>
                         <td class="editable excel-cell" data-field="exchangeRate" data-index="${index}" style="font-weight: 600; background: #fef3c7;">${emp.exchangeRate}</td>
                         ${renderAttendanceCell(emp, index, '11px', currentMonth, currentYear)}
@@ -13298,7 +13385,7 @@
                             💵 ${currentLang === 'ar' ? 'المجموع (عملة دفع USD)' : 'Total (Payment: USD)'} 
                             <span style="font-size: 11px; opacity: 0.8;">(${usdCount} ${currentLang === 'ar' ? 'موظف' : 'emp'})</span>
                         </td>
-                        <td colspan="10"></td>
+                        <td colspan="11"></td>
                         <td style="color: #1e40af; font-size: 13px;">${formatCurrency(usdActual)}</td>
                         <td style="color: #1e40af; font-size: 13px;">${formatCurrency(usdActual * 1420)}</td>
                         <td style="color: #1e40af; font-size: 13px;">${formatCurrency(usdBonus)}</td>
@@ -13324,7 +13411,7 @@
                             💰 ${currentLang === 'ar' ? 'المجموع (عملة دفع IQD)' : 'Total (Payment: IQD)'} 
                             <span style="font-size: 11px; opacity: 0.8;">(${iqdCount} ${currentLang === 'ar' ? 'موظف' : 'emp'})</span>
                         </td>
-                        <td colspan="10"></td>
+                        <td colspan="11"></td>
                         <td style="color: #92400e; font-size: 13px;">${formatCurrency(iqdActual / 1420)}</td>
                         <td style="color: #92400e; font-size: 13px;">${formatCurrency(iqdActual)}</td>
                         <td style="color: #92400e; font-size: 13px;">${formatCurrency(iqdBonus)}</td>
@@ -13352,7 +13439,7 @@
                             🌐 ${currentLang === 'ar' ? 'الإجمالي العام' : 'Grand Total'} 
                             <span style="font-size: 11px; opacity: 0.8;">(${usdCount + iqdCount} ${currentLang === 'ar' ? 'موظف' : 'emp'})</span>
                         </td>
-                        <td colspan="20"></td>
+                        <td colspan="21"></td>
                         <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; font-size: 14px; padding: 15px; text-align: center;">
                             <div style="font-size: 17px; font-weight: 900; margin-bottom: 3px;">💵 ${formatCurrency(grandTotalUSD)} USD</div>
                             <div style="font-size: 17px; font-weight: 900;">💰 ${formatCurrency(grandTotalIQD)} IQD</div>
@@ -13720,6 +13807,7 @@ function renderProjectView() {
                     { dataColumn: 'number', label: '#' },
                     { dataColumn: 'name', label: t('name') },
                     { dataColumn: 'position', label: t('position') },
+                    { dataColumn: 'department', label: t('department') },
                     { dataColumn: 'salary', label: t('salary') },
                     { dataColumn: 'salaryCurrency', label: t('salaryCurrency') },
                     { dataColumn: 'paymentCurrency', label: t('paymentCurrency') },
@@ -13768,7 +13856,9 @@ function renderProjectView() {
                             ${emp.linkedToFirebaseId ? '🔗 ' : ''}${empName}
                             ${emp.linkedToFirebaseId ? `<span style="font-size: 10px; color: #856404; display: block; margin-top: 2px;" title="${t('linkedToOriginal')}">${t('linkedDuplicate')}</span>` : ''}
                         </td>
-                        <td>${emp.position}</td><td>${formatCurrency(emp.salary)}</td><td>${emp.salaryCurrency}</td><td>${emp.paymentCurrency}</td>
+                        <td>${emp.position}</td>
+                        <td>${getDepartmentLabel(emp.department)}</td>
+                        <td>${formatCurrency(emp.salary)}</td><td>${emp.salaryCurrency}</td><td>${emp.paymentCurrency}</td>
                         <td><input type="number" value="${emp.exchangeRate}" min="0" onchange="updateProjectField(${globalIndex}, 'exchangeRate', this.value)" style="width: 100%;"></td>
                         ${renderAttendanceCell(emp, globalIndex, '11px', selectedProjectMonth, currentYear)}
                         <td>${formatCurrency(dailySalaryUSD)}</td><td>${formatCurrency(actualSalaryUSD)}</td><td>${formatCurrency(actualSalaryIQD)}</td>
@@ -15719,6 +15809,7 @@ function renderProjectView() {
                 'code': '🔖 الرمز',
                 'name': '👤 الاسم',
                 'position': '💼 المنصب',
+                'department': '🏢 القسم',
                 'employeeType': '📋 النوع',
                 'project': '🏗️ المشروع',
                 'salary': '💵 الراتب',
@@ -15816,6 +15907,9 @@ function renderProjectView() {
                     case 'position':
                         value = emp.position;
                         break;
+                    case 'department':
+                        value = getDepartmentLabel(emp.department);
+                        break;
                     case 'employeeType':
                         value = getEmployeeTypeText(emp.employeeType);
                         break;
@@ -15904,6 +15998,7 @@ function renderProjectView() {
                 'nameAr': '👤 الاسم بالعربية',
                 'nameEn': '👤 الاسم بالإنجليزية',
                 'position': '💼 المنصب',
+                'department': '🏢 القسم',
                 'employeeType': '📋 النوع',
                 'project': '🏗️ المشروع',
                 'salary': '💵 الراتب',
@@ -16280,6 +16375,9 @@ function renderProjectView() {
                         case 'position':
                             empValue = emp.position || '';
                             break;
+                        case 'department':
+                            empValue = getDepartmentLabel(emp.department);
+                            break;
                         case 'employeeType':
                             empValue = getEmployeeTypeText(emp.employeeType);
                             break;
@@ -16633,6 +16731,11 @@ function renderProjectView() {
             if (modalId === 'employeeModal' || modalId === 'editModal') {
                 populateProjectSelects();
             }
+            if (modalId === 'employeeModal') {
+                initEmployeeCardDepartmentSelects('');
+                const phoneAdd = document.getElementById('employeePhone');
+                if (phoneAdd) phoneAdd.value = '';
+            }
         }
 
         function closeModal(modalId) {
@@ -16698,6 +16801,9 @@ function renderProjectView() {
                     document.getElementById('editNameAr').value = emp.nameAr || '';
                     document.getElementById('editNameEn').value = emp.nameEn || '';
                     document.getElementById('editPosition').value = emp.position || '';
+                    fillDepartmentSelect(document.getElementById('editDepartment'), emp.department || '');
+                    const editPhoneEl = document.getElementById('editPhone');
+                    if (editPhoneEl) editPhoneEl.value = emp.phoneNumber || '';
                     document.getElementById('editEmployeeType').value = emp.employeeType || 'monthly';
                     document.getElementById('editSalary').value = emp.salary || 0;
                     document.getElementById('editSalaryCurrency').value = emp.salaryCurrency || 'USD';
@@ -18502,6 +18608,7 @@ function renderProjectView() {
             const columnNames = {
                 'name': '👤 الاسم',
                 'position': '💼 المنصب',
+                'department': '🏢 القسم',
                 'employeeType': '📋 النوع',
                 'project': '🏗️ المشروع',
                 'salary': '💵 الراتب',
@@ -19326,17 +19433,25 @@ function renderProjectView() {
             menuEl.style.bottom = '';
             menuEl.style.maxHeight = '';
             menuEl.style.width = '';
+            menuEl.style.display = '';
         }
 
         function positionNavDropdownFloat(menuEl, triggerEl) {
             if (!menuEl || !triggerEl) return;
+            const isPicker = menuEl.classList.contains('nav-picker-menu');
             menuEl.classList.add('nav-dropdown-float');
-            menuEl.style.visibility = 'hidden';
-            menuEl.style.display = 'block';
+            if (isPicker) {
+                menuEl.style.visibility = 'hidden';
+                menuEl.style.display = 'block';
+            }
             const gap = 6;
             const rect = triggerEl.getBoundingClientRect();
-            const menuWidth = menuEl.offsetWidth || 280;
+            const menuWidth = menuEl.offsetWidth || (isPicker ? 280 : 220);
+            const menuHeight = menuEl.offsetHeight || 180;
             let top = rect.bottom + gap;
+            if (top + menuHeight > window.innerHeight - 8) {
+                top = Math.max(8, rect.top - menuHeight - gap);
+            }
             let right = Math.max(8, window.innerWidth - rect.right);
             if (right + menuWidth > window.innerWidth - 8) {
                 right = Math.max(8, window.innerWidth - menuWidth - 8);
@@ -19345,8 +19460,16 @@ function renderProjectView() {
             menuEl.style.top = top + 'px';
             menuEl.style.right = right + 'px';
             menuEl.style.left = 'auto';
-            menuEl.style.maxHeight = Math.max(120, maxH) + 'px';
-            menuEl.style.visibility = '';
+            if (isPicker) {
+                menuEl.style.maxHeight = Math.max(120, maxH) + 'px';
+                menuEl.style.visibility = '';
+            }
+        }
+
+        function positionNavToolsMenu() {
+            const menu = document.getElementById('navToolsDropdown');
+            const trigger = document.getElementById('navTools');
+            positionNavDropdownFloat(menu, trigger);
         }
 
         function toggleDropdown(id, event) {
@@ -21758,6 +21881,8 @@ function renderProjectView() {
                                         {dataColumn: 'nameAr'},
                                         {dataColumn: 'nameEn'},
                                         {dataColumn: 'position'},
+                                        {dataColumn: 'department'},
+                                        {dataColumn: 'phoneNumber'},
                                         {dataColumn: 'employeeType'},
                                         {dataColumn: 'project'},
                                         {dataColumn: 'salary'},
@@ -21778,6 +21903,8 @@ function renderProjectView() {
                                         <th data-column="nameAr" style="padding: 12px; text-align: right; min-width: 120px;">${t('nameAr')}</th>
                                         <th data-column="nameEn" style="padding: 12px; text-align: right; min-width: 120px;">${t('nameEn')}</th>
                                         <th data-column="position" style="padding: 12px; text-align: right; min-width: 100px;">${t('position')}</th>
+                                        <th data-column="department" style="padding: 12px; text-align: right; min-width: 110px;">${t('department')}</th>
+                                        <th data-column="phoneNumber" style="padding: 12px; text-align: right; min-width: 110px;">${t('phoneNumber')}</th>
                                         <th data-column="employeeType" style="padding: 12px; text-align: right; min-width: 100px;">${t('employeeType')}</th>
                                         <th data-column="project" style="padding: 12px; text-align: right; min-width: 100px;">${t('project')}</th>
                                         <th data-column="salary" style="padding: 12px; text-align: right; min-width: 100px;">${t('basicSalary')}</th>
@@ -21797,7 +21924,7 @@ function renderProjectView() {
                                 <tbody id="bulkEditTableBody">
                                     ${employees.length === 0 ? `
                                     <tr>
-                                        <td colspan="18" style="padding: 40px; text-align: center; color: var(--gray);">
+                                        <td colspan="20" style="padding: 40px; text-align: center; color: var(--gray);">
                                             ${t('noEmployeesInMonth')} ${t('monthNames')[bulkEditMonth]} ${bulkEditYear}
                                         </td>
                                     </tr>
@@ -21837,6 +21964,25 @@ function renderProjectView() {
                                                 data-field="position" 
                                                 data-emp-id="${empId}"
                                                 value="${(emp.position || '').replace(/"/g, '&quot;')}" 
+                                                style="width: 100%; padding: 8px; font-size: 12px; border: 1px solid var(--border); border-radius: 4px; background: white;">
+                                        </td>
+                                        <td style="padding: 8px;">
+                                            <select 
+                                                class="bulk-edit-field" 
+                                                data-field="department" 
+                                                data-emp-id="${empId}"
+                                                style="width: 100%; padding: 8px; font-size: 12px; border: 1px solid var(--border); border-radius: 4px; background: white;">
+                                                ${renderBulkDepartmentSelectOptions(emp.department || '')}
+                                            </select>
+                                        </td>
+                                        <td style="padding: 8px;">
+                                            <input type="tel" 
+                                                class="bulk-edit-field" 
+                                                data-field="phoneNumber" 
+                                                data-emp-id="${empId}"
+                                                value="${(emp.phoneNumber || '').replace(/"/g, '&quot;')}" 
+                                                inputmode="tel"
+                                                placeholder="07xxxxxxxx"
                                                 style="width: 100%; padding: 8px; font-size: 12px; border: 1px solid var(--border); border-radius: 4px; background: white;">
                                         </td>
                                         <td style="padding: 8px;">
@@ -22017,6 +22163,8 @@ function renderProjectView() {
                 'nameAr': '👤 الاسم بالعربية',
                 'nameEn': '👤 الاسم بالإنجليزية',
                 'position': '💼 المنصب',
+                'department': '🏢 القسم',
+                'phoneNumber': '📱 ' + t('phoneNumber'),
                 'employeeType': '📋 النوع',
                 'project': '🏗️ المشروع',
                 'salary': '💵 الراتب',
@@ -22176,6 +22324,8 @@ function renderProjectView() {
             const nameArField = row.querySelector('[data-field="nameAr"]');
             const nameEnField = row.querySelector('[data-field="nameEn"]');
             const positionField = row.querySelector('[data-field="position"]');
+            const departmentField = row.querySelector('[data-field="department"]');
+            const phoneNumberField = row.querySelector('[data-field="phoneNumber"]');
             const employeeTypeField = row.querySelector('[data-field="employeeType"]');
             const projectField = row.querySelector('[data-field="project"]');
             const salaryField = row.querySelector('[data-field="salary"]');
@@ -22216,6 +22366,14 @@ function renderProjectView() {
             if (positionField) {
                 const position = positionField.value.trim();
                 if (position) updates.position = position;
+            }
+
+            if (departmentField) {
+                updates.department = departmentField.value || '';
+            }
+
+            if (phoneNumberField) {
+                updates.phoneNumber = phoneNumberField.value.trim();
             }
             
             if (employeeTypeField) {
@@ -24297,6 +24455,7 @@ function renderProjectView() {
             { id: 'index', labelAr: '#', labelEn: '#' },
             { id: 'name', labelAr: 'الاسم', labelEn: 'Name' },
             { id: 'position', labelAr: 'المنصب', labelEn: 'Position' },
+            { id: 'department', labelAr: 'القسم', labelEn: 'Department' },
             { id: 'project', labelAr: 'المشروع', labelEn: 'Project' },
             { id: 'salary', labelAr: 'الراتب', labelEn: 'Salary' },
             { id: 'salaryCurrency', labelAr: 'ع.راتب', labelEn: 'S.Curr' },
@@ -24343,6 +24502,7 @@ function renderProjectView() {
                     if (emp.linkedToFirebaseId) n = '🔗 ' + n + ' (' + t('linkedDuplicate') + ')';
                     return n;
                 case 'position': return emp.position || '';
+                case 'department': return getDepartmentLabel(emp.department);
                 case 'project': return projects[emp.project] || emp.project || '';
                 case 'salary': return (emp.salary || 0);
                 case 'salaryCurrency': return emp.salaryCurrency || 'IQD';
@@ -28969,29 +29129,50 @@ function generateComparisonSummary(projectCode, month1, month2) {
         function toggleNavToolsDropdown(event) {
             if (event && event.stopPropagation) event.stopPropagation();
             const wrapper = document.getElementById('navToolsWrapper');
-            const menu = document.getElementById('navToolsDropdown');
             const trigger = document.getElementById('navTools');
-            const willOpen = wrapper && !wrapper.classList.contains('active');
+            const isOpen = wrapper && wrapper.classList.contains('active');
             closeAllDropdowns();
-            if (wrapper && willOpen) {
+            if (wrapper && !isOpen) {
                 wrapper.classList.add('active');
                 wrapper.classList.add('is-open');
                 if (trigger) trigger.setAttribute('aria-expanded', 'true');
                 document.getElementById('userMenu')?.classList.remove('active');
-                requestAnimationFrame(() => positionNavDropdownFloat(menu, trigger));
+                requestAnimationFrame(positionNavToolsMenu);
             }
         }
 
         function closeNavToolsDropdown() {
-            closeAllDropdowns();
+            const wrapper = document.getElementById('navToolsWrapper');
+            const menu = document.getElementById('navToolsDropdown');
+            const trigger = document.getElementById('navTools');
+            if (wrapper) {
+                wrapper.classList.remove('active');
+                wrapper.classList.remove('is-open');
+            }
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+            clearNavDropdownFloat(menu);
         }
 
-        window.addEventListener('resize', closeAllDropdowns);
+        window.addEventListener('resize', function() {
+            const wrapper = document.getElementById('navToolsWrapper');
+            if (wrapper && wrapper.classList.contains('active')) {
+                positionNavToolsMenu();
+            } else {
+                closeAllDropdowns();
+            }
+        });
+
         window.addEventListener('scroll', function(e) {
             const target = e.target;
             if (target && target.closest && target.closest('.nav-dropdown-float')) return;
-            closeAllDropdowns();
+            if (target && target.closest && target.closest('.main-area')) {
+                closeAllDropdowns();
+            }
         }, true);
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeAllDropdowns();
+        });
 
         // Close user menu and nav dropdowns when clicking outside
         document.addEventListener('click', function(e) {
@@ -29069,6 +29250,9 @@ function generateComparisonSummary(projectCode, month1, month2) {
         window.updateNavigation = updateNavigation;
         window.clearMonthFiltersAndRefresh = clearMonthFiltersAndRefresh;
         window.getEmptyStateHTML = getEmptyStateHTML;
+        window.getDepartmentLabel = getDepartmentLabel;
+        window.fillDepartmentSelect = fillDepartmentSelect;
+        window.renderBulkDepartmentSelectOptions = renderBulkDepartmentSelectOptions;
         window.changeDashboardMonth = changeDashboardMonth;
 	window.renderContent = renderContent;
         window.renderYearsView = renderYearsView;
@@ -29821,6 +30005,8 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 nameAr: nameAr,
                 nameEn: nameEn,
                 position: document.getElementById('position').value,
+                department: document.getElementById('employeeDepartment')?.value || '',
+                phoneNumber: (document.getElementById('employeePhone')?.value || '').trim(),
                 employeeType: document.getElementById('employeeType').value,
                 project: projectCode,
                 salary: parseFloat(document.getElementById('salary').value),
@@ -29957,6 +30143,8 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 nameAr: nameAr,     
                 nameEn: nameEn,
                 position: document.getElementById('editPosition').value.trim(),
+                department: document.getElementById('editDepartment')?.value || '',
+                phoneNumber: (document.getElementById('editPhone')?.value || '').trim(),
                 employeeType: document.getElementById('editEmployeeType').value,
                 project: document.getElementById('editProject').value,
                 salary: parseFloat(document.getElementById('editSalary').value) || 0,
