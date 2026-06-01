@@ -11674,6 +11674,11 @@
 
         async function renderContent() {
             const content = document.getElementById('mainContent');
+            if (currentView === 'month') {
+                await ensureColumnVisibilityForPeriod(currentYear, currentMonth);
+            } else if (currentView === 'project') {
+                await ensureColumnVisibilityForPeriod(currentYear, selectedProjectMonth || currentMonth);
+            }
             if (currentView === 'dashboard') {
                 const idx = months.indexOf(dashboardSelectedMonth);
                 const prevYear = idx > 0 ? currentYear : currentYear - 1;
@@ -13028,18 +13033,7 @@
                 </div>
             </div>`;
 
-            // لوحة التحكم في الأعمدة
-            html += `<div id="columnVisibilityPanel" style="display: none; background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 2px solid #0ea5e9;">
-                <h4 style="color: #075985; margin-bottom: 15px; font-size: 16px;">👁️ ${currentLang === 'ar' ? 'التحكم في الأعمدة' : 'Column Visibility'}</h4>
-                <div id="columnToggles" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
-                    <!-- سيتم ملؤها بالجافاسكريبت -->
-                </div>
-                <div style="margin-top: 15px; display: flex; gap: 10px;">
-                    <button class="btn btn-success btn-small" onclick="showAllColumns()">✅ ${currentLang === 'ar' ? 'إظهار الكل' : 'Show All'}</button>
-                    <button class="btn btn-warning btn-small" onclick="hideAllColumns()">❌ ${currentLang === 'ar' ? 'إخفاء الكل' : 'Hide All'}</button>
-                    <button class="btn btn-primary btn-small" onclick="resetColumnVisibility()">🔄 ${currentLang === 'ar' ? 'إعادة تعيين' : 'Reset'}</button>
-                </div>
-            </div>`;
+            html += getColumnVisibilityPanelHTML();
 
             // قسم الفلاتر المحسّن
             html += `
@@ -13750,12 +13744,18 @@ function renderProjectView() {
                             style="padding: 12px 24px; font-weight: 700; font-size: 14px;">
                         ${isUnlocked ? '🔓 المكافآت مفتوحة' : '🔒 فتح المكافآت'}
                     </button>
+                    <button class="btn btn-secondary" onclick="toggleColumnVisibilityPanel()" 
+                            style="padding: 12px 24px; font-weight: 700; font-size: 14px;">
+                        👁️ ${currentLang === 'ar' ? 'إظهار/إخفاء الأعمدة' : 'Show/Hide Columns'}
+                    </button>
                     <button class="btn" onclick="saveCurrentFormatting()" 
                             style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; font-weight: 700; font-size: 14px;">
                         💾 ${currentLang === 'ar' ? 'حفظ التنسيق' : 'Save Format'}
                     </button>
                 </div>
             </div>`;
+
+            html += getColumnVisibilityPanelHTML();
 
             if (monthEmployees.length === 0) {
                 html += getEmptyStateHTML({ variant: 'no-project-data' });
@@ -18382,6 +18382,7 @@ function renderProjectView() {
             console.log(`✅ نسخ جماعي: ${copiedCount} موظف من ${t('monthNames')[currentMonth]} ${currentYear} إلى ${t('monthNames')[targetMonth]} ${targetYear}`);
             
             await loadEmployeesFromFirebase(targetYear, targetMonth, false, true); // إعادة تحميل الفترة المستهدفة
+            await inheritColumnVisibilityAfterCopy(parseInt(targetYear, 10), targetMonth, parseInt(currentYear, 10), currentMonth);
             renderContent();
         }
 
@@ -18571,6 +18572,7 @@ function renderProjectView() {
                 console.log(`✅ نسخ المحدد: ${copiedCount} موظف من ${t('monthNames')[currentMonth]} ${currentYear} إلى ${t('monthNames')[targetMonth]} ${targetYear}`);
                 
                 await loadEmployeesFromFirebase(targetYear, targetMonth, false, true);
+                await inheritColumnVisibilityAfterCopy(parseInt(targetYear, 10), targetMonth, parseInt(currentYear, 10), currentMonth);
                 renderContent();
             } catch (error) {
                 console.error('❌ خطأ في confirmCopySelected:', error);
@@ -18579,157 +18581,349 @@ function renderProjectView() {
             }
         }
 
-        // ========== نظام إظهار/إخفاء الأعمدة ==========
-        let hiddenColumns = new Set(JSON.parse(localStorage.getItem('hiddenColumns') || '[]'));
-        
+        // ========== نظام إظهار/إخفاء الأعمدة (لكل شهر — Firebase/محلي) ==========
+        const COLUMN_VISIBILITY_SKIP = new Set(['select', 'reorder', 'number', 'code']);
+        const COLUMN_VISIBILITY_ALIASES = {
+            actualUSD: ['actualUSD', 'actualSalaryUSD'],
+            actualIQD: ['actualIQD', 'actualSalaryIQD']
+        };
+        const PRINT_ID_TO_DATA_COLUMN = {
+            index: 'number',
+            actualSalaryUSD: 'actualUSD',
+            actualSalaryIQD: 'actualIQD'
+        };
+        const COLUMN_VISIBILITY_LABELS = {
+            name: 'الاسم', position: 'المنصب', department: 'القسم', employeeType: 'النوع', project: 'المشروع',
+            salary: 'الراتب', salaryCurrency: 'عملة الراتب', paymentCurrency: 'عملة الدفع', exchangeRate: 'سعر الصرف',
+            attendance: 'الدوام', dailySalary: 'الراتب اليومي', actualUSD: 'الفعلي USD', actualIQD: 'الفعلي IQD',
+            actualSalaryUSD: 'الفعلي USD', actualSalaryIQD: 'الفعلي IQD',
+            bonus: 'البونص', bonusCurrency: 'عملة البونص', phoneBills: 'الفواتير', phoneBillsCurrency: 'عملة الفواتير',
+            deductions: 'الخصومات', deductionsCurrency: 'عملة الخصومات', advance: 'السلفة', advanceCurrency: 'عملة السلفة',
+            salaryIncrease: 'زيادة راتب', salaryIncreaseCurrency: 'عملة الزيادة', ceoBonus: 'مكافأة CEO', ceoBonusCurrency: 'عملة المكافأة',
+            netSalary: 'الصافي', paymentStatus: 'حالة الدفع', reservationPercentage: 'نسبة الحجز',
+            reservedAmount: 'المحجوز', reservation: 'الحجز', actions: 'الإجراءات'
+        };
+        let columnVisibilityCache = {};
+        let columnVisibilityLegacyMigrated = false;
+
+        function columnVisibilityCacheKey(year, month) {
+            return `${parseInt(year, 10)}_${month}`;
+        }
+
+        function getMonthTableColumnVisibilityRoot() {
+            if (!companySettings.monthTableColumnVisibility) {
+                companySettings.monthTableColumnVisibility = {};
+            }
+            return companySettings.monthTableColumnVisibility;
+        }
+
+        function getPeriodVisibilityRecord(year, month) {
+            const root = getMonthTableColumnVisibilityRoot();
+            const y = String(parseInt(year, 10));
+            if (!root[y]) return null;
+            return root[y][month] || null;
+        }
+
+        function getActiveColumnVisibilityPeriod() {
+            if (currentView === 'month') {
+                return { year: currentYear, month: currentMonth };
+            }
+            if (currentView === 'project') {
+                return { year: currentYear, month: selectedProjectMonth || currentMonth };
+            }
+            return null;
+        }
+
+        function getActiveHiddenColumnsSet() {
+            const period = getActiveColumnVisibilityPeriod();
+            if (!period) return new Set();
+            const key = columnVisibilityCacheKey(period.year, period.month);
+            if (columnVisibilityCache[key]) return columnVisibilityCache[key];
+            const rec = getPeriodVisibilityRecord(period.year, period.month);
+            return new Set(rec && Array.isArray(rec.hidden) ? rec.hidden : []);
+        }
+
+        function isDataColumnHidden(colName, hiddenSet) {
+            if (!colName || !hiddenSet) return false;
+            if (hiddenSet.has(colName)) return true;
+            for (const [canonical, aliases] of Object.entries(COLUMN_VISIBILITY_ALIASES)) {
+                if (aliases.includes(colName) && hiddenSet.has(canonical)) return true;
+            }
+            return false;
+        }
+
+        function isPrintColumnHidden(printColId, hiddenSet) {
+            const dataCol = PRINT_ID_TO_DATA_COLUMN[printColId] || printColId;
+            return isDataColumnHidden(dataCol, hiddenSet);
+        }
+
+        function findInheritSourceYearMonth(targetYear, targetMonth) {
+            const y = parseInt(targetYear, 10);
+            const copySrc = companySettings.monthCopySources && companySettings.monthCopySources[String(y)]
+                ? companySettings.monthCopySources[String(y)][targetMonth] : null;
+            if (copySrc && copySrc.month) {
+                return { year: parseInt(copySrc.year, 10), month: copySrc.month };
+            }
+            const monthIdx = months.indexOf(targetMonth);
+            for (let i = monthIdx - 1; i >= 0; i--) {
+                const m = months[i];
+                const rec = getPeriodVisibilityRecord(y, m);
+                if (rec && Array.isArray(rec.hidden)) return { year: y, month: m };
+            }
+            const prevYear = y - 1;
+            for (let i = months.length - 1; i >= 0; i--) {
+                const m = months[i];
+                const rec = getPeriodVisibilityRecord(prevYear, m);
+                if (rec && Array.isArray(rec.hidden)) return { year: prevYear, month: m };
+            }
+            return null;
+        }
+
+        function recordMonthCopySource(targetYear, targetMonth, sourceYear, sourceMonth) {
+            if (!companySettings.monthCopySources) companySettings.monthCopySources = {};
+            const y = String(parseInt(targetYear, 10));
+            if (!companySettings.monthCopySources[y]) companySettings.monthCopySources[y] = {};
+            companySettings.monthCopySources[y][targetMonth] = {
+                year: parseInt(sourceYear, 10),
+                month: sourceMonth
+            };
+        }
+
+        async function savePeriodColumnVisibility(year, month, record) {
+            const y = parseInt(year, 10);
+            const root = getMonthTableColumnVisibilityRoot();
+            const yKey = String(y);
+            if (!root[yKey]) root[yKey] = {};
+            root[yKey][month] = {
+                hidden: Array.isArray(record.hidden) ? [...record.hidden] : [],
+                source: record.source || 'manual',
+                copiedFrom: record.copiedFrom || null,
+                updatedAt: record.updatedAt || new Date().toISOString(),
+                updatedBy: record.updatedBy || (currentUser && currentUser.email) || 'unknown'
+            };
+            companySettings.monthTableColumnVisibility = root;
+            columnVisibilityCache[columnVisibilityCacheKey(y, month)] = new Set(root[yKey][month].hidden);
+            await saveCompanySettings({ ...companySettings });
+        }
+
+        async function ensureColumnVisibilityForPeriod(year, month) {
+            const y = parseInt(year, 10);
+            const cacheKey = columnVisibilityCacheKey(y, month);
+            if (!companySettings.monthTableColumnVisibility) {
+                await loadCompanySettings();
+            }
+            const existing = getPeriodVisibilityRecord(y, month);
+            if (existing && Array.isArray(existing.hidden)) {
+                columnVisibilityCache[cacheKey] = new Set(existing.hidden);
+                return columnVisibilityCache[cacheKey];
+            }
+            if (!columnVisibilityLegacyMigrated) {
+                try {
+                    const legacy = JSON.parse(localStorage.getItem('hiddenColumns') || '[]');
+                    if (legacy.length > 0) {
+                        await savePeriodColumnVisibility(y, month, {
+                            hidden: legacy,
+                            source: 'manual',
+                            copiedFrom: null
+                        });
+                        localStorage.removeItem('hiddenColumns');
+                        columnVisibilityLegacyMigrated = true;
+                        return columnVisibilityCache[cacheKey];
+                    }
+                } catch (e) { /* ignore */ }
+                columnVisibilityLegacyMigrated = true;
+            }
+            const source = findInheritSourceYearMonth(y, month);
+            let hidden = [];
+            if (source) {
+                await ensureColumnVisibilityForPeriod(source.year, source.month);
+                const srcRec = getPeriodVisibilityRecord(source.year, source.month);
+                hidden = srcRec && Array.isArray(srcRec.hidden) ? [...srcRec.hidden] : [];
+            }
+            await savePeriodColumnVisibility(y, month, {
+                hidden,
+                source: 'inherit',
+                copiedFrom: source
+            });
+            return columnVisibilityCache[cacheKey];
+        }
+
+        async function inheritColumnVisibilityAfterCopy(targetYear, targetMonth, sourceYear, sourceMonth) {
+            recordMonthCopySource(targetYear, targetMonth, sourceYear, sourceMonth);
+            const existing = getPeriodVisibilityRecord(targetYear, targetMonth);
+            if (existing && Array.isArray(existing.hidden)) {
+                companySettings.monthCopySources = companySettings.monthCopySources || {};
+                await saveCompanySettings({ ...companySettings });
+                return;
+            }
+            await ensureColumnVisibilityForPeriod(sourceYear, sourceMonth);
+            const srcRec = getPeriodVisibilityRecord(sourceYear, sourceMonth);
+            const hidden = srcRec && Array.isArray(srcRec.hidden) ? [...srcRec.hidden] : [];
+            await savePeriodColumnVisibility(targetYear, targetMonth, {
+                hidden,
+                source: 'inherit',
+                copiedFrom: { year: parseInt(sourceYear, 10), month: sourceMonth }
+            });
+        }
+
+        async function saveManualColumnVisibilityForActivePeriod(hiddenArray) {
+            const period = getActiveColumnVisibilityPeriod();
+            if (!period) return;
+            const existing = getPeriodVisibilityRecord(period.year, period.month) || {};
+            await savePeriodColumnVisibility(period.year, period.month, {
+                hidden: hiddenArray,
+                source: 'manual',
+                copiedFrom: existing.copiedFrom || null
+            });
+        }
+
+        function getColumnVisibilityPanelHTML() {
+            return `<div id="columnVisibilityPanel" style="display: none; background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 2px solid #0ea5e9;">
+                <h4 style="color: #075985; margin-bottom: 15px; font-size: 16px;">👁️ ${currentLang === 'ar' ? 'التحكم في الأعمدة (لهذا الشهر)' : 'Column Visibility (this month)'}</h4>
+                <div id="columnToggles" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
+                <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-success btn-small" onclick="showAllColumns()">✅ ${currentLang === 'ar' ? 'إظهار الكل' : 'Show All'}</button>
+                    <button type="button" class="btn btn-warning btn-small" onclick="hideAllColumns()">❌ ${currentLang === 'ar' ? 'إخفاء الكل' : 'Hide All'}</button>
+                    <button type="button" class="btn btn-primary btn-small" onclick="resetColumnVisibility()">🔄 ${currentLang === 'ar' ? 'إعادة تعيين' : 'Reset'}</button>
+                </div>
+            </div>`;
+        }
+
+        function collectToggleableColumnKeys() {
+            const keys = new Set();
+            const tables = [];
+            const monthTable = document.getElementById('employeeTable');
+            if (monthTable) tables.push(monthTable);
+            document.querySelectorAll('.table-container table[id]').forEach(t => {
+                if (t.id && t.id.startsWith('project')) tables.push(t);
+            });
+            tables.forEach(table => {
+                table.querySelectorAll('thead th[data-column]').forEach(th => {
+                    const col = th.dataset.column;
+                    if (col && !COLUMN_VISIBILITY_SKIP.has(col)) keys.add(col);
+                });
+            });
+            if (keys.size === 0) {
+                Object.keys(COLUMN_VISIBILITY_LABELS).forEach(k => keys.add(k));
+            }
+            return [...keys];
+        }
+
         function toggleColumnVisibilityPanel() {
             const panel = document.getElementById('columnVisibilityPanel');
             if (panel) {
                 const isVisible = panel.style.display !== 'none';
                 panel.style.display = isVisible ? 'none' : 'block';
-                
-                if (!isVisible) {
-                    // ملء قائمة الأعمدة
-                    populateColumnToggles();
-                }
+                if (!isVisible) populateColumnToggles();
             }
         }
-        
+
         function populateColumnToggles() {
             const container = document.getElementById('columnToggles');
             if (!container) return;
-            
-            const table = document.querySelector('#employeeTable');
-            if (!table) return;
-            
-            const headers = table.querySelectorAll('thead th[data-column]');
+            const hiddenSet = getActiveHiddenColumnsSet();
+            const colKeys = collectToggleableColumnKeys();
+            const seen = new Set();
             container.innerHTML = '';
-            
-            const columnNames = {
-                'name': '👤 الاسم',
-                'position': '💼 المنصب',
-                'department': '🏢 القسم',
-                'employeeType': '📋 النوع',
-                'project': '🏗️ المشروع',
-                'salary': '💵 الراتب',
-                'salaryCurrency': '💱 عملة الراتب',
-                'paymentCurrency': '💳 عملة الدفع',
-                'exchangeRate': '🔄 سعر الصرف',
-                'attendance': '⏰ الدوام',
-                'dailySalary': '📅 الراتب اليومي',
-                'actualUSD': '💵 الفعلي USD',
-                'actualIQD': '💰 الفعلي IQD',
-                'bonus': '🎁 البونص',
-                'bonusCurrency': '💱 عملة البونص',
-                'phoneBills': '📞 الفواتير',
-                'phoneBillsCurrency': '💱 عملة الفواتير',
-                'deductions': '➖ الخصومات',
-                'deductionsCurrency': '💱 عملة الخصومات',
-                'advance': '💳 السلفة',
-                'advanceCurrency': '💱 عملة السلفة',
-                'netSalary': '✅ الصافي',
-                'actions': '⚙️ الإجراءات'
-            };
-            
-            headers.forEach(header => {
-                const colName = header.dataset.column;
-                if (!colName || colName === 'select' || colName === 'reorder' || colName === 'number' || colName === 'code') return;
-                
-                const isHidden = hiddenColumns.has(colName);
-                const displayName = columnNames[colName] || colName;
-                
+            colKeys.forEach(colName => {
+                const canonical = COLUMN_VISIBILITY_ALIASES.actualUSD && COLUMN_VISIBILITY_ALIASES.actualUSD.includes(colName)
+                    ? 'actualUSD'
+                    : (COLUMN_VISIBILITY_ALIASES.actualIQD && COLUMN_VISIBILITY_ALIASES.actualIQD.includes(colName) ? 'actualIQD' : colName);
+                if (seen.has(canonical)) return;
+                seen.add(canonical);
+                const isHidden = isDataColumnHidden(canonical, hiddenSet);
+                const displayName = COLUMN_VISIBILITY_LABELS[canonical] || COLUMN_VISIBILITY_LABELS[colName] || colName;
                 const toggle = document.createElement('label');
                 toggle.style.cssText = 'display: flex; align-items: center; gap: 8px; padding: 10px; background: white; border-radius: 8px; cursor: pointer; transition: all 0.2s; border: 2px solid #e5e7eb;';
                 toggle.onmouseenter = function() { this.style.background = '#f0f9ff'; this.style.borderColor = '#0ea5e9'; };
                 toggle.onmouseleave = function() { this.style.background = 'white'; this.style.borderColor = '#e5e7eb'; };
-                
-                toggle.innerHTML = `
-                    <input type="checkbox" ${!isHidden ? 'checked' : ''} 
-                        onchange="toggleColumnVisibility('${colName}', this.checked)" 
-                        style="width: 18px; height: 18px; cursor: pointer;">
-                    <span style="font-size: 13px; font-weight: 500;">${displayName}</span>
-                `;
-                
+                toggle.innerHTML = `<input type="checkbox" ${!isHidden ? 'checked' : ''} data-col="${canonical}"
+                    onchange="toggleColumnVisibility('${canonical}', this.checked)" style="width: 18px; height: 18px; cursor: pointer;">
+                    <span style="font-size: 13px; font-weight: 500;">${displayName}</span>`;
                 container.appendChild(toggle);
             });
         }
-        
-        function toggleColumnVisibility(columnName, show) {
+
+        async function toggleColumnVisibility(columnName, show) {
+            const hiddenSet = new Set(getActiveHiddenColumnsSet());
             if (show) {
-                hiddenColumns.delete(columnName);
+                hiddenSet.delete(columnName);
+                const aliases = COLUMN_VISIBILITY_ALIASES[columnName];
+                if (aliases) aliases.forEach(a => hiddenSet.delete(a));
             } else {
-                hiddenColumns.add(columnName);
+                hiddenSet.add(columnName);
             }
-            
-            // حفظ في localStorage
-            localStorage.setItem('hiddenColumns', JSON.stringify([...hiddenColumns]));
-            
-            // تطبيق التغيير
+            const period = getActiveColumnVisibilityPeriod();
+            if (period) {
+                columnVisibilityCache[columnVisibilityCacheKey(period.year, period.month)] = hiddenSet;
+            }
+            await saveManualColumnVisibilityForActivePeriod([...hiddenSet]);
             applyColumnVisibility();
         }
-        
-        function applyColumnVisibility() {
-            const table = document.querySelector('#employeeTable');
-            if (!table) return;
-            
-            const headers = table.querySelectorAll('thead th[data-column]');
-            headers.forEach((header, index) => {
+
+        function applyColumnVisibilityToTable(table, hiddenSet) {
+            if (!table || !hiddenSet) return;
+            const headerRow = table.querySelector('thead tr:not(.pin-checkbox-row):last-of-type')
+                || table.querySelector('thead tr:not(.pin-checkbox-row)');
+            if (!headerRow) return;
+            headerRow.querySelectorAll('th[data-column]').forEach(header => {
                 const colName = header.dataset.column;
-                const isHidden = hiddenColumns.has(colName);
-                
-                // إخفاء/إظهار الرأس
+                const isHidden = isDataColumnHidden(colName, hiddenSet);
+                const colIndex = header.cellIndex;
                 header.style.display = isHidden ? 'none' : '';
-                
-                // إخفاء/إظهار جميع خلايا العمود
-                const rows = table.querySelectorAll('tbody tr');
-                rows.forEach(row => {
-                    const cell = row.cells[index];
-                    if (cell) {
-                        cell.style.display = isHidden ? 'none' : '';
-                    }
+                table.querySelectorAll('tbody tr').forEach(row => {
+                    const cell = row.cells[colIndex];
+                    if (cell) cell.style.display = isHidden ? 'none' : '';
                 });
             });
-            
-            console.log('✅ تم تطبيق إعدادات الأعمدة:', hiddenColumns.size, 'أعمدة مخفية');
         }
-        
-        function showAllColumns() {
-            const checkboxes = document.querySelectorAll('#columnToggles input[type="checkbox"]');
-            checkboxes.forEach(cb => {
-                cb.checked = true;
-                const colName = cb.onchange.toString().match(/'([^']+)'/)[1];
-                hiddenColumns.delete(colName);
-            });
-            
-            localStorage.setItem('hiddenColumns', JSON.stringify([]));
-            applyColumnVisibility();
-            showNotification('success', 'تم', 'تم إظهار جميع الأعمدة');
-        }
-        
-        function hideAllColumns() {
-            const checkboxes = document.querySelectorAll('#columnToggles input[type="checkbox"]');
-            checkboxes.forEach(cb => {
-                cb.checked = false;
-                const match = cb.onchange.toString().match(/'([^']+)'/);
-                if (match) {
-                    hiddenColumns.add(match[1]);
+
+        function applyColumnVisibility() {
+            const hiddenSet = getActiveHiddenColumnsSet();
+            const monthTable = document.getElementById('employeeTable');
+            if (monthTable) applyColumnVisibilityToTable(monthTable, hiddenSet);
+            document.querySelectorAll('.table-container table[id]').forEach(table => {
+                if (table.id && table.id.startsWith('project')) {
+                    applyColumnVisibilityToTable(table, hiddenSet);
                 }
             });
-            
-            localStorage.setItem('hiddenColumns', JSON.stringify([...hiddenColumns]));
-            applyColumnVisibility();
-            showNotification('warning', 'تم', 'تم إخفاء جميع الأعمدة');
         }
-        
-        function resetColumnVisibility() {
-            hiddenColumns = new Set();
-            localStorage.removeItem('hiddenColumns');
-            
-            const checkboxes = document.querySelectorAll('#columnToggles input[type="checkbox"]');
-            checkboxes.forEach(cb => cb.checked = true);
-            
+
+        async function showAllColumns() {
+            document.querySelectorAll('#columnToggles input[type="checkbox"]').forEach(cb => { cb.checked = true; });
+            await saveManualColumnVisibilityForActivePeriod([]);
             applyColumnVisibility();
-            showNotification('success', 'تم', 'تم إعادة تعيين الأعمدة للوضع الافتراضي');
+            populateColumnToggles();
+            showNotification('success', 'تم', currentLang === 'ar' ? 'تم إظهار جميع الأعمدة' : 'All columns shown');
+        }
+
+        async function hideAllColumns() {
+            const keys = collectToggleableColumnKeys().map(col => {
+                if (COLUMN_VISIBILITY_ALIASES.actualUSD && COLUMN_VISIBILITY_ALIASES.actualUSD.includes(col)) return 'actualUSD';
+                if (COLUMN_VISIBILITY_ALIASES.actualIQD && COLUMN_VISIBILITY_ALIASES.actualIQD.includes(col)) return 'actualIQD';
+                return col;
+            });
+            const unique = [...new Set(keys)];
+            document.querySelectorAll('#columnToggles input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+            const period = getActiveColumnVisibilityPeriod();
+            if (period) columnVisibilityCache[columnVisibilityCacheKey(period.year, period.month)] = new Set(unique);
+            await saveManualColumnVisibilityForActivePeriod(unique);
+            applyColumnVisibility();
+            showNotification('warning', 'تم', currentLang === 'ar' ? 'تم إخفاء جميع الأعمدة' : 'All columns hidden');
+        }
+
+        async function resetColumnVisibility() {
+            await saveManualColumnVisibilityForActivePeriod([]);
+            document.querySelectorAll('#columnToggles input[type="checkbox"]').forEach(cb => { cb.checked = true; });
+            applyColumnVisibility();
+            showNotification('success', 'تم', currentLang === 'ar' ? 'تم إعادة تعيين الأعمدة' : 'Columns reset');
+        }
+
+        function getHiddenColumnsForPrint(year, month) {
+            const key = columnVisibilityCacheKey(year, month);
+            if (columnVisibilityCache[key]) return columnVisibilityCache[key];
+            const rec = getPeriodVisibilityRecord(year, month);
+            return new Set(rec && Array.isArray(rec.hidden) ? rec.hidden : []);
         }
         
         // ========== نظام الإضافة المتعددة المحسّن ==========
@@ -24028,7 +24222,7 @@ function renderProjectView() {
             });
         }
         
-        function executePrintWithOptions(showPreview) {
+        async function executePrintWithOptions(showPreview) {
             console.log('⚙️ تنفيذ الطباعة البسيطة');
             
             // جمع الإعدادات البسيطة
@@ -24045,11 +24239,11 @@ function renderProjectView() {
             closeModal('printOptionsModal');
             
             // طباعة بسيطة
-            printSimple(settings);
+            await printSimple(settings);
         }
         
         // دالة معاينة الطباعة مع إمكانية تعديل عرض الأعمدة
-        function openPrintPreview() {
+        async function openPrintPreview() {
             console.log('👁️ فتح معاينة الطباعة');
             
             // جمع الإعدادات
@@ -24120,6 +24314,9 @@ function renderProjectView() {
             // ==================== ملخص مقارنة (الحالي vs السابق) وفق نفس فلاتر الطباعة ====================
             const monthKeyCurrentPrint = (currentView === 'project') ? (selectedProjectMonth || currentMonth) : currentMonth;
             const yearKeyCurrentPrint = currentYear;
+            await ensureColumnVisibilityForPeriod(yearKeyCurrentPrint, monthKeyCurrentPrint);
+            settings.printVisibilityYear = yearKeyCurrentPrint;
+            settings.printVisibilityMonth = monthKeyCurrentPrint;
             const currentMonthIndexPrint = months.indexOf(monthKeyCurrentPrint);
             const prevMonthIndexPrint = currentMonthIndexPrint > 0 ? currentMonthIndexPrint - 1 : 11;
             const monthKeyPrevPrint = months[prevMonthIndexPrint];
@@ -24482,13 +24679,31 @@ function renderProjectView() {
             { id: 'workDays', labelAr: 'أيام العمل', labelEn: 'Work Days', simpleOnly: true }
         ];
         
-        function getPrintColumnsList(printColumns, isPreview) {
+        function getPrintColumnsList(printColumns, isPreview, printYear, printMonth) {
             if (!printColumns || printColumns.length === 0) return null;
+            const hiddenSet = (printYear != null && printMonth)
+                ? getHiddenColumnsForPrint(printYear, printMonth)
+                : null;
             return PRINT_COLUMNS_CONFIG.filter(c => {
                 if (!printColumns.includes(c.id)) return false;
-                if (isPreview && c.simpleOnly) return false;  // في المعاينة لا نعرض أعمدة الطباعة المباشرة فقط
+                if (isPreview && c.simpleOnly) return false;
+                if (hiddenSet && isPrintColumnHidden(c.id, hiddenSet)) return false;
                 return true;
             });
+        }
+
+        function resolvePrintColumns(settings, isPreview) {
+            const y = settings.printVisibilityYear != null ? settings.printVisibilityYear : currentYear;
+            const m = settings.printVisibilityMonth
+                || ((currentView === 'project') ? (selectedProjectMonth || currentMonth) : currentMonth);
+            if (settings.printColumns && settings.printColumns.length > 0) {
+                return getPrintColumnsList(settings.printColumns, isPreview, y, m);
+            }
+            const defaultIds = PRINT_COLUMNS_CONFIG
+                .filter(c => !(isPreview && c.simpleOnly))
+                .map(c => c.id);
+            const filtered = getPrintColumnsList(defaultIds, isPreview, y, m);
+            return filtered && filtered.length > 0 ? filtered : null;
         }
         
         function getCellValueForPrint(col, emp, index, type, isArabic, ctx) {
@@ -24549,7 +24764,7 @@ function renderProjectView() {
         
         // دالة إنشاء جدول المعاينة
         function generatePreviewTable(employees, type, settings) {
-            const cols = settings && settings.printColumns ? getPrintColumnsList(settings.printColumns, true) : null;
+            const cols = settings ? resolvePrintColumns(settings, true) : null;
             const isArabic = true;
             
             let html = '<table>';
@@ -24588,8 +24803,9 @@ function renderProjectView() {
         }
         
         // دالة طباعة بسيطة وفعالة
-        function printSimple(settings) {
+        async function printSimple(settings) {
             console.log('🖨️ طباعة بسيطة:', settings);
+            settings = settings || {};
             
             // جمع الموظفين من البيانات الحالية
             let employeesToPrint = [];
@@ -24648,6 +24864,9 @@ function renderProjectView() {
             // ==================== ملخص مقارنة (الحالي vs السابق) وفق نفس فلاتر الطباعة ====================
             const monthKeyCurrentPrint = (currentView === 'project') ? (selectedProjectMonth || currentMonth) : currentMonth;
             const yearKeyCurrentPrint = currentYear;
+            await ensureColumnVisibilityForPeriod(yearKeyCurrentPrint, monthKeyCurrentPrint);
+            settings.printVisibilityYear = yearKeyCurrentPrint;
+            settings.printVisibilityMonth = monthKeyCurrentPrint;
             const currentMonthIndexPrint = months.indexOf(monthKeyCurrentPrint);
             const prevMonthIndexPrint = currentMonthIndexPrint > 0 ? currentMonthIndexPrint - 1 : 11;
             const monthKeyPrevPrint = months[prevMonthIndexPrint];
@@ -24972,7 +25191,7 @@ function renderProjectView() {
         // دالة إنشاء جدول بسيط مع الحقول المطلوبة
         function generateSimpleTable(employees, type, settings) {
             const isArabic = currentLang === 'ar';
-            const cols = settings && settings.printColumns ? getPrintColumnsList(settings.printColumns, false) : null;
+            const cols = settings ? resolvePrintColumns(settings, false) : null;
             
             let html = '<table>';
             html += '<thead><tr>';
