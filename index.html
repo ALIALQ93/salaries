@@ -7652,6 +7652,17 @@
                 attendanceSaveError: 'فشل حفظ بيانات الدوام',
                 loadUsersError: 'فشل تحميل قائمة المستخدمين',
                 userAddedSuccess: 'تم إضافة المستخدم بنجاح',
+                userStatusActive: 'نشط',
+                userStatusDisabled: 'معطّل',
+                userDisable: 'تعطيل',
+                userEnable: 'تنشيط',
+                userDisableConfirm: 'تعطيل حساب المستخدم؟ لن يتمكن من استخدام النظام بعد تسجيل الخروج أو إعادة فتح التطبيق.',
+                userEnableConfirm: 'تنشيط حساب المستخدم وإعادة السماح بالدخول؟',
+                userDisabledSuccess: 'تم تعطيل المستخدم',
+                userEnabledSuccess: 'تم تنشيط المستخدم',
+                cannotDisableSelf: 'لا يمكنك تعطيل حسابك الحالي',
+                accountDisabledMessage: 'تم تعطيل حسابك. تواصل مع المدير.',
+                noPermissionEditUsers: 'ليس لديك صلاحية تعديل المستخدمين',
                 userLinkedSuccess: 'تم ربط المستخدم بالصلاحيات بنجاح',
                 linkUserError: 'فشل ربط المستخدم',
                 loadUserDataError: 'فشل تحميل بيانات المستخدم',
@@ -8064,6 +8075,17 @@
                 attendanceSaveError: 'Failed to save attendance data',
                 loadUsersError: 'Failed to load users list',
                 userAddedSuccess: 'User added successfully',
+                userStatusActive: 'Active',
+                userStatusDisabled: 'Disabled',
+                userDisable: 'Disable',
+                userEnable: 'Enable',
+                userDisableConfirm: 'Disable this user? They will not be able to use the system after logout or reopening the app.',
+                userEnableConfirm: 'Enable this user and allow login again?',
+                userDisabledSuccess: 'User disabled',
+                userEnabledSuccess: 'User enabled',
+                cannotDisableSelf: 'You cannot disable your own account',
+                accountDisabledMessage: 'Your account has been disabled. Contact the administrator.',
+                noPermissionEditUsers: 'You do not have permission to edit users',
                 userLinkedSuccess: 'User linked to permissions successfully',
                 linkUserError: 'Failed to link user',
                 loadUserDataError: 'Failed to load user data',
@@ -8583,12 +8605,22 @@
                 if (userDoc.exists()) {
                     userData = userDoc.data();
                 }
+
+                const accountStatus = userData.status || 'active';
+                if (accountStatus === 'disabled') {
+                    console.warn('حساب معطّل:', user.email);
+                    await signOut(auth);
+                    hideLoading();
+                    showNotification('warning', t('loginError'), t('accountDisabledMessage'));
+                    return;
+                }
                 
                 currentUser = {
                     uid: user.uid,
                     email: user.email,
                     role: userData.role || 'مستخدم',
                     fullAccess: userData.fullAccess || false,
+                    status: accountStatus,
                     permissions: userData.permissions || {
                         employees: {
                             monthly: { view: true, add: false, edit: false, delete: false },
@@ -20547,18 +20579,25 @@ function renderProjectView() {
             const permLabel = currentLang === 'ar' ? '🔐 الصلاحيات' : '🔐 Permissions';
             const detailsLabel = currentLang === 'ar' ? '📊 التفاصيل' : '📊 Details';
             const createdLabel = currentLang === 'ar' ? '📅 تاريخ الإنشاء' : '📅 Created At';
+            const statusLabel = currentLang === 'ar' ? '📶 الحالة' : '📶 Status';
             const actionsLabel = currentLang === 'ar' ? '⚙️ الإجراءات' : '⚙️ Actions';
-            html += `<th style="width: 50px;">${idLabel}</th><th>${emailLabel}</th><th>${roleLabel}</th><th>${permLabel}</th><th>${detailsLabel}</th><th>${createdLabel}</th><th style="width: 200px;">${actionsLabel}</th></tr></thead><tbody>`;
+            const canEditUsers = currentUser && (currentUser.fullAccess || hasPermission('users.edit'));
+            html += `<th style="width: 50px;">${idLabel}</th><th>${emailLabel}</th><th>${roleLabel}</th><th>${statusLabel}</th><th>${permLabel}</th><th>${detailsLabel}</th><th>${createdLabel}</th><th style="min-width: 280px;">${actionsLabel}</th></tr></thead><tbody>`;
             let index = 1;
             cache.forEach(({ id: uid, data: userData }) => {
                 const notSpecified = currentLang === 'ar' ? 'غير محدد' : 'Not Specified';
                 const defaultRole = currentLang === 'ar' ? 'مستخدم' : 'User';
                 const fullText = currentLang === 'ar' ? '🔓 كاملة' : '🔓 Full';
                 const limitedText = currentLang === 'ar' ? '🔒 محدودة' : '🔒 Limited';
-                html += '<tr>';
+                const isDisabled = userData.status === 'disabled';
+                const statusActiveText = t('userStatusActive');
+                const statusDisabledText = t('userStatusDisabled');
+                const rowStyle = isDisabled ? ' style="opacity: 0.65; background: #fef2f2;"' : '';
+                html += `<tr${rowStyle}>`;
                 html += `<td>${index++}</td>`;
                 html += `<td style="text-align: left; direction: ltr;">${userData.email || notSpecified}</td>`;
                 html += `<td><span style="background: var(--primary); color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">${userData.role || defaultRole}</span></td>`;
+                html += `<td><span style="background: ${isDisabled ? '#fee2e2' : '#d1fae5'}; color: ${isDisabled ? '#991b1b' : '#065f46'}; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">${isDisabled ? statusDisabledText : statusActiveText}</span></td>`;
                 html += `<td>${userData.fullAccess ? fullText : limitedText}</td>`;
                 let permissionDetails = '';
                 const allPermsText = currentLang === 'ar' ? '✅ جميع الصلاحيات' : '✅ All Permissions';
@@ -20614,7 +20653,20 @@ function renderProjectView() {
                 const editTitle = currentLang === 'ar' ? 'تعديل الصلاحيات' : 'Edit Permissions';
                 const deleteTitle = currentLang === 'ar' ? 'حذف الربط' : 'Delete Link';
                 const safeEmail = (userData.email || '').replace(/'/g, "\\'");
-                html += `<td>${dateText}</td><td><button class="btn btn-small btn-primary" onclick="editUserPermissions('${uid}', '${safeEmail}', '${(userData.role || defaultRole).replace(/'/g, "\\'")}', ${userData.fullAccess || false})" title="${editTitle}">${editBtnText}</button> <button class="btn btn-small btn-danger" onclick="deleteUserPermissions('${uid}', '${safeEmail}')" title="${deleteTitle}">${deleteBtnText}</button></td></tr>`;
+                const isSelf = currentUser && currentUser.uid === uid;
+                let actionBtns = '';
+                if (canEditUsers && !isSelf) {
+                    if (isDisabled) {
+                        const enableTitle = currentLang === 'ar' ? 'تنشيط الحساب' : 'Enable account';
+                        actionBtns += `<button type="button" class="btn btn-small btn-success" onclick="setUserAccountStatus('${uid}', '${safeEmail}', true)" title="${enableTitle}">${t('userEnable')}</button> `;
+                    } else {
+                        const disableTitle = currentLang === 'ar' ? 'تعطيل الحساب' : 'Disable account';
+                        actionBtns += `<button type="button" class="btn btn-small btn-warning" onclick="setUserAccountStatus('${uid}', '${safeEmail}', false)" title="${disableTitle}">${t('userDisable')}</button> `;
+                    }
+                }
+                actionBtns += `<button type="button" class="btn btn-small btn-primary" onclick="editUserPermissions('${uid}', '${safeEmail}', '${(userData.role || defaultRole).replace(/'/g, "\\'")}', ${userData.fullAccess || false})" title="${editTitle}">${editBtnText}</button> `;
+                actionBtns += `<button type="button" class="btn btn-small btn-danger" onclick="deleteUserPermissions('${uid}', '${safeEmail}')" title="${deleteTitle}">${deleteBtnText}</button>`;
+                html += `<td>${dateText}</td><td style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">${actionBtns}</td></tr>`;
             });
             html += '</tbody></table></div>';
             const notesTitle = currentLang === 'ar' ? '📖 ملاحظات هامة:' : '📖 Important Notes:';
@@ -20622,7 +20674,8 @@ function renderProjectView() {
             const note2 = currentLang === 'ar' ? 'لربط مستخدم موجود: أضفه أولاً في Firebase Console ثم استخدم زر "ربط مستخدم موجود" مع UID' : 'To link existing user: Add it first in Firebase Console then use "Link Existing User" button with UID';
             const note3 = currentLang === 'ar' ? 'حذف الربط هنا يحذف الصلاحيات من النظام فقط، الحساب في Firebase Authentication يبقى موجوداً' : 'Deleting link here removes permissions from system only, the account in Firebase Authentication remains';
             const note4 = currentLang === 'ar' ? 'تعديل الصلاحيات يؤثر فوراً على المستخدم في الجلسة التالية' : 'Permission changes take effect immediately in the next session';
-            html += `<div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 20px; border-radius: 12px; margin-top: 20px; border: 2px solid #bae6fd;"><h4 style="color: var(--primary); margin-bottom: 10px;">${notesTitle}</h4><ul style="font-size: 13px; color: var(--gray); line-height: 1.8; padding-${currentLang === 'ar' ? 'right' : 'left'}: 20px;"><li>${note1}</li><li>${note2}</li><li>${note3}</li><li>${note4}</li></ul></div>`;
+            const note5 = currentLang === 'ar' ? 'التعطيل/التنشيط يمنع الدخول عبر النظام؛ للتعطيل الكامل في Firebase استخدم Console → Authentication' : 'Disable/enable blocks app access; for full Firebase Auth disable use Console → Authentication';
+            html += `<div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 20px; border-radius: 12px; margin-top: 20px; border: 2px solid #bae6fd;"><h4 style="color: var(--primary); margin-bottom: 10px;">${notesTitle}</h4><ul style="font-size: 13px; color: var(--gray); line-height: 1.8; padding-${currentLang === 'ar' ? 'right' : 'left'}: 20px;"><li>${note1}</li><li>${note2}</li><li>${note3}</li><li>${note4}</li><li>${note5}</li></ul></div>`;
             container.innerHTML = html;
         }
         
@@ -21117,6 +21170,36 @@ function renderProjectView() {
             return permissions; 
         }
         
+        /** تعطيل أو تنشيط مستخدم (حقل status في Firestore) */
+        async function setUserAccountStatus(uid, email, enable) {
+            if (!currentUser || (!currentUser.fullAccess && !hasPermission('users.edit'))) {
+                showNotification('error', t('error'), t('noPermissionEditUsers'));
+                return;
+            }
+            if (currentUser.uid === uid) {
+                showNotification('warning', t('warning'), t('cannotDisableSelf'));
+                return;
+            }
+            const confirmMsg = enable ? t('userEnableConfirm') : t('userDisableConfirm');
+            const confirmDetail = email ? `\n\n${email}` : '';
+            if (!confirm(confirmMsg + confirmDetail)) return;
+            try {
+                showLoading();
+                await updateDoc(doc(db, 'users', uid), {
+                    status: enable ? 'active' : 'disabled',
+                    statusUpdatedAt: new Date().toISOString(),
+                    statusUpdatedBy: currentUser.email || 'unknown'
+                });
+                hideLoading();
+                showNotification('success', t('success'), enable ? t('userEnabledSuccess') : t('userDisabledSuccess'));
+                if (currentView === 'users') loadUsersData(true);
+            } catch (error) {
+                console.error('خطأ في تحديث حالة المستخدم:', error);
+                hideLoading();
+                showNotification('error', t('error'), error.message);
+            }
+        }
+
         // حذف صلاحيات المستخدم (لا يحذف من Authentication)
         async function deleteUserPermissions(uid, email) {
             if (!confirm(`هل أنت متأكد من حذف صلاحيات المستخدم: ${email}?\n\nملاحظة: سيتم حذف الصلاحيات من النظام فقط، الحساب في Firebase Authentication سيبقى موجوداً.`)) {
@@ -30132,6 +30215,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
         window.loadUsersData = loadUsersData;
         window.editUserPermissions = editUserPermissions;
         window.deleteUserPermissions = deleteUserPermissions;
+        window.setUserAccountStatus = setUserAccountStatus;
         window.togglePermissionDetails = togglePermissionDetails;
         window.toggleLinkPermissionDetails = toggleLinkPermissionDetails;
         window.toggleEditPermissionDetails = toggleEditPermissionDetails;
