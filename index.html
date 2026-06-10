@@ -3871,43 +3871,47 @@
 
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(var(--grid-columns), 1fr);
-            gap: 16px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
             margin-bottom: 0;
+            width: 100%;
         }
 
         .kpi-grid .kpi-card {
-            grid-column: span 3;
+            grid-column: auto;
+            min-width: 0;
         }
 
-        @media (max-width: 1279px) {
-            .kpi-grid .kpi-card {
-                grid-column: span 6;
+        @media (max-width: 992px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
 
-        @media (max-width: 767px) {
-            .kpi-grid .kpi-card {
-                grid-column: span 12;
+        @media (max-width: 520px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
             }
         }
 
         .kpi-card {
-            padding: 25px;
-            border-radius: 16px;
-            box-shadow: var(--shadow-md);
+            padding: 14px 16px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-card);
             position: relative;
             overflow: hidden;
             color: #fff;
+            min-height: 0;
         }
 
         .kpi-card__decor {
             position: absolute;
-            top: -20px;
-            right: -20px;
-            font-size: 120px;
-            opacity: 0.1;
+            top: -6px;
+            right: -6px;
+            font-size: 52px;
+            opacity: 0.12;
             pointer-events: none;
+            line-height: 1;
         }
 
         .kpi-card__body {
@@ -3916,23 +3920,48 @@
         }
 
         .kpi-card__label {
-            color: rgba(255, 255, 255, 0.92);
-            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
             font-weight: 600;
-            margin-bottom: 8px;
+            line-height: 16px;
+            letter-spacing: 0.02em;
+            margin-bottom: 4px;
         }
 
         .kpi-card__value {
             color: white;
-            font-size: 38px;
-            font-weight: 900;
-            margin-bottom: 5px;
-            line-height: 1.1;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 2px;
+            line-height: 1.2;
+            font-variant-numeric: tabular-nums lining-nums;
         }
 
         .kpi-card__value--lg {
-            font-size: 42px;
-            margin-bottom: 8px;
+            font-size: 26px;
+            margin-bottom: 4px;
+        }
+
+        .kpi-card__unit {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .kpi-card__trend {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            color: rgba(255, 255, 255, 0.88);
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        .kpi-card__trend .status-chip {
+            font-size: 10px;
+            padding: 2px 8px;
         }
 
         .kpi-card--primary { background: var(--primary); }
@@ -3971,18 +4000,20 @@
 
         .dashboard-charts-grid {
             display: grid;
-            grid-template-columns: repeat(var(--grid-columns), 1fr);
-            gap: 16px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
             margin-bottom: 0;
+            width: 100%;
         }
 
         .dashboard-charts-grid > .panel-surface {
-            grid-column: span 6;
+            grid-column: auto;
+            min-width: 0;
         }
 
         @media (max-width: 1100px) {
-            .dashboard-charts-grid > .panel-surface {
-                grid-column: span 12;
+            .dashboard-charts-grid {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -4059,50 +4090,53 @@
 
         .dist-grid {
             display: grid;
-            grid-template-columns: repeat(var(--grid-columns), 1fr);
-            gap: 16px;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 10px;
+            width: 100%;
         }
 
         .dist-grid .dist-tile {
-            grid-column: span 2;
+            grid-column: auto;
+            min-width: 0;
         }
 
-        @media (max-width: 1279px) {
-            .dist-grid .dist-tile {
-                grid-column: span 4;
+        @media (max-width: 992px) {
+            .dist-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
             }
         }
 
-        @media (max-width: 767px) {
-            .dist-grid .dist-tile {
-                grid-column: span 6;
+        @media (max-width: 600px) {
+            .dist-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
 
         .dist-tile {
-            padding: 20px;
+            padding: 10px 8px;
             border-radius: var(--radius-md);
             text-align: center;
-            border: 2px solid transparent;
+            border: 1px solid transparent;
         }
 
         .dist-tile__count {
-            font-size: 42px;
-            font-weight: 900;
-            margin-bottom: 8px;
-            line-height: 1;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            line-height: 1.1;
         }
 
         .dist-tile__label {
-            font-size: 15px;
+            font-size: 12px;
             font-weight: 600;
+            line-height: 1.3;
         }
 
         .dist-tile__pct {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 2px solid rgba(0, 0, 0, 0.08);
-            font-size: 13px;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            font-size: 11px;
             font-weight: 600;
         }
 
@@ -4111,6 +4145,196 @@
         .dist-tile--daily { background: #dcfce7; border-color: #10b981; color: #065f46; }
         .dist-tile--vehicle { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
         .dist-tile--machinery { background: var(--primary-light); border-color: var(--primary); color: var(--primary-dark); }
+
+        /* ===== التعديل المتعدد — تخطيط ملء الشاشة ===== */
+        .main-area.main-area--bulk-edit {
+            overflow: hidden;
+        }
+
+        .content.content--bulk-edit {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            height: 100%;
+            padding: 10px 16px;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 1280px) {
+            .content.content--bulk-edit {
+                padding: 12px 24px;
+            }
+        }
+
+        .bulk-edit-view {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            max-width: 100%;
+            gap: 10px;
+        }
+
+        .bulk-edit-toolbar {
+            flex-shrink: 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 10px 12px;
+            padding: 12px 14px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-card);
+        }
+
+        .bulk-edit-toolbar__title {
+            flex: 1 1 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .bulk-edit-toolbar__title h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .bulk-edit-toolbar__title p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--gray);
+            flex: 1 1 100%;
+        }
+
+        .bulk-edit-toolbar__field {
+            flex: 1 1 160px;
+            min-width: 130px;
+            max-width: 220px;
+        }
+
+        .bulk-edit-toolbar__field label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gray);
+            margin-bottom: 4px;
+        }
+
+        .bulk-edit-toolbar__field select {
+            width: 100%;
+            padding: 6px 10px;
+            font-size: 13px;
+            border: 1px solid var(--outline);
+            border-radius: var(--radius-md);
+            background: var(--bg-surface);
+            font-family: inherit;
+        }
+
+        .bulk-edit-summary {
+            flex: 1 1 auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary);
+            min-width: 160px;
+        }
+
+        .bulk-edit-table-panel {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-card);
+            overflow: hidden;
+        }
+
+        .bulk-edit-table-panel__head {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--border);
+            background: var(--slate-50);
+        }
+
+        .bulk-edit-table-panel__head h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .bulk-edit-table-panel__head p {
+            margin: 0;
+            font-size: 11px;
+            color: var(--gray);
+        }
+
+        .bulk-edit-table-wrap {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 0;
+            max-height: none;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        .bulk-edit-view #bulkEditTable {
+            font-size: 12px;
+        }
+
+        .bulk-edit-view #bulkEditTable thead {
+            z-index: 30;
+        }
+
+        .bulk-edit-view #bulkEditTable th {
+            padding: 8px 10px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .bulk-edit-view #bulkEditTable td {
+            padding: 4px 6px;
+            vertical-align: middle;
+        }
+
+        .bulk-edit-view #bulkEditTable .bulk-edit-field {
+            width: 100%;
+            min-width: 0;
+            padding: 4px 6px !important;
+            font-size: 12px !important;
+            border: 1px solid var(--outline) !important;
+            border-radius: var(--radius-sm) !important;
+            background: var(--bg-surface) !important;
+            min-height: var(--input-height-compact);
+            height: var(--input-height-compact);
+            box-sizing: border-box;
+        }
+
+        .bulk-edit-view #bulkEditTable td .btn {
+            padding: 4px 10px;
+            font-size: 11px;
+            white-space: nowrap;
+        }
 
         .btn-linked,
         .btn-format-save {
@@ -12872,6 +13096,13 @@
 
         async function renderContent() {
             const content = document.getElementById('mainContent');
+            const mainArea = content ? content.closest('.main-area') : null;
+            if (mainArea) {
+                mainArea.classList.toggle('main-area--bulk-edit', currentView === 'bulkEdit');
+            }
+            if (content) {
+                content.classList.toggle('content--bulk-edit', currentView === 'bulkEdit');
+            }
             if (currentView === 'month') {
                 await ensureColumnVisibilityForPeriod(currentYear, currentMonth);
             } else if (currentView === 'project') {
@@ -13185,7 +13416,7 @@
                     <div class="kpi-card__body">
                         <div class="kpi-card__label">${t('totalEmployees')}</div>
                         <div class="kpi-card__value kpi-card__value--lg">${currentStats.totalEmployees}</div>
-                        <div style="display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.9); font-size: 13px;">
+                        <div class="kpi-card__trend">
                             ${employeesChange !== 0 ? `
                                 <span class="status-chip ${employeesChange > 0 ? 'status-chip--success' : 'status-chip--absent'}">
                                     ${employeesChange > 0 ? '↑' : '↓'} ${Math.abs(employeesChange)} (${Math.abs(employeesChangePercent)}%)
@@ -13201,8 +13432,8 @@
                     <div class="kpi-card__body">
                         <div class="kpi-card__label">${t('totalSalariesLabel')}</div>
                         <div class="kpi-card__value">${formatCurrency(currentStats.totalSalaryUSD)}</div>
-                        <div style="color: rgba(255,255,255,0.85); font-size: 14px; font-weight: 600; margin-bottom: 8px;">USD</div>
-                        <div style="display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.9); font-size: 13px;">
+                        <div class="kpi-card__unit">USD</div>
+                        <div class="kpi-card__trend">
                             ${salaryChange !== 0 ? `
                                 <span class="status-chip ${salaryChange > 0 ? 'status-chip--success' : 'status-chip--absent'}">
                                     ${salaryChange > 0 ? '↑' : '↓'} ${formatCurrency(Math.abs(salaryChange))} (${Math.abs(salaryChangePercent)}%)
@@ -13217,7 +13448,7 @@
                     <div class="kpi-card__body">
                         <div class="kpi-card__label">${t('totalSalariesLabel')}</div>
                         <div class="kpi-card__value">${formatCurrency(currentStats.totalSalaryIQD)}</div>
-                        <div style="color: rgba(255,255,255,0.85); font-size: 14px; font-weight: 600;">IQD</div>
+                        <div class="kpi-card__unit">IQD</div>
                     </div>
                 </div>
                 
@@ -13226,7 +13457,7 @@
                     <div class="kpi-card__body">
                         <div class="kpi-card__label">${t('avgSalary')}</div>
                         <div class="kpi-card__value">${formatCurrency(currentStats.avgSalary)}</div>
-                        <div style="color: rgba(255,255,255,0.85); font-size: 14px; font-weight: 600;">USD</div>
+                        <div class="kpi-card__unit">USD</div>
                     </div>
                 </div>
             </div>
@@ -23247,91 +23478,67 @@ function renderProjectView() {
             employees = applyFiltersToData(employees);
             
             let html = `
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <h2 style="color: var(--primary); font-size: 32px; margin-bottom: 10px;">✏️ ${t('bulkEditTitle')}</h2>
-                    <p style="color: var(--gray); font-size: 16px;">${t('bulkEditDescription')}</p>
-                </div>
-                
-                <!-- اختيار الشهر والسنة -->
-                <div class="card" style="max-width: 1200px; margin: 0 auto 30px;">
-                    <div class="card-header">
-                        <h3>📅 ${t('selectMonthYear')}</h3>
+                <div class="bulk-edit-view">
+                <div class="bulk-edit-toolbar">
+                    <div class="bulk-edit-toolbar__title">
+                        <h2>✏️ ${t('bulkEditTitle')}</h2>
+                        <p>${t('bulkEditDescription')}</p>
                     </div>
-                    <div class="card-body" style="padding: 30px;">
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
-                            <div class="form-group">
-                                <label style="font-weight: 600; font-size: 14px; color: var(--primary); margin-bottom: 10px; display: block;">
-                                    📅 ${t('year')}:
-                                </label>
-                                <select id="bulkEditYearSelect" class="form-control" onchange="updateBulkEditYear(this.value)" style="padding: 12px; font-size: 14px; border: 2px solid var(--border); border-radius: 8px;">
-                                    ${availableYears.map(y => `<option value="${y}" ${y === bulkEditYear ? 'selected' : ''}>${y}</option>`).join('')}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label style="font-weight: 600; font-size: 14px; color: var(--primary); margin-bottom: 10px; display: block;">
-                                    📆 ${t('month')}:
-                                </label>
-                                <select id="bulkEditMonthSelect" class="form-control" onchange="updateBulkEditMonth(this.value)" style="padding: 12px; font-size: 14px; border: 2px solid var(--border); border-radius: 8px;">
-                                    ${months.map(m => `<option value="${m}" ${m === bulkEditMonth ? 'selected' : ''}>${t('monthNames')[m]}</option>`).join('')}
-                                </select>
-                            </div>
-                        </div>
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 20px;">
-                            <div class="form-group">
-                                <label style="font-weight: 600; font-size: 14px; color: var(--primary); margin-bottom: 10px; display: block;">
-                                    🏗️ ${t('filterByProject')}:
-                                </label>
-                                <select id="bulkEditFilterProject" class="form-control" onchange="updateBulkEditFilterProject(this.value)" style="padding: 12px; font-size: 14px; border: 2px solid var(--border); border-radius: 8px;">
-                                    <option value="all" ${bulkEditFilterProject === 'all' ? 'selected' : ''}>${t('allProjects')}</option>
-                                    ${Object.entries(projects).filter(([code]) => {
-                                        const allEmployees = (employeeData[bulkEditYear] && employeeData[bulkEditYear][bulkEditMonth]) 
-                                            ? employeeData[bulkEditYear][bulkEditMonth].filter(emp => hasProjectAccess(emp.project))
-                                            : [];
-                                        return allEmployees.some(emp => emp.project === code);
-                                    }).map(([code, name]) => 
-                                        `<option value="${code}" ${bulkEditFilterProject === code ? 'selected' : ''}>${code} - ${name}</option>`
-                                    ).join('')}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label style="font-weight: 600; font-size: 14px; color: var(--primary); margin-bottom: 10px; display: block;">
-                                    👤 ${t('filterByType')}:
-                                </label>
-                    <select id="bulkEditFilterType" class="form-control" onchange="updateBulkEditFilterType(this.value)" style="padding: 12px; font-size: 14px; border: 2px solid var(--border); border-radius: 8px;">
-                                    <option value="all" ${bulkEditFilterType === 'all' ? 'selected' : ''}>${t('allTypes')}</option>
-                                    <option value="monthly" ${bulkEditFilterType === 'monthly' ? 'selected' : ''}>${t('monthly')}</option>
-                                    <option value="daily" ${bulkEditFilterType === 'daily' ? 'selected' : ''}>${t('daily')}</option>
-                                    <option value="vehicle" ${bulkEditFilterType === 'vehicle' ? 'selected' : ''}>${t('vehicle')}</option>
-                                    <option value="machinery" ${bulkEditFilterType === 'machinery' ? 'selected' : ''}>${t('machinery')}</option>
-                                    <option value="external" ${bulkEditFilterType === 'external' ? 'selected' : ''}>${t('external')}</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin-top: 20px; border: 2px solid #3b82f6;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                                <strong style="color: #1e40af;">📊 ${t('displayedEmployees')}: <span id="bulkEditEmployeeCount">${employees.length}</span></strong>
-                                ${bulkEditFilterProject !== 'all' || bulkEditFilterType !== 'all' ? `
-                                <button class="btn btn-secondary" onclick="resetBulkEditFilters()" style="padding: 6px 12px; font-size: 12px;">
-                                    🔄 ${t('resetFilters')}
-                                </button>
-                                ` : ''}
-                            </div>
-                        </div>
+                    <div class="bulk-edit-toolbar__field">
+                        <label for="bulkEditYearSelect">📅 ${t('year')}</label>
+                        <select id="bulkEditYearSelect" class="form-control" onchange="updateBulkEditYear(this.value)">
+                            ${availableYears.map(y => `<option value="${y}" ${y === bulkEditYear ? 'selected' : ''}>${y}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="bulk-edit-toolbar__field">
+                        <label for="bulkEditMonthSelect">📆 ${t('month')}</label>
+                        <select id="bulkEditMonthSelect" class="form-control" onchange="updateBulkEditMonth(this.value)">
+                            ${months.map(m => `<option value="${m}" ${m === bulkEditMonth ? 'selected' : ''}>${t('monthNames')[m]}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="bulk-edit-toolbar__field">
+                        <label for="bulkEditFilterProject">🏗️ ${t('filterByProject')}</label>
+                        <select id="bulkEditFilterProject" class="form-control" onchange="updateBulkEditFilterProject(this.value)">
+                            <option value="all" ${bulkEditFilterProject === 'all' ? 'selected' : ''}>${t('allProjects')}</option>
+                            ${Object.entries(projects).filter(([code]) => {
+                                const allEmployees = (employeeData[bulkEditYear] && employeeData[bulkEditYear][bulkEditMonth])
+                                    ? employeeData[bulkEditYear][bulkEditMonth].filter(emp => hasProjectAccess(emp.project))
+                                    : [];
+                                return allEmployees.some(emp => emp.project === code);
+                            }).map(([code, name]) =>
+                                `<option value="${code}" ${bulkEditFilterProject === code ? 'selected' : ''}>${code} - ${name}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div class="bulk-edit-toolbar__field">
+                        <label for="bulkEditFilterType">👤 ${t('filterByType')}</label>
+                        <select id="bulkEditFilterType" class="form-control" onchange="updateBulkEditFilterType(this.value)">
+                            <option value="all" ${bulkEditFilterType === 'all' ? 'selected' : ''}>${t('allTypes')}</option>
+                            <option value="monthly" ${bulkEditFilterType === 'monthly' ? 'selected' : ''}>${t('monthly')}</option>
+                            <option value="daily" ${bulkEditFilterType === 'daily' ? 'selected' : ''}>${t('daily')}</option>
+                            <option value="vehicle" ${bulkEditFilterType === 'vehicle' ? 'selected' : ''}>${t('vehicle')}</option>
+                            <option value="machinery" ${bulkEditFilterType === 'machinery' ? 'selected' : ''}>${t('machinery')}</option>
+                            <option value="external" ${bulkEditFilterType === 'external' ? 'selected' : ''}>${t('external')}</option>
+                        </select>
+                    </div>
+                    <div class="bulk-edit-summary">
+                        <span>📊 ${t('displayedEmployees')}: <span id="bulkEditEmployeeCount">${employees.length}</span></span>
+                        ${bulkEditFilterProject !== 'all' || bulkEditFilterType !== 'all' ? `
+                        <button type="button" class="btn btn-secondary btn-small" onclick="resetBulkEditFilters()">🔄 ${t('resetFilters')}</button>
+                        ` : ''}
                     </div>
                 </div>
-                
-                <!-- جدول الموظفين -->
-                <div class="card" style="max-width: 1400px; margin: 0 auto 30px;">
-                    <div class="card-header">
-                        <h3>👥 ${t('employeesList')}</h3>
-                        <p>
-                            ${t('employeesListDescription')}
-                        </p>
+
+                <div class="bulk-edit-table-panel">
+                    <div class="bulk-edit-table-panel__head">
+                        <div>
+                            <h3>👥 ${t('employeesList')}</h3>
+                            <p>${t('employeesListDescription')}</p>
+                        </div>
                     </div>
-                    <div class="card-body" style="padding: 0;">
-                        <div class="table-container" style="max-height: 600px; overflow-y: auto;">
-                            <table id="bulkEditTable" style="width: 100%; border-collapse: collapse;">
-                                <thead style="position: sticky; top: 0; background: var(--primary); color: white; z-index: 10;">
+                    <div class="table-container bulk-edit-table-wrap">
+                            <table id="bulkEditTable" class="has-pin-checkbox-row">
+                                <thead>
                                     ${createPinCheckboxRow([
                                         {dataColumn: 'employeeCode'},
                                         {dataColumn: 'nameAr'},
@@ -23355,26 +23562,26 @@ function renderProjectView() {
                                         {dataColumn: 'actions'}
                                     ], 'bulkEditTable', 'bulkEdit')}
                                     <tr>
-                                        <th data-column="employeeCode" style="padding: 12px; text-align: right; min-width: 100px;">🔖 ${currentLang === 'ar' ? 'الرمز' : 'Code'}</th>
-                                        <th data-column="nameAr" style="padding: 12px; text-align: right; min-width: 120px;">${t('nameAr')}</th>
-                                        <th data-column="nameEn" style="padding: 12px; text-align: right; min-width: 120px;">${t('nameEn')}</th>
-                                        <th data-column="position" style="padding: 12px; text-align: right; min-width: 100px;">${t('position')}</th>
-                                        <th data-column="department" style="padding: 12px; text-align: right; min-width: 110px;">${t('department')}</th>
-                                        <th data-column="phoneNumber" style="padding: 12px; text-align: right; min-width: 110px;">${t('phoneNumber')}</th>
-                                        <th data-column="employeeType" style="padding: 12px; text-align: right; min-width: 100px;">${t('employeeType')}</th>
-                                        <th data-column="project" style="padding: 12px; text-align: right; min-width: 100px;">${t('project')}</th>
-                                        <th data-column="salary" style="padding: 12px; text-align: right; min-width: 100px;">${t('basicSalary')}</th>
-                                        <th data-column="salaryCurrency" style="padding: 12px; text-align: right; min-width: 90px;">${t('salaryCurrency')}</th>
-                                        <th data-column="paymentCurrency" style="padding: 12px; text-align: right; min-width: 90px;">${t('paymentCurrency')}</th>
-                                        <th data-column="exchangeRate" style="padding: 12px; text-align: right; min-width: 100px;">${t('exchangeRate')}</th>
-                                        <th data-column="attendanceSystem" style="padding: 12px; text-align: right; min-width: 120px;">${t('attendanceSystem')}</th>
-                                        <th data-column="dailyWorkHours" style="padding: 12px; text-align: right; min-width: 100px;">${t('dailyWorkHours')}</th>
-                                        <th data-column="overtimeMultiplier" style="padding: 12px; text-align: right; min-width: 100px;">${t('overtimeMultiplier')}</th>
-                                        <th data-column="paymentMethod" style="padding: 12px; text-align: right; min-width: 120px;">💳 ${t('paymentMethod')}</th>
-                                        <th data-column="mastercardNumber" style="padding: 12px; text-align: right; min-width: 110px;">${t('mastercardNumber')}</th>
-                                        <th data-column="monthCalculationMethod" style="padding: 12px; text-align: right; min-width: 120px;">${t('monthCalculationMethod')}</th>
-                                        <th data-column="paidLeaveCalculation" style="padding: 12px; text-align: right; min-width: 120px;">${t('paidLeaveCalculation')}</th>
-                                        <th data-column="actions" style="padding: 12px; text-align: center; min-width: 100px;">${t('actions')}</th>
+                                        <th data-column="employeeCode">🔖 ${currentLang === 'ar' ? 'الرمز' : 'Code'}</th>
+                                        <th data-column="nameAr">${t('nameAr')}</th>
+                                        <th data-column="nameEn">${t('nameEn')}</th>
+                                        <th data-column="position">${t('position')}</th>
+                                        <th data-column="department">${t('department')}</th>
+                                        <th data-column="phoneNumber">${t('phoneNumber')}</th>
+                                        <th data-column="employeeType">${t('employeeType')}</th>
+                                        <th data-column="project">${t('project')}</th>
+                                        <th data-column="salary">${t('basicSalary')}</th>
+                                        <th data-column="salaryCurrency">${t('salaryCurrency')}</th>
+                                        <th data-column="paymentCurrency">${t('paymentCurrency')}</th>
+                                        <th data-column="exchangeRate">${t('exchangeRate')}</th>
+                                        <th data-column="attendanceSystem">${t('attendanceSystem')}</th>
+                                        <th data-column="dailyWorkHours">${t('dailyWorkHours')}</th>
+                                        <th data-column="overtimeMultiplier">${t('overtimeMultiplier')}</th>
+                                        <th data-column="paymentMethod">💳 ${t('paymentMethod')}</th>
+                                        <th data-column="mastercardNumber">${t('mastercardNumber')}</th>
+                                        <th data-column="monthCalculationMethod">${t('monthCalculationMethod')}</th>
+                                        <th data-column="paidLeaveCalculation">${t('paidLeaveCalculation')}</th>
+                                        <th data-column="actions">${t('actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody id="bulkEditTableBody">
@@ -23594,7 +23801,7 @@ function renderProjectView() {
                                 </tbody>
                             </table>
                         </div>
-                    </div>
+                </div>
                 </div>
             `;
             
