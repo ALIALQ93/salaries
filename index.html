@@ -952,6 +952,12 @@
             background: var(--light);
             border: 1px solid var(--border);
             color: var(--dark);
+            min-width: 148px;
+            max-width: 220px;
+            padding: 4px 10px 4px 4px;
+            gap: 8px;
+            flex-shrink: 0;
+            border-radius: 10px;
         }
 
         .topbar .user-info-enhanced:hover {
@@ -959,9 +965,33 @@
             border-color: var(--primary);
         }
 
-        .topbar .user-name { color: var(--dark); }
-        .topbar .user-role { color: var(--gray); }
-        .topbar .dropdown-arrow { color: var(--gray); }
+        .topbar .user-details {
+            min-width: 0;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .topbar .user-name {
+            color: var(--dark);
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .topbar .user-role {
+            color: var(--gray);
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .topbar .dropdown-arrow {
+            color: var(--gray);
+            flex-shrink: 0;
+            margin-inline-start: 2px;
+        }
 
         /* شريط التنقل: مساحة ثابتة — بدون أشرطة تمرير، التفاف تلقائي */
         .header-nav {
@@ -1457,6 +1487,18 @@
             opacity: 1;
             visibility: visible;
             transform: translateY(0);
+        }
+
+        .user-dropdown.user-dropdown-float {
+            position: fixed !important;
+            z-index: 10001 !important;
+            pointer-events: auto;
+        }
+
+        .user-menu.active .user-dropdown.user-dropdown-float {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: translateY(0) !important;
         }
 
         .user-dropdown-header {
@@ -5261,7 +5303,7 @@
                             <span class="notification-badge" id="notificationCount" style="display: none;">0</span>
                         </button>
                         <div class="user-menu" id="userMenu">
-                            <div class="user-info-enhanced" onclick="toggleUserMenu()">
+                            <div class="user-info-enhanced" onclick="toggleUserMenu()" role="button" aria-haspopup="true" aria-expanded="false" aria-controls="userDropdownMenu">
                                 <div class="avatar" id="userAvatar">A</div>
                                 <div class="user-details">
                                     <span class="user-name" id="currentUser">Admin</span>
@@ -5269,7 +5311,7 @@
                                 </div>
                                 <span class="dropdown-arrow">▼</span>
                             </div>
-                            <div class="user-dropdown">
+                            <div class="user-dropdown" id="userDropdownMenu">
                                 <div class="user-dropdown-header">
                                     <div class="avatar-large" id="userAvatarLarge">A</div>
                                     <h3 id="userNameDropdown">Admin</h3>
@@ -10148,10 +10190,9 @@
                 
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('app').style.display = 'block';
-                document.getElementById('currentUser').textContent = currentUser.role;
-                document.getElementById('userAvatar').textContent = user.email[0].toUpperCase();
+                updateUserMenuUI();
                 
-                showNotification('success', 'تم تسجيل الدخول', `مرحباً ${currentUser.role}! 🎉`);
+                showNotification('success', 'تم تسجيل الدخول', `مرحباً ${getUserDisplayName(currentUser)}! 🎉`);
                 
                 // تحميل الإعدادات والتوقيعات المشتركة
                 await loadCompanySettings();
@@ -10651,7 +10692,6 @@
             const elements = {
                 // Header
                 'headerTitle': 'PayRose',
-                'userRole': t('systemManager'),
                 // Sidebar
                 'navSectionWork': t('navSectionWork'),
                 'navSectionAdmin': t('navSectionAdmin'),
@@ -10819,6 +10859,7 @@
                     element.textContent = text;
                 }
             });
+            updateUserMenuUI();
             const deptAddSel = document.getElementById('employeeDepartment');
             const deptEditSel = document.getElementById('editDepartment');
             if (deptAddSel) fillDepartmentSelect(deptAddSel, deptAddSel.value);
@@ -31063,13 +31104,105 @@ function generateComparisonSummary(projectCode, month1, month2) {
         }
 
         // ========== Enhanced Header Functions ==========
-        
+
+        function getUserDisplayName(user) {
+            if (!user) return currentLang === 'ar' ? 'مستخدم' : 'User';
+            if (user.displayName && String(user.displayName).trim()) {
+                return String(user.displayName).trim();
+            }
+            const email = user.email || '';
+            if (email) {
+                const local = email.split('@')[0] || email;
+                return local.replace(/[._-]+/g, ' ').trim() || email;
+            }
+            return user.role || (currentLang === 'ar' ? 'مستخدم' : 'User');
+        }
+
+        function getUserRoleLabel(user) {
+            if (!user) return '';
+            if (user.role) return user.role;
+            if (user.fullAccess) return t('systemManager');
+            return currentLang === 'ar' ? 'مستخدم' : 'User';
+        }
+
+        function updateUserMenuUI() {
+            const nameEl = document.getElementById('currentUser');
+            const roleEl = document.getElementById('userRole');
+            const avatarEl = document.getElementById('userAvatar');
+            const avatarLargeEl = document.getElementById('userAvatarLarge');
+            const nameDropdownEl = document.getElementById('userNameDropdown');
+            const emailDropdownEl = document.getElementById('userEmailDropdown');
+            const triggerEl = document.querySelector('.user-info-enhanced');
+
+            const user = currentUser || (typeof LocalAuth !== 'undefined' && LocalAuth.getCurrentUser ? LocalAuth.getCurrentUser() : null);
+            if (!user) return;
+
+            const displayName = getUserDisplayName(user);
+            const roleLabel = getUserRoleLabel(user);
+            const email = user.email || '';
+            const initial = (email[0] || displayName[0] || 'U').toUpperCase();
+
+            if (nameEl) nameEl.textContent = displayName;
+            if (roleEl) roleEl.textContent = roleLabel;
+            if (avatarEl) avatarEl.textContent = initial;
+            if (avatarLargeEl) avatarLargeEl.textContent = initial;
+            if (nameDropdownEl) nameDropdownEl.textContent = displayName;
+            if (emailDropdownEl) emailDropdownEl.textContent = email || '—';
+            if (triggerEl) {
+                triggerEl.title = email ? `${displayName} — ${roleLabel}` : `${displayName} — ${roleLabel}`;
+            }
+        }
+
+        function clearUserDropdownFloat(menuEl) {
+            if (!menuEl) return;
+            menuEl.classList.remove('user-dropdown-float');
+            menuEl.style.top = '';
+            menuEl.style.right = '';
+            menuEl.style.left = '';
+            menuEl.style.bottom = '';
+            menuEl.style.maxHeight = '';
+            menuEl.style.width = '';
+        }
+
+        function positionUserMenuDropdown() {
+            const userMenu = document.getElementById('userMenu');
+            const dropdown = userMenu?.querySelector('.user-dropdown');
+            const trigger = userMenu?.querySelector('.user-info-enhanced');
+            if (!dropdown || !trigger || !userMenu?.classList.contains('active')) return;
+
+            dropdown.classList.add('user-dropdown-float');
+            const gap = 8;
+            const rect = trigger.getBoundingClientRect();
+            const menuWidth = dropdown.offsetWidth || 240;
+            const menuHeight = dropdown.offsetHeight || 320;
+            let top = rect.bottom + gap;
+            if (top + menuHeight > window.innerHeight - 8) {
+                top = Math.max(8, rect.top - menuHeight - gap);
+            }
+            let right = Math.max(8, window.innerWidth - rect.right);
+            if (right + menuWidth > window.innerWidth - 8) {
+                right = Math.max(8, window.innerWidth - menuWidth - 8);
+            }
+            dropdown.style.top = top + 'px';
+            dropdown.style.right = right + 'px';
+            dropdown.style.left = 'auto';
+        }
+
         // Toggle User Menu
         function toggleUserMenu() {
             const userMenu = document.getElementById('userMenu');
+            const dropdown = userMenu?.querySelector('.user-dropdown');
+            const trigger = userMenu?.querySelector('.user-info-enhanced');
+            const willOpen = !userMenu.classList.contains('active');
             userMenu.classList.toggle('active');
             closeNavToolsDropdown();
             closeAllDropdowns();
+            if (trigger) trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+            if (willOpen) {
+                requestAnimationFrame(positionUserMenuDropdown);
+            } else {
+                clearUserDropdownFloat(dropdown);
+            }
         }
 
         // Toggle Nav Tools Dropdown
@@ -31102,8 +31235,11 @@ function generateComparisonSummary(projectCode, month1, month2) {
 
         window.addEventListener('resize', function() {
             const wrapper = document.getElementById('navToolsWrapper');
+            const userMenu = document.getElementById('userMenu');
             if (wrapper && wrapper.classList.contains('active')) {
                 positionNavToolsMenu();
+            } else if (userMenu && userMenu.classList.contains('active')) {
+                positionUserMenuDropdown();
             } else {
                 closeAllDropdowns();
             }
@@ -31112,13 +31248,26 @@ function generateComparisonSummary(projectCode, month1, month2) {
         window.addEventListener('scroll', function(e) {
             const target = e.target;
             if (target && target.closest && target.closest('.nav-dropdown-float')) return;
+            if (target && target.closest && target.closest('.user-dropdown-float')) return;
+            const userMenu = document.getElementById('userMenu');
+            if (userMenu?.classList.contains('active')) {
+                positionUserMenuDropdown();
+            }
             if (target && target.closest && target.closest('.main-area')) {
                 closeAllDropdowns();
             }
         }, true);
 
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeAllDropdowns();
+            if (e.key === 'Escape') {
+                const userMenu = document.getElementById('userMenu');
+                if (userMenu?.classList.contains('active')) {
+                    userMenu.classList.remove('active');
+                    clearUserDropdownFloat(userMenu.querySelector('.user-dropdown'));
+                    userMenu.querySelector('.user-info-enhanced')?.setAttribute('aria-expanded', 'false');
+                }
+                closeAllDropdowns();
+            }
         });
 
         // Close user menu and nav dropdowns when clicking outside
@@ -31126,6 +31275,8 @@ function generateComparisonSummary(projectCode, month1, month2) {
             const userMenu = document.getElementById('userMenu');
             if (userMenu && !userMenu.contains(e.target)) {
                 userMenu.classList.remove('active');
+                clearUserDropdownFloat(userMenu.querySelector('.user-dropdown'));
+                userMenu.querySelector('.user-info-enhanced')?.setAttribute('aria-expanded', 'false');
             }
             if (!e.target.closest('.header-nav .nav-dropdown-wrapper')) {
                 closeAllDropdowns();
@@ -31191,6 +31342,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
         window.checkPassword = checkPassword;
         window.openPasswordModal = openPasswordModal;
         window.toggleUserMenu = toggleUserMenu;
+        window.updateUserMenuUI = updateUserMenuUI;
         window.toggleNavToolsDropdown = toggleNavToolsDropdown;
         window.closeNavToolsDropdown = closeNavToolsDropdown;
         window.closeSidebarMobile = closeSidebarMobile;
@@ -31820,6 +31972,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
                     // إخفاء شاشة تسجيل الدخول وإظهار التطبيق
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('app').style.display = 'block';
+                    updateUserMenuUI();
                     
                     // تحميل البيانات
                     initializeSystem();
