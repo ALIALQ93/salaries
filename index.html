@@ -3150,6 +3150,107 @@
             top: 0;
             z-index: 5;
         }
+        /* ملخص الأشهر السابقة في التقارير */
+        .report-year-overview {
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            background: var(--bg-surface);
+            overflow: hidden;
+            box-shadow: var(--shadow-card);
+        }
+
+        .report-year-overview__head {
+            padding: 12px 16px;
+            background: var(--slate-50);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .report-year-overview__head h4 {
+            margin: 0 0 4px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .report-year-overview__head p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--gray);
+        }
+
+        .report-year-overview__body {
+            overflow-x: auto;
+        }
+
+        .report-year-overview table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            min-width: 640px;
+        }
+
+        .report-year-overview thead th {
+            padding: 8px 10px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 11px;
+            background: var(--slate-100);
+            color: var(--on-surface);
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .report-year-overview tbody td {
+            padding: 8px 10px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            font-variant-numeric: tabular-nums lining-nums;
+        }
+
+        .report-year-overview tbody td:nth-child(2),
+        .report-year-overview tbody td:nth-child(3),
+        .report-year-overview tbody td:nth-child(4) {
+            text-align: right;
+        }
+
+        .report-year-overview__row--focus td {
+            background: rgba(16, 185, 129, 0.08);
+            font-weight: 700;
+        }
+
+        .report-year-overview__row--compare td {
+            background: rgba(37, 99, 235, 0.08);
+        }
+
+        .report-year-overview__row--empty td {
+            color: var(--gray);
+            opacity: 0.65;
+        }
+
+        .report-year-overview__row--ytd td {
+            background: var(--slate-50);
+            font-weight: 700;
+            border-top: 2px solid var(--border);
+        }
+
+        .report-year-overview .change-up {
+            color: #059669;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        .report-year-overview .change-down {
+            color: #dc2626;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        .report-year-overview .change-neutral {
+            color: var(--gray);
+            font-size: 11px;
+        }
+
         .report-table-container tfoot td {
             position: sticky;
             bottom: 0;
@@ -6541,8 +6642,9 @@
 
     <!-- نافذة الملخصات والمقارنات -->
     <div class="modal" id="summaryModal">
-        <div class="modal-content" style="max-width: 900px;">
+        <div class="modal-content" style="max-width: 1180px; width: 96vw;">
             <div class="modal-header"><h2 id="summaryModalTitle">📊 الملخصات والمقارنات</h2></div>
+            <div class="modal-body" style="padding: 16px 20px; overflow-y: auto; max-height: calc(92vh - 160px);">
             <div class="filter-section">
                 <div class="filter-row">
                     <div class="filter-group">
@@ -6570,6 +6672,7 @@
                 </div>
             </div>
             <div id="summaryResults"></div>
+            </div>
             <div class="modal-actions">
                 <button class="btn btn-success" onclick="printSummary()" id="printSummaryBtn" style="display: none;">
                     🖨️ <span id="printSummaryText">طباعة الملخص</span>
@@ -29531,6 +29634,159 @@ function renderProjectView() {
             });
         }
 
+        /** إحصائيات شهر واحد للتقارير (مشروع أو جميع المشاريع) */
+        function computeReportMonthStats(month, year, projectFilter) {
+            const emps = (employeeData[year] && employeeData[year][month])
+                ? employeeData[year][month].filter(emp => {
+                    if (!hasProjectAccess(emp.project)) return false;
+                    if (projectFilter && projectFilter !== 'ALL' && emp.project !== projectFilter) return false;
+                    return true;
+                })
+                : [];
+
+            let totalUSD = 0;
+            let totalIQD = 0;
+            emps.forEach(emp => {
+                const netSalary = calculateNetSalary(emp, month, year);
+                const rate = emp.exchangeRate || 1420;
+                if (emp.paymentCurrency === 'USD') {
+                    totalUSD += netSalary;
+                    totalIQD += netSalary * rate;
+                } else {
+                    totalIQD += netSalary;
+                    totalUSD += netSalary / rate;
+                }
+            });
+
+            return {
+                month,
+                employeeCount: emps.length,
+                totalUSD,
+                totalIQD,
+                hasData: !!(employeeData[year] && employeeData[year][month])
+            };
+        }
+
+        function formatReportChangeBadge(current, previous, isCurrency) {
+            const isAr = currentLang === 'ar';
+            if (previous === null || previous === undefined) {
+                return `<span class="change-neutral">—</span>`;
+            }
+            const diff = current - previous;
+            if (Math.abs(diff) < (isCurrency ? 0.01 : 1)) {
+                return `<span class="change-neutral">${isAr ? 'بدون تغيير' : 'No change'}</span>`;
+            }
+            const cls = diff > 0 ? 'change-up' : 'change-down';
+            const sign = diff > 0 ? '+' : '';
+            const text = isCurrency ? sign + formatCurrency(Math.abs(diff)) : sign + diff;
+            return `<span class="${cls}">${text}</span>`;
+        }
+
+        /** ملخص منظم لأشهر السنة حتى الشهر المحدد */
+        function buildYearMonthsOverviewHTML(project, focusMonth, compareMonth, year, forPrint) {
+            year = year || currentYear;
+            const isAr = currentLang === 'ar';
+            const focusIdx = months.indexOf(focusMonth);
+            if (focusIdx < 0) return '';
+
+            const monthsToShow = months.slice(0, focusIdx + 1);
+            const projectLabel = project === 'ALL'
+                ? (isAr ? 'جميع المشاريع' : 'All Projects')
+                : (projects[project] || project);
+
+            let rowsHtml = '';
+            let prevStats = null;
+            let ytdUSD = 0;
+            let ytdIQD = 0;
+
+            monthsToShow.forEach(m => {
+                const stats = computeReportMonthStats(m, year, project);
+                ytdUSD += stats.totalUSD;
+                ytdIQD += stats.totalIQD;
+
+                const isFocus = m === focusMonth;
+                const isCompare = compareMonth && m === compareMonth;
+                let rowClass = 'report-year-overview__row';
+                if (!stats.hasData && stats.employeeCount === 0) rowClass += ' report-year-overview__row--empty';
+                if (isFocus) rowClass += ' report-year-overview__row--focus';
+                if (isCompare) rowClass += ' report-year-overview__row--compare';
+
+                const monthLabel = t('monthNames')[m];
+                const badge = isFocus
+                    ? ` <span${forPrint ? ' style="font-size:9px;font-weight:700;"' : ' class="status-chip status-chip--success" style="font-size:10px;padding:2px 6px;"'}>${isAr ? '★' : '★'}</span>`
+                    : (isCompare ? ` <span${forPrint ? ' style="font-size:9px;font-weight:700;"' : ' class="status-chip status-chip--full" style="font-size:10px;padding:2px 6px;"'}>${isAr ? '↔' : '↔'}</span>` : '');
+
+                const empChange = prevStats
+                    ? formatReportChangeBadge(stats.employeeCount, prevStats.employeeCount, false)
+                    : formatReportChangeBadge(0, null, false);
+                const usdChange = prevStats
+                    ? formatReportChangeBadge(stats.totalUSD, prevStats.totalUSD, true)
+                    : formatReportChangeBadge(0, null, true);
+                const iqdChange = prevStats
+                    ? formatReportChangeBadge(stats.totalIQD, prevStats.totalIQD, true)
+                    : formatReportChangeBadge(0, null, true);
+
+                rowsHtml += `<tr class="${rowClass}">
+                    <td style="text-align:${isAr ? 'right' : 'left'};font-weight:600;">${monthLabel}${badge}</td>
+                    <td>${stats.hasData || stats.employeeCount > 0 ? stats.employeeCount : '—'}</td>
+                    <td>${stats.employeeCount > 0 ? formatCurrency(stats.totalUSD) : '—'}</td>
+                    <td>${stats.employeeCount > 0 ? formatCurrency(stats.totalIQD) : '—'}</td>
+                    <td>${empChange}</td>
+                    <td>${usdChange}</td>
+                    <td>${iqdChange}</td>
+                </tr>`;
+
+                if (stats.hasData || stats.employeeCount > 0) {
+                    prevStats = stats;
+                }
+            });
+
+            const priorCount = focusIdx;
+            const subtitle = priorCount > 0
+                ? (isAr
+                    ? `ملخص ${priorCount} ${priorCount === 1 ? 'شهر سابق' : 'أشهر سابقة'} حتى ${t('monthNames')[focusMonth]} ${year} — ${projectLabel}`
+                    : `Summary of ${priorCount} prior month(s) through ${t('monthNames')[focusMonth]} ${year} — ${projectLabel}`)
+                : (isAr
+                    ? `بداية السنة — ${t('monthNames')[focusMonth]} ${year} — ${projectLabel}`
+                    : `Start of year — ${t('monthNames')[focusMonth]} ${year} — ${projectLabel}`);
+
+            const wrapStyle = forPrint ? ' style="margin-bottom:12px;border:1px solid #999;page-break-inside:avoid;"' : '';
+            const bodyClass = forPrint ? 'report-year-overview__body' : 'report-year-overview__body report-table-container';
+            const bodyStyle = forPrint ? ' style="overflow-x:auto;"' : ' style="max-height:none;border:none;border-radius:0;"';
+
+            return `<div class="report-year-overview"${wrapStyle}>
+                <div class="report-year-overview__head"${forPrint ? ' style="padding:8px 10px;background:#f5f5f5;border-bottom:1px solid #999;"' : ''}>
+                    <h4${forPrint ? ' style="margin:0;font-size:13px;"' : ''}>📅 ${isAr ? 'ملخص أشهر السنة' : 'Year-to-date months overview'}</h4>
+                    <p${forPrint ? ' style="margin:4px 0 0;font-size:10px;"' : ''}>${subtitle}</p>
+                </div>
+                <div class="${bodyClass}"${bodyStyle}>
+                    <table${forPrint ? ' style="width:100%;font-size:11px;border-collapse:collapse;"' : ''}>
+                        <thead>
+                            <tr>
+                                <th>${isAr ? 'الشهر' : 'Month'}</th>
+                                <th>${isAr ? 'الموظفون' : 'Employees'}</th>
+                                <th>${isAr ? 'الإجمالي USD' : 'Total USD'}</th>
+                                <th>${isAr ? 'الإجمالي IQD' : 'Total IQD'}</th>
+                                <th>${isAr ? 'Δ موظفون' : 'Δ Emp.'}</th>
+                                <th>${isAr ? 'Δ USD' : 'Δ USD'}</th>
+                                <th>${isAr ? 'Δ IQD' : 'Δ IQD'}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                            <tr class="report-year-overview__row--ytd">
+                                <td style="text-align:${isAr ? 'right' : 'left'};">${isAr ? 'مجموع الفترة (تراكمي)' : 'Period cumulative'}</td>
+                                <td>—</td>
+                                <td>${formatCurrency(ytdUSD)}</td>
+                                <td>${formatCurrency(ytdIQD)}</td>
+                                <td colspan="3" style="text-align:center;font-size:11px;color:var(--gray);">${isAr ? 'مجموع رواتب الأشهر المعروضة' : 'Sum of displayed monthly payroll'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+        }
+
         function generateSummary() {
             const project = document.getElementById('summaryProject').value;
             const month1 = document.getElementById('summaryMonth1').value;
@@ -29558,11 +29814,11 @@ function renderProjectView() {
             // إنشاء الملخص بعد تأخير بسيط لتحسين تجربة المستخدم
             setTimeout(() => {
                 try {
-                    let summaryHTML = '';
+                    let summaryHTML = buildYearMonthsOverviewHTML(project, month1, month2 || null, currentYear);
                     if (project === 'ALL') {
-                        summaryHTML = month2 ? generateAllProjectsComparison(month1, month2) : generateAllProjectsSummary(month1);
+                        summaryHTML += month2 ? generateAllProjectsComparison(month1, month2) : generateAllProjectsSummary(month1);
                     } else {
-                        summaryHTML = month2 ? generateComparisonSummary(project, month1, month2) : generateSingleMonthSummary(project, month1);
+                        summaryHTML += month2 ? generateComparisonSummary(project, month1, month2) : generateSingleMonthSummary(project, month1);
                     }
                     
                     setHTML(resultsDiv, summaryHTML);
@@ -29704,6 +29960,9 @@ function renderProjectView() {
             html += '<div class="company-info">📅 ' + currentDate + '<br>🕐 ' + currentTime + '</div>';
             html += '</div>';
             html += '</div></div>';
+            
+            // ملخص أشهر السنة السابقة
+            html += buildYearMonthsOverviewHTML(project, month1, month2 || null, currentYear, true);
             
             // المحتوى - إنشاء الجدول مباشرة
             html += '<div class="section-title">' + (isArabic ? '📋 ملخص المشاريع' : '📋 Projects Summary') + '</div>';
