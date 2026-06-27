@@ -2411,7 +2411,7 @@
             z-index: 100;
         }
         
-        table.has-pin-checkbox-row thead tr:not(.pin-checkbox-row) th {
+        table.has-pin-checkbox-row thead tr:not(.pin-checkbox-row) th:not(.pinned-column) {
             position: relative;
             background: var(--primary);
             color: #ffffff !important;
@@ -2791,28 +2791,25 @@
             animation: filterFadeIn 0.3s ease;
         }
         
-        /* منع أي عنصر آخر من إخفاء النافذة */
-        .table-container,
-        table,
-        thead,
-        tbody,
-        th,
-        td {
-            position: relative;
-        }
-        
+        /* z-index للفلاتر — لا تضع position:relative على كل th/td (يكسر sticky للأعمدة المثبتة) */
         .table-container {
+            position: relative;
             z-index: 1;
         }
-        
+
         table {
             z-index: 1;
         }
-        
+
         thead {
             z-index: 100;
         }
-        
+
+        th.pinned-column,
+        td.pinned-column {
+            position: sticky !important;
+        }
+
         th.pinned-column {
             z-index: 102;
         }
@@ -8057,6 +8054,100 @@
         };
         
         // ========== Column Pinning Functions ==========
+        function resolvePinTableType(tableId) {
+            if (!tableId) return 'month';
+            const id = String(tableId);
+            if (id.includes('bulkEdit') || id === 'bulkEditTable') return 'bulkEdit';
+            if (id.startsWith('project') || id.includes('Project')) return 'project';
+            return 'month';
+        }
+
+        function measurePinColumnWidth(cell) {
+            if (!cell || cell.style.display === 'none') return 0;
+            let width = cell.offsetWidth;
+            if (!width) width = cell.getBoundingClientRect().width;
+            if (!width) {
+                const cs = window.getComputedStyle(cell);
+                width = parseFloat(cs.width) || parseFloat(cs.minWidth) || 0;
+            }
+            return Math.max(width || 0, 50);
+        }
+
+        function clearPinStyles(cells) {
+            cells.forEach(cell => {
+                cell.classList.remove('pinned-column');
+                cell.style.left = '';
+                cell.style.right = '';
+                cell.style.top = '';
+                cell.style.zIndex = '';
+                cell.style.position = '';
+                cell.style.background = '';
+            });
+        }
+
+        function applyPinCellStyles(cell, opts) {
+            const { offset, pinnedIndex, isRTL, top, isCheckboxRow, rowIndex, isHeader } = opts;
+            if (!cell) return;
+            cell.classList.add('pinned-column');
+            cell.style.position = 'sticky';
+            if (isRTL) {
+                cell.style.right = `${offset}px`;
+                cell.style.left = 'auto';
+            } else {
+                cell.style.left = `${offset}px`;
+                cell.style.right = 'auto';
+            }
+            if (top != null && top !== '') {
+                cell.style.top = typeof top === 'number' ? `${top}px` : top;
+            }
+            if (isCheckboxRow) {
+                cell.style.zIndex = String(103 + pinnedIndex);
+                cell.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+            } else if (isHeader) {
+                cell.style.zIndex = String(102 + pinnedIndex);
+                cell.style.background = '#101d2d';
+            } else {
+                cell.style.zIndex = String(9 + pinnedIndex);
+                cell.style.background = rowIndex != null && rowIndex % 2 === 0 ? '#f8fafc' : '#ffffff';
+            }
+        }
+
+        function buildColumnOffsetMap(headerCells, hiddenSet) {
+            const offsetByIndex = new Map();
+            let cumulative = 0;
+            headerCells.forEach((th, colIndex) => {
+                const columnKey = th.getAttribute('data-column') || `column_${colIndex}`;
+                const isHidden = hiddenSet && isDataColumnHidden(columnKey, hiddenSet);
+                const isDisplayed = th.style.display !== 'none' && !isHidden;
+                offsetByIndex.set(colIndex, cumulative);
+                if (isDisplayed) cumulative += measurePinColumnWidth(th);
+            });
+            return offsetByIndex;
+        }
+
+        function applyPinnedOffsetsToTable(table, columnsMeta, headerRows, pinCheckboxRow, tbody, tfoot, isRTL, headerTop) {
+            columnsMeta.forEach((col, pinnedIndex) => {
+                const { colIndex, offset } = col;
+                headerRows.forEach(row => {
+                    applyPinCellStyles(row.querySelectorAll('th')[colIndex], {
+                        offset, pinnedIndex, isRTL, top: headerTop, isHeader: true
+                    });
+                });
+                if (pinCheckboxRow) {
+                    applyPinCellStyles(pinCheckboxRow.querySelectorAll('th')[colIndex + 1], {
+                        offset, pinnedIndex, isRTL, top: 0, isCheckboxRow: true
+                    });
+                }
+                [tbody, tfoot].filter(Boolean).forEach(section => {
+                    section.querySelectorAll('tr').forEach((tr, rowIndex) => {
+                        const td = tr.querySelectorAll('td')[colIndex];
+                        if (!td || td.style.display === 'none') return;
+                        applyPinCellStyles(td, { offset, pinnedIndex, isRTL, rowIndex, isHeader: false });
+                    });
+                });
+            });
+        }
+
         // حفظ الأعمدة المثبتة لكل مستخدم
         function savePinnedColumns(tableType, pinnedColumns) {
             // استخدام المتغير العام currentUser (يعمل مع Firebase و LocalAuth)
@@ -8101,249 +8192,133 @@
         
         // تبديل حالة تثبيت العمود
         function toggleColumnPin(tableId, columnIndex, columnName) {
-            // تحديد نوع الجدول بشكل أفضل
-            let tableType = 'month'; // افتراضي
-            if (tableId.includes('project') || tableId.includes('Project')) {
-                tableType = 'project';
-            } else if (tableId.includes('bulkEdit') || tableId.includes('BulkEdit')) {
-                tableType = 'bulkEdit';
-            } else if (tableId.includes('month') || tableId.includes('Month') || tableId.includes('employeeTable')) {
-                tableType = 'month';
-            }
-            
+            const tableType = resolvePinTableType(tableId);
             let pinnedColumns = loadPinnedColumns(tableType);
-            
             const columnKey = columnName || `column_${columnIndex}`;
             const index = pinnedColumns.indexOf(columnKey);
-            
+
             if (index > -1) {
                 pinnedColumns.splice(index, 1);
-                console.log('📌 تم إلغاء تثبيت العمود:', columnKey, 'من الجدول:', tableType);
             } else {
                 pinnedColumns.push(columnKey);
-                console.log('📌 تم تثبيت العمود:', columnKey, 'في الجدول:', tableType);
             }
-            
-            // حفظ الأعمدة المثبتة
+
             savePinnedColumns(tableType, pinnedColumns);
-            
-            // تطبيق التغييرات على الجدول
             applyPinnedColumns(tableId, tableType);
         }
-        
+
+        function reapplyPinnedColumnsForActiveTables() {
+            const monthTable = document.getElementById('employeeTable');
+            if (monthTable) applyPinnedColumns('employeeTable', 'month');
+            document.querySelectorAll('.table-container table[id^="project"]').forEach(t => {
+                if (t.id) applyPinnedColumns(t.id, 'project');
+            });
+            const bulkTable = document.getElementById('bulkEditTable');
+            if (bulkTable) applyPinnedColumns('bulkEditTable', 'bulkEdit');
+        }
+
         // تطبيق الأعمدة المثبتة على الجدول
         function applyPinnedColumns(tableId, tableType) {
             const table = document.getElementById(tableId);
             if (!table) return;
-            
-            const pinnedColumns = loadPinnedColumns(tableType);
+
+            tableType = tableType || resolvePinTableType(tableId);
+            const pinnedKeys = loadPinnedColumns(tableType);
             const hiddenSet = (typeof getActiveHiddenColumnsSet === 'function') ? getActiveHiddenColumnsSet() : new Set();
             const thead = table.querySelector('thead');
             const tbody = table.querySelector('tbody');
+            const tfoot = table.querySelector('tfoot');
             const pinCheckboxRow = table.querySelector('.pin-checkbox-row');
-            
+
             if (!thead || !tbody) return;
-            
-            // إضافة class للجدول إذا كان يحتوي على صف صناديق التحديد
-            if (pinCheckboxRow) {
-                table.classList.add('has-pin-checkbox-row');
-            } else {
-                table.classList.remove('has-pin-checkbox-row');
-            }
-            
-            // تحديد اتجاه النص (RTL أو LTR)
-            const isRTL = document.documentElement.dir === 'rtl' || 
-                         getComputedStyle(document.documentElement).direction === 'rtl' ||
-                         currentLang === 'ar';
-            
-            // إزالة التثبيت السابق
-            const allThs = thead.querySelectorAll('th');
-            const allTds = tbody.querySelectorAll('td');
-            
-            allThs.forEach((th) => {
-                th.classList.remove('pinned-column');
-                th.style.left = '';
-                th.style.right = '';
-            });
-            
-            allTds.forEach((td) => {
-                td.classList.remove('pinned-column');
-                td.style.left = '';
-                td.style.right = '';
-            });
-            
-            // تطبيق التثبيت على الأعمدة المحددة
-            let offset = 0;
+
+            if (pinCheckboxRow) table.classList.add('has-pin-checkbox-row');
+            else table.classList.remove('has-pin-checkbox-row');
+
+            const isRTL = document.documentElement.dir === 'rtl' ||
+                getComputedStyle(document.documentElement).direction === 'rtl' ||
+                currentLang === 'ar';
+
+            const allPinCells = [
+                ...thead.querySelectorAll('th'),
+                ...tbody.querySelectorAll('td'),
+                ...(tfoot ? tfoot.querySelectorAll('td') : [])
+            ];
+            clearPinStyles(allPinCells);
+
             const headerRows = thead.querySelectorAll('tr:not(.pin-checkbox-row)');
-            
-            // الحصول على أعمدة رأس الجدول (تجاهل صف صناديق التحديد)
-            const headerRow = headerRows[0];
+            const headerRow = headerRows[headerRows.length - 1] || headerRows[0];
             if (!headerRow) return;
-            
-            const headerCells = headerRow.querySelectorAll('th');
-            
-            // جمع الأعمدة المثبتة مع مواضعها (بالترتيب من البداية)
-            const pinnedColumnsData = [];
+
+            const headerCells = [...headerRow.querySelectorAll('th')];
+            const pinRowHeight = pinCheckboxRow ? Math.ceil(pinCheckboxRow.getBoundingClientRect().height) : 0;
+            const headerTop = pinCheckboxRow ? pinRowHeight : 0;
+            const offsetByIndex = buildColumnOffsetMap(headerCells, hiddenSet);
+
+            const columnsMeta = [];
             headerCells.forEach((th, colIndex) => {
                 const columnKey = th.getAttribute('data-column') || `column_${colIndex}`;
-                // لا نثبت عموداً مخفياً
-                if (hiddenSet && isDataColumnHidden(columnKey, hiddenSet)) {
-                    // تأكد من إلغاء تحديد الـ checkbox إن كان موجوداً
-                    if (pinCheckboxRow) {
-                        const cb = pinCheckboxRow.querySelectorAll('th')[colIndex + 1]?.querySelector('.pin-checkbox');
-                        if (cb) cb.checked = false;
-                    }
-                    return;
+                const isHidden = hiddenSet && isDataColumnHidden(columnKey, hiddenSet);
+                const isDisplayed = th.style.display !== 'none' && !isHidden;
+                const checkbox = pinCheckboxRow
+                    ? pinCheckboxRow.querySelectorAll('th')[colIndex + 1]?.querySelector('.pin-checkbox')
+                    : null;
+
+                if (checkbox) {
+                    checkbox.disabled = !isDisplayed;
+                    if (!isDisplayed) checkbox.checked = false;
                 }
-                const checkbox = pinCheckboxRow ? 
-                    pinCheckboxRow.querySelectorAll('th')[colIndex + 1]?.querySelector('.pin-checkbox') : null;
-                
-                const isPinned = pinnedColumns.includes(columnKey) || (checkbox && checkbox.checked);
-                
+
+                const isPinned = isDisplayed && (
+                    pinnedKeys.includes(columnKey) || (checkbox && checkbox.checked)
+                );
+
+                if (checkbox && isDisplayed) {
+                    checkbox.checked = isPinned;
+                }
+
                 if (isPinned) {
-                    // حساب العرض الفعلي للعمود - استخدام عدة طرق لضمان الدقة
-                    let width = th.offsetWidth;
-                    if (!width || width === 0) {
-                        const rect = th.getBoundingClientRect();
-                        width = rect.width;
-                    }
-                    if (!width || width === 0) {
-                        // محاولة الحصول من computed style
-                        const computedStyle = window.getComputedStyle(th);
-                        width = parseFloat(computedStyle.width) || parseFloat(computedStyle.minWidth) || 100;
-                    }
-                    if (!width || width === 0) {
-                        width = 100; // قيمة افتراضية
-                    }
-                    
-                    pinnedColumnsData.push({
-                        colIndex: colIndex,
-                        columnKey: columnKey,
-                        th: th,
-                        width: Math.max(width, 50) // حد أدنى 50px
+                    columnsMeta.push({
+                        colIndex,
+                        columnKey,
+                        offset: offsetByIndex.get(colIndex) || 0,
+                        th
                     });
                 }
             });
-            
-            // تطبيق التثبيت على الأعمدة المثبتة بالترتيب
-            pinnedColumnsData.forEach((colData, pinnedIndex) => {
-                const { colIndex, th, width } = colData;
-                
-                // تطبيق التثبيت على جميع صفوف thead (للتمرير الأفقي فقط)
-                // z-index يزداد مع كل عمود مثبت لضمان الترتيب الصحيح
-                const headerZIndex = 102 + pinnedIndex;
-                headerRows.forEach(row => {
-                    const cell = row.querySelectorAll('th')[colIndex];
-                    if (cell) {
-                        cell.classList.add('pinned-column');
-                        if (isRTL) {
-                            cell.style.right = `${offset}px`;
-                            cell.style.left = 'auto';
-                        } else {
-                            cell.style.left = `${offset}px`;
-                            cell.style.right = 'auto';
-                        }
-                        cell.style.zIndex = headerZIndex.toString();
-                        // التأكد من وجود خلفية للأعمدة المثبتة
-                        cell.style.background = '#101d2d';
-                        cell.style.position = 'sticky';
-                    }
-                });
-                
-                // تطبيق التثبيت على صف صناديق التحديد
-                if (pinCheckboxRow) {
-                    const checkboxCell = pinCheckboxRow.querySelectorAll('th')[colIndex + 1];
-                    if (checkboxCell) {
-                        checkboxCell.classList.add('pinned-column');
-                        if (isRTL) {
-                            checkboxCell.style.right = `${offset}px`;
-                            checkboxCell.style.left = 'auto';
-                        } else {
-                            checkboxCell.style.left = `${offset}px`;
-                            checkboxCell.style.right = 'auto';
-                        }
-                        // z-index أعلى لصف صناديق التحديد
-                        checkboxCell.style.zIndex = (103 + pinnedIndex).toString();
-                        checkboxCell.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
-                        checkboxCell.style.position = 'sticky';
-                    }
-                }
-                
-                // تطبيق نفس التثبيت على جميع صفوف tbody (للتمرير الأفقي فقط)
-                const rows = tbody.querySelectorAll('tr');
-                rows.forEach((tr, rowIndex) => {
-                    const td = tr.querySelectorAll('td')[colIndex];
-                    if (td) {
-                        td.classList.add('pinned-column');
-                        if (isRTL) {
-                            td.style.right = `${offset}px`;
-                            td.style.left = 'auto';
-                        } else {
-                            td.style.left = `${offset}px`;
-                            td.style.right = 'auto';
-                        }
-                        // z-index للخلايا أقل من رأس الجدول
-                        td.style.zIndex = (9 + pinnedIndex).toString();
-                        td.style.position = 'sticky';
-                        // إضافة خلفية حسب نوع الصف
-                        if (rowIndex % 2 === 0) {
-                            td.style.background = '#f8fafc';
-                        } else {
-                            td.style.background = 'white';
-                        }
-                    }
-                });
-                
-                // حساب العرض للعمود التالي (للتمرير الأفقي)
-                // استخدام العرض الفعلي المحسوب مع إضافة مسافة صغيرة لضمان عدم التداخل
-                offset += width;
-            });
-            
-            // إعادة حساب المواضع بعد تطبيق التثبيت لضمان الدقة
-            if (pinnedColumnsData.length > 0) {
+
+            columnsMeta.sort((a, b) => a.colIndex - b.colIndex);
+            applyPinnedOffsetsToTable(table, columnsMeta, headerRows, pinCheckboxRow, tbody, tfoot, isRTL, headerTop);
+
+            if (columnsMeta.length > 0) {
                 setTimeout(() => {
-                    let recalcOffset = 0;
-                    pinnedColumnsData.forEach((colData, pinnedIndex) => {
-                        const { colIndex, th } = colData;
-                        const currentWidth = th.getBoundingClientRect().width || th.offsetWidth || 100;
-                        
-                        // إعادة تطبيق المواضع مع العرض المحدث
-                        headerRows.forEach(row => {
-                            const cell = row.querySelectorAll('th')[colIndex];
-                            if (cell && cell.classList.contains('pinned-column')) {
-                                if (isRTL) {
-                                    cell.style.right = `${recalcOffset}px`;
-                                } else {
-                                    cell.style.left = `${recalcOffset}px`;
-                                }
-                            }
-                        });
-                        
-                        if (pinCheckboxRow) {
-                            const checkboxCell = pinCheckboxRow.querySelectorAll('th')[colIndex + 1];
-                            if (checkboxCell && checkboxCell.classList.contains('pinned-column')) {
-                                if (isRTL) {
-                                    checkboxCell.style.right = `${recalcOffset}px`;
-                                } else {
-                                    checkboxCell.style.left = `${recalcOffset}px`;
-                                }
-                            }
-                        }
-                        
-                        const rows = tbody.querySelectorAll('tr');
-                        rows.forEach(tr => {
-                            const td = tr.querySelectorAll('td')[colIndex];
-                            if (td && td.classList.contains('pinned-column')) {
-                                if (isRTL) {
-                                    td.style.right = `${recalcOffset}px`;
-                                } else {
-                                    td.style.left = `${recalcOffset}px`;
-                                }
-                            }
-                        });
-                        
-                        recalcOffset += currentWidth;
-                    });
+                    const tableEl = document.getElementById(tableId);
+                    if (!tableEl) return;
+                    const theadEl = tableEl.querySelector('thead');
+                    const tbodyEl = tableEl.querySelector('tbody');
+                    const tfootEl = tableEl.querySelector('tfoot');
+                    const pinRow = tableEl.querySelector('.pin-checkbox-row');
+                    const hRows = theadEl?.querySelectorAll('tr:not(.pin-checkbox-row)');
+                    const hRow = hRows && (hRows[hRows.length - 1] || hRows[0]);
+                    if (!hRow || !tbodyEl) return;
+
+                    const hCells = [...hRow.querySelectorAll('th')];
+                    const hidden = (typeof getActiveHiddenColumnsSet === 'function') ? getActiveHiddenColumnsSet() : new Set();
+                    const recalcOffsets = buildColumnOffsetMap(hCells, hidden);
+                    const rtl = document.documentElement.dir === 'rtl' || currentLang === 'ar';
+                    const top = pinRow ? Math.ceil(pinRow.getBoundingClientRect().height) : 0;
+
+                    const meta = columnsMeta.map(col => ({
+                        ...col,
+                        offset: recalcOffsets.get(col.colIndex) || 0
+                    }));
+
+                    clearPinStyles([
+                        ...theadEl.querySelectorAll('th'),
+                        ...tbodyEl.querySelectorAll('td'),
+                        ...(tfootEl ? tfootEl.querySelectorAll('td') : [])
+                    ]);
+                    applyPinnedOffsetsToTable(tableEl, meta, hRows, pinRow, tbodyEl, tfootEl, rtl, top);
                 }, 50);
             }
         }
@@ -8379,6 +8354,7 @@
         // جعل الدوال متاحة عالمياً
         window.toggleColumnPin = toggleColumnPin;
         window.applyPinnedColumns = applyPinnedColumns;
+        window.reapplyPinnedColumnsForActiveTables = reapplyPinnedColumnsForActiveTables;
 
         const savedDbConfig = loadSavedDbConfig();
         const firebaseConfig = mergeDbConfigs(DEFAULT_FIREBASE_CONFIG, savedDbConfig);
@@ -10499,11 +10475,7 @@
                             
                             // إعادة تطبيق التثبيت بعد تغيير حجم العمود
                             setTimeout(() => {
-                                if (tableId.includes('project')) {
-                                    applyPinnedColumns(tableId, 'project');
-                                } else {
-                                    applyPinnedColumns(tableId, 'month');
-                                }
+                                applyPinnedColumns(tableId, resolvePinTableType(tableId));
                             }, 50);
                             
                             console.log('✅ Column resized:', index, '→', header.offsetWidth + 'px');
@@ -10599,6 +10571,7 @@
             } else {
                 showNotification('info', 'تم الحفظ', 'تم حفظ التنسيق الحالي');
             }
+            setTimeout(() => reapplyPinnedColumnsForActiveTables(), 50);
         }
         
         function loadColumnWidths() {
@@ -10641,6 +10614,9 @@
             
             if (loadedCount > 0) {
                 console.log(`✅ تم تحميل ${loadedCount} عرض عمود محفوظ`);
+            }
+            if (loadedCount > 0) {
+                setTimeout(() => reapplyPinnedColumnsForActiveTables(), 50);
             }
         }
         
@@ -20345,7 +20321,7 @@ function renderProjectView() {
             try {
                 const hiddenSet = new Set(hiddenArray || []);
                 const toRemove = (key) => isDataColumnHidden(key, hiddenSet) || hiddenSet.has(key);
-                ['month', 'project'].forEach(tableType => {
+                ['month', 'project', 'bulkEdit'].forEach(tableType => {
                     const pinned = loadPinnedColumns(tableType) || [];
                     const cleaned = pinned.filter(k => !toRemove(k));
                     if (cleaned.length !== pinned.length) {
@@ -20463,7 +20439,7 @@ function renderProjectView() {
                     const pinCell = pinCells[colIndex + 1]; // +1 لأن أول خلية للـ 📌
                     if (pinCell) pinCell.style.display = isHidden ? 'none' : '';
                 }
-                table.querySelectorAll('tbody tr').forEach(row => {
+                table.querySelectorAll('tbody tr, tfoot tr').forEach(row => {
                     const cell = row.cells[colIndex];
                     if (cell) cell.style.display = isHidden ? 'none' : '';
                 });
@@ -20479,6 +20455,7 @@ function renderProjectView() {
                     applyColumnVisibilityToTable(table, hiddenSet);
                 }
             });
+            setTimeout(() => reapplyPinnedColumnsForActiveTables(), 30);
         }
 
         async function showAllColumns() {
@@ -29891,92 +29868,52 @@ function renderProjectView() {
             }, 100);
         }
         
-        // دالة طباعة الملخصات (محسّنة لتقارير المشاريع)
-        function printSummary() {
-            const project = document.getElementById('summaryProject').value;
-            const month1 = document.getElementById('summaryMonth1').value;
-            const month2 = document.getElementById('summaryMonth2').value;
-            
-            if (!project || !month1) {
-                showNotification('warning', currentLang === 'ar' ? 'تحذير' : 'Warning', 
-                    currentLang === 'ar' ? 'الرجاء إنشاء ملخص أولاً' : 'Please generate summary first');
-                return;
-            }
-            
-            // إنشاء تقرير محسّن للمشاريع
-            const printWindow = window.open('', '_blank');
-            const currentDate = new Date().toLocaleDateString('ar-EG', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
+        function sanitizeSummaryHTMLForPrint(sourceEl) {
+            if (!sourceEl || !sourceEl.innerHTML.trim()) return '';
+            const clone = sourceEl.cloneNode(true);
+            clone.querySelectorAll('[onmouseover],[onmouseout],[onclick]').forEach(el => {
+                el.removeAttribute('onmouseover');
+                el.removeAttribute('onmouseout');
+                el.removeAttribute('onclick');
             });
-            const currentTime = new Date().toLocaleTimeString('ar-EG', {
-                hour: '2-digit',
-                minute: '2-digit'
+            clone.querySelectorAll('.loading-spinner').forEach(el => el.remove());
+            clone.querySelectorAll('[style]').forEach(el => {
+                const s = el.getAttribute('style') || '';
+                if (/overflow\s*:\s*(hidden|auto|scroll)/i.test(s)) {
+                    el.setAttribute('style', s.replace(/overflow\s*:\s*(hidden|auto|scroll)/gi, 'overflow:visible'));
+                }
+                if (/max-height\s*:/i.test(s)) {
+                    el.setAttribute('style', (el.getAttribute('style') || '').replace(/max-height\s*:[^;]+;?/gi, ''));
+                }
+                if (/max-width\s*:\s*100%/i.test(s)) {
+                    el.setAttribute('style', (el.getAttribute('style') || '').replace(/max-width\s*:\s*100%[^;]*;?/gi, 'max-width:none;'));
+                }
             });
-            const headerInfo = getHeaderInfo();
-            const isArabic = currentLang === 'ar';
+            clone.querySelectorAll('.report-table-container, .chart-container, .total-grid').forEach(el => {
+                el.style.overflow = 'visible';
+                el.style.maxHeight = 'none';
+                el.style.maxWidth = 'none';
+            });
+            clone.querySelectorAll('table').forEach(table => {
+                table.style.width = '100%';
+                table.style.minWidth = '0';
+                table.style.tableLayout = 'auto';
+            });
+            clone.querySelectorAll('h3').forEach(h => {
+                h.style.color = '#101d2d';
+            });
+            return clone.innerHTML;
+        }
+
+        function buildSummaryPrintHeaderHTML(project, month1, month2, isArabic, currentDate, currentTime) {
             const companyNameAr = companySettings.companyNameAr || '';
             const companyNameEn = companySettings.companyNameEn || 'ROSEMARY COMPANY';
             const companyLogo = companySettings.companyLogo || '';
-            
-            // تحديد حجم الورق (A3 للتقارير الكبيرة أفضل)
-            const pageSize = 'A3';
-            const orientation = 'landscape';
-            
-            let html = '<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">';
-            html += '<title>' + (isArabic ? 'تقرير ملخص المشاريع' : 'Projects Summary Report') + ' - ' + currentYear + '</title>';
-            html += '<style>';
-            
-            // CSS محسّن للطباعة على A3
-            html += '@media print {';
-            html += '@page { size: ' + pageSize + ' ' + orientation + '; margin: ' + PRINT_DESIGN.pageMargin(pageSize) + '; }';
-            html += 'body { padding-bottom: ' + PRINT_DESIGN.bodyPaddingBottom(pageSize) + ' !important; padding: ' + PRINT_DESIGN.bodyPadding + '; }';
-            html += '.print-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 120px; background: white; border-top: 2px solid #999; padding: 10px; page-break-inside: avoid; }';
-            html += '.signature-section { position: fixed; bottom: 0; left: 0; right: 0; height: 120px; background: white; padding: 10px 20px; page-break-inside: avoid; }';
-            html += '* { -webkit-print-color-adjust: economy; print-color-adjust: economy; box-shadow: none !important; text-shadow: none !important; filter: none !important; }';
-            html += '}';
-            
-            html += '* { margin: 0; padding: 0; box-sizing: border-box; }';
-            html += 'body { font-family: "Arial", "Tahoma", sans-serif; font-size: 13px; margin: 0; padding: 8px; direction: rtl; }';
-            
-            // رأس التقرير (نصوص وصورة يمين/يسار لتوفير المساحة)
-            html += '.print-header { background: #f2f2f2; padding: 10px 12px; border-radius: 8px; margin-bottom: 10px; page-break-inside: avoid; page-break-after: avoid; border: 1px solid #999; }';
-            html += '.print-header-grid { display: flex; align-items: center; justify-content: space-between; gap: 12px; }';
-            html += '.print-header-logo { width: 56px; min-width: 56px; display: flex; align-items: center; justify-content: center; }';
-            html += '.print-header-logo img { max-width: 52px; max-height: 52px; object-fit: contain; border-radius: 8px; background: #fff; padding: 4px; border: 1px solid #ddd; }';
-            html += '.print-header-text { flex: 1; text-align: right; }';
-            html += '.print-header-meta { min-width: 220px; text-align: left; font-size: 10px; font-weight: 600; }';
-            html += '.print-header h1 { color: #000; font-size: 16px; font-weight: bold; margin: 2px 0; }';
-            html += '.print-header h2 { color: #000; font-size: 12px; margin: 2px 0; font-weight: 600; }';
-            html += '.print-header .company-name { color: #000; font-size: 11px; margin: 1px 0; font-weight: 700; }';
-            html += '.print-header .company-info { color: #000; font-size: 10px; margin: 1px 0; font-weight: 500; }';
-            
-            // الجداول
-            html += 'table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 12px; page-break-inside: auto; }';
-            html += 'thead { background: #efefef; }';
-            html += 'thead th { color: #000; padding: 10px 8px; text-align: center; font-weight: 700; font-size: 12px; border: 1px solid #999; }';
-            html += 'tbody td { padding: 10px 8px; text-align: center; border: 1px solid #e5e7eb; font-size: 12px; }';
-            html += 'tbody tr:nth-child(even) { background: #f9fafb; }';
-            html += 'tfoot tr, tr[style*="background"] { background: #f5f5f5 !important; font-weight: bold; }';
-            html += 'tfoot td { color: #000; padding: 10px 8px; font-size: 13px; border: 1px solid #999; }';
-            
-            // العنوان
-            html += '.section-title { background: #efefef; color: #000; padding: 10px 15px; border-radius: 8px; margin: 15px 0 10px 0; font-size: 14px; font-weight: 700; text-align: center; border: 1px solid #999; page-break-after: avoid; }';
-            
-            // التذييل
-            html += '.print-footer { margin-top: 20px; text-align: center; padding-top: 8px; border-top: 2px solid #999; font-size: 12px; color: #000; page-break-inside: avoid; }';
-            html += '.signature-section { display: flex; justify-content: space-around; margin-top: 20px; page-break-inside: avoid; page-break-before: avoid; }';
-            html += '.signature-box { text-align: center; width: 200px; }';
-            html += '.signature-line { border-top: 2px solid #000; margin-top: 40px; padding-top: 6px; font-weight: bold; font-size: 13px; }';
-            html += '</style></head><body>';
-            
-            // رأس التقرير
-            html += '<div class="print-header"><div class="print-header-grid">';
             const logo = companyLogo || '';
             const hasLogo = !!(logo && typeof logo === 'string' && logo.trim() && logo !== 'undefined' && logo !== 'null' && logo.length > 0);
-            html += '<div class="print-header-logo">' + (hasLogo ? ('<img src="' + logo + '" onerror="this.style.display=\\\'none\\\'">') : '') + '</div>';
+
+            let html = '<div class="print-header"><div class="print-header-grid">';
+            html += '<div class="print-header-logo">' + (hasLogo ? ('<img src="' + logo + '" onerror="this.style.display=\'none\'">') : '') + '</div>';
             html += '<div class="print-header-text">';
             html += '<div class="company-name">' + companyNameEn + '</div>';
             if (companyNameAr) {
@@ -29994,8 +29931,7 @@ function renderProjectView() {
                 html += ' ' + (isArabic ? 'مقارنة بـ ' : 'vs ') + t('monthNames')[month2];
             }
             html += ' ' + currentYear;
-            html += '</h2>';
-            html += '</div>';
+            html += '</h2></div>';
             html += '<div class="print-header-meta">';
             if (companySettings.companyAddress) {
                 html += '<div class="company-info">📍 ' + companySettings.companyAddress + '</div>';
@@ -30004,54 +29940,131 @@ function renderProjectView() {
                 html += '<div class="company-info">📞 ' + companySettings.companyPhone + '</div>';
             }
             html += '<div class="company-info">📅 ' + currentDate + '<br>🕐 ' + currentTime + '</div>';
-            html += '</div>';
-            html += '</div></div>';
-            
-            // ملخص أشهر السنة السابقة
-            html += buildYearMonthsOverviewHTML(project, month1, month2 || null, currentYear, true);
-            
-            // المحتوى - إنشاء الجدول مباشرة
-            html += '<div class="section-title">' + (isArabic ? '📋 ملخص المشاريع' : '📋 Projects Summary') + '</div>';
-            
+            html += '</div></div></div>';
+            return html;
+        }
+
+        function getSummaryPrintStyles(pageSize, orientation) {
+            let css = '@media print {';
+            css += '@page { size: ' + pageSize + ' ' + orientation + '; margin: 10mm; }';
+            css += 'html, body { height: auto !important; overflow: visible !important; }';
+            css += 'body { padding: 0 !important; margin: 0 !important; }';
+            css += '.print-footer, .signature-section { position: static !important; height: auto !important; }';
+            css += 'thead { display: table-header-group; }';
+            css += 'tfoot { display: table-footer-group; }';
+            css += 'tr { page-break-inside: avoid; break-inside: avoid; }';
+            css += 'table { page-break-inside: auto; break-inside: auto; }';
+            css += '.print-content, .print-content * { overflow: visible !important; max-height: none !important; }';
+            css += '.print-content table { width: 100% !important; min-width: 0 !important; font-size: 9px !important; }';
+            css += '.print-content th, .print-content td { padding: 4px 5px !important; word-break: break-word; }';
+            css += '* { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-shadow: none !important; }';
+            css += '}';
+            css += '* { margin: 0; padding: 0; box-sizing: border-box; }';
+            css += 'body { font-family: Arial, Tahoma, sans-serif; font-size: 11px; padding: 12px; direction: rtl; color: #000; }';
+            css += '.print-header { background: #f2f2f2; padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #999; page-break-inside: avoid; }';
+            css += '.print-header-grid { display: flex; align-items: center; justify-content: space-between; gap: 12px; }';
+            css += '.print-header-logo { width: 56px; min-width: 56px; display: flex; align-items: center; justify-content: center; }';
+            css += '.print-header-logo img { max-width: 52px; max-height: 52px; object-fit: contain; }';
+            css += '.print-header-text { flex: 1; text-align: right; }';
+            css += '.print-header-meta { min-width: 200px; text-align: left; font-size: 10px; font-weight: 600; }';
+            css += '.print-header h1 { font-size: 16px; font-weight: bold; margin: 2px 0; color: #000; }';
+            css += '.print-header h2 { font-size: 12px; margin: 2px 0; font-weight: 600; color: #000; }';
+            css += '.print-content { width: 100%; overflow: visible; }';
+            css += '.print-content .report-year-overview { margin-bottom: 14px; page-break-inside: avoid; border: 1px solid #999; }';
+            css += '.print-content .report-year-overview table { font-size: 9px; }';
+            css += '.print-content .chart-container { margin: 14px 0; page-break-inside: auto; }';
+            css += '.print-content .chart-container h3 { font-size: 13px; color: #101d2d; margin-bottom: 8px; }';
+            css += '.print-content table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 10px; }';
+            css += '.print-content thead th { background: #efefef; color: #000; padding: 6px 5px; text-align: center; font-weight: 700; border: 1px solid #999; }';
+            css += '.print-content tbody td { padding: 5px; text-align: center; border: 1px solid #ddd; }';
+            css += '.print-content .total-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }';
+            css += '.print-content .total-item { border: 1px solid #ddd; padding: 8px; text-align: center; border-radius: 6px; }';
+            css += '.print-content .total-item .label { font-size: 10px; color: #555; }';
+            css += '.print-content .total-item .value { font-size: 14px; font-weight: 700; color: #101d2d; }';
+            css += '.signature-section { margin-top: 24px; page-break-inside: avoid; }';
+            css += '.print-footer { margin-top: 16px; padding-top: 10px; border-top: 2px solid #999; text-align: center; font-size: 11px; page-break-inside: avoid; }';
+            return css;
+        }
+
+        function buildSummaryPrintBodyHTML(project, month1, month2) {
+            const resultsDiv = document.getElementById('summaryResults');
+            const fromScreen = sanitizeSummaryHTMLForPrint(resultsDiv);
+            if (fromScreen && !fromScreen.includes('loading-spinner') && fromScreen.trim().length > 50) {
+                return fromScreen;
+            }
+            const isArabic = currentLang === 'ar';
+            let html = buildYearMonthsOverviewHTML(project, month1, month2 || null, currentYear, true);
             if (project === 'ALL') {
-                // ملخص جميع المشاريع
-                if (month2) {
-                    html += generateProjectsComparisonTable(month1, month2, isArabic);
-                } else {
-                    html += generateProjectsSummaryTable(month1, isArabic);
-                }
+                html += month2
+                    ? generateProjectsComparisonTable(month1, month2, isArabic)
+                    : generateProjectsSummaryTable(month1, isArabic);
             } else {
-                // ملخص مشروع واحد
                 html += generateSingleProjectSummaryTable(project, month1, month2, isArabic);
             }
+            return html;
+        }
+        
+        // دالة طباعة الملخصات (محسّنة لتقارير المشاريع)
+        function printSummary() {
+            const project = document.getElementById('summaryProject').value;
+            const month1 = document.getElementById('summaryMonth1').value;
+            const month2 = document.getElementById('summaryMonth2').value;
             
-            // التوقيعات
+            if (!project || !month1) {
+                showNotification('warning', currentLang === 'ar' ? 'تحذير' : 'Warning', 
+                    currentLang === 'ar' ? 'الرجاء إنشاء ملخص أولاً' : 'Please generate summary first');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('summaryResults');
+            if (!resultsDiv || !resultsDiv.innerHTML.trim() || resultsDiv.querySelector('.loading-spinner')) {
+                showNotification('warning', currentLang === 'ar' ? 'تحذير' : 'Warning',
+                    currentLang === 'ar' ? 'الرجاء الضغط على «عرض الملخص» أولاً' : 'Please click Generate Summary first');
+                return;
+            }
+            
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                showNotification('error', currentLang === 'ar' ? 'خطأ' : 'Error',
+                    currentLang === 'ar' ? 'تعذّر فتح نافذة الطباعة — تحقق من حظر النوافذ المنبثقة' : 'Could not open print window');
+                return;
+            }
+
+            const currentDate = new Date().toLocaleDateString('ar-EG', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+            const currentTime = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+            const isArabic = currentLang === 'ar';
+            const pageSize = 'A3';
+            const orientation = 'landscape';
+            
+            let html = '<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">';
+            html += '<title>' + (isArabic ? 'تقرير ملخص المشاريع' : 'Projects Summary Report') + ' - ' + currentYear + '</title>';
+            html += '<style>' + getSummaryPrintStyles(pageSize, orientation) + '</style></head><body class="print-safe-zone">';
+            
+            html += buildSummaryPrintHeaderHTML(project, month1, month2, isArabic, currentDate, currentTime);
+            html += '<div class="print-content">' + buildSummaryPrintBodyHTML(project, month1, month2) + '</div>';
+            
             const signaturesHTML = getSignaturesHTML();
             if (signaturesHTML) {
                 html += '<div class="signature-section">' + signaturesHTML + '</div>';
             }
             
-            // التذييل
             html += '<div class="print-footer">';
             html += '<p>🔒 ' + (isArabic ? 'هذا التقرير سري ومخصص للاستخدام الداخلي فقط' : 'This report is confidential and for internal use only') + '</p>';
-            html += '<p style="margin-top: 5px; font-size: 11px; color: #000; font-weight: 600;">';
-            html += '🌿 Powered by ROSEMARY | PayRose System';
-            html += '</p>';
-            html += '<p style="margin-top: 3px; font-size: 10px; color: #000;">';
-            html += '© ' + currentYear + ' ' + companyNameEn + ' - ' + (isArabic ? 'نظام الرواتب الاحترافي' : 'Professional Payroll System');
-            html += '</p>';
+            html += '<p style="margin-top: 5px; font-size: 11px;">🌿 Powered by ROSEMARY | PayRose System</p>';
+            html += '<p style="margin-top: 3px; font-size: 10px;">© ' + currentYear + ' ' + (companySettings.companyNameEn || 'ROSEMARY COMPANY') + '</p>';
             html += '</div>';
             
-            html += '<scr' + 'ipt>';
-            html += 'window.onload = function() { setTimeout(function() { window.print(); }, 500); };';
-            html += '</scr' + 'ipt>';
+            html += '<scr' + 'ipt>window.onload=function(){setTimeout(function(){window.print();},600);};</scr' + 'ipt>';
             html += '</body></html>';
             
+            printWindow.document.open();
             printWindow.document.write(html);
             printWindow.document.close();
             
             showNotification('success', '✅ ' + (isArabic ? 'جاهز للطباعة' : 'Ready to Print'), 
-                (isArabic ? 'تم فتح نافذة الطباعة بنجاح' : 'Print window opened successfully'));
+                (isArabic ? 'تم فتح نافذة الطباعة — المحتوى مطابق للمعروض على الشاشة' : 'Print window opened with on-screen content'));
         }
         
         // دالة لإنشاء جدول ملخص المشاريع للطباعة
