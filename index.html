@@ -5377,6 +5377,9 @@
                         <div class="nav-item" onclick="showTab('bulkEdit')" id="navBulkEdit" role="button" tabindex="0">
                             <span id="navBulkEditText">تعديل متعدد</span>
                         </div>
+                        <div class="nav-item" onclick="showTab('employeeProfiles')" id="navEmployeeProfiles" role="button" tabindex="0">
+                            <span id="navEmployeeProfilesText">🪪 بطاقات الموظفين</span>
+                        </div>
                         <div class="nav-separator"></div>
                         <div class="nav-item" onclick="showTab('years')" id="navYears" role="button" tabindex="0">
                             <span id="navYearsText">السنوات</span>
@@ -6745,6 +6748,27 @@
         </div>
     </div>
 
+    <!-- نافذة إنشاء/تعديل بطاقة موظف -->
+    <div class="modal" id="employeeProfileModal">
+        <div class="modal-content" style="max-width: 640px;">
+            <div id="employeeProfileModalContent"><!-- يُملأ بالجافاسكريبت --></div>
+        </div>
+    </div>
+
+    <!-- نافذة ربط البطاقات الشهرية -->
+    <div class="modal" id="linkMonthlyCardsModal">
+        <div class="modal-content" style="max-width: 1000px; max-height: 95vh;">
+            <div id="linkMonthlyCardsContent"><!-- يُملأ بالجافاسكريبت --></div>
+        </div>
+    </div>
+
+    <!-- نافذة توليد بطاقة ربط من الشهر -->
+    <div class="modal" id="createProfileFromMonthModal">
+        <div class="modal-content" style="max-width: 1000px; max-height: 95vh;">
+            <div id="createProfileFromMonthContent"><!-- يُملأ بالجافاسكريبت --></div>
+        </div>
+    </div>
+
     <!-- نافذة إضافة موظفين متعددين المحسّنة -->
     <div class="modal" id="multipleEmployeesModal">
         <div class="modal-content" style="max-width: 1400px; max-height: 95vh;">
@@ -8050,6 +8074,16 @@
             // تحميل السنوات المتاحة
             loadYears: function() {
                 return LocalStorage.load('available_years') || [];
+            },
+            
+            // حفظ بطاقات الموظفين
+            saveEmployeeProfiles: function(profiles) {
+                return LocalStorage.save('employee_profiles', profiles);
+            },
+            
+            // تحميل بطاقات الموظفين
+            loadEmployeeProfiles: function() {
+                return LocalStorage.load('employee_profiles') || {};
             }
         };
         
@@ -9412,7 +9446,60 @@
                 actions: 'الإجراءات',
                 save: 'حفظ',
                 saveChanges: 'حفظ التعديلات',
-                noEmployeesInMonth: 'لا يوجد موظفين في'
+                noEmployeesInMonth: 'لا يوجد موظفين في',
+                // بطاقات الموظفين
+                navEmployeeProfiles: 'بطاقات الموظفين',
+                employeeProfilesTitle: '🪪 بطاقات الموظفين',
+                employeeProfilesSubtitle: 'تعريف بطاقات الموظفين وربط السجلات الشهرية بها يدوياً لاستخراج تقرير دقيق',
+                newProfile: 'بطاقة جديدة',
+                editProfileTitle: 'تعديل البطاقة',
+                profileName: 'اسم الموظف',
+                profileNameEn: 'الاسم بالإنجليزية',
+                profileCode: 'رمز البطاقة',
+                profileCodeHint: 'يُولَّد تلقائياً — يمكنك تعديله',
+                regenerateCode: 'إعادة توليد',
+                profileDefaultProject: 'المشروع الافتراضي',
+                linkedMonthsCount: 'الأشهر المربوطة',
+                lastLinkedMonth: 'آخر شهر',
+                profileLinkStatus: 'حالة الربط',
+                linkMonthlyCards: 'ربط الأشهر',
+                manageProfileLink: 'إدارة الربط',
+                createProfileFromMonth: 'توليد بطاقة ربط',
+                profileReport: 'تقرير البطاقة',
+                profileActive: 'نشط',
+                profileInactive: 'غير نشط',
+                profileNotes: 'ملاحظات',
+                noProfiles: 'لا توجد بطاقات موظفين بعد',
+                noProfilesDesc: 'أنشئ بطاقة جديدة أو استخدم زر «توليد بطاقة ربط» من جدول الشهر',
+                duplicateProfileName: 'يوجد بطاقة موظف بنفس الاسم',
+                duplicateProfileCode: 'رمز البطاقة مستخدم مسبقاً',
+                openExistingProfile: 'فتح البطاقة الموجودة',
+                profileNameRequired: 'اسم الموظف (عربي) مطلوب',
+                profileCodeRequired: 'رمز البطاقة مطلوب',
+                profileSaved: 'تم حفظ البطاقة بنجاح',
+                profileDeleted: 'تم حذف البطاقة',
+                deleteProfileConfirm: 'هل أنت متأكد من حذف هذه البطاقة؟ سيتم فك ربط جميع السجلات الشهرية المرتبطة بها.',
+                linksSaved: 'تم حفظ الربط بنجاح',
+                suggestionsNearby: 'اقتراحات قريبة',
+                allUnlinkedRecords: 'سجلات أخرى غير مربوطة',
+                linkedToOtherProfile: 'مربوطة لبطاقة أخرى',
+                saveLinks: 'حفظ الربط',
+                selectAtLeastOneMonth: 'اختر شهراً واحداً على الأقل',
+                createAndLink: 'إنشاء البطاقة وربط المحدد',
+                strongMatch: 'مطابق قوي',
+                possibleMatch: 'محتمل',
+                weakMatch: 'ضعيف',
+                alreadyLinkedHere: 'مربوط حالياً',
+                noLinkedMonths: 'لا توجد أشهر مربوطة بهذه البطاقة. استخدم «ربط الأشهر».',
+                profilesCount: 'عدد البطاقات',
+                searchProfiles: 'بحث في البطاقات...',
+                showActiveOnly: 'النشطة فقط',
+                linkComplete: 'مكتمل',
+                linkPartial: 'جزئي',
+                linkNone: 'بدون ربط',
+                profileRecordLinkedNote: 'هذا السجل مربوط ببطاقة بالفعل',
+                noUnloadedYearsNote: 'تُعرض السجلات من السنوات المحمّلة فقط',
+                currentMonthRecord: 'الشهر الحالي'
             },
             en: {
                 monthNames: {january: 'January', february: 'February', march: 'March', april: 'April',
@@ -9834,7 +9921,60 @@
                 actions: 'Actions',
                 save: 'Save',
                 saveChanges: 'Save Changes',
-                noEmployeesInMonth: 'No employees in'
+                noEmployeesInMonth: 'No employees in',
+                // Employee Profiles
+                navEmployeeProfiles: 'Employee Cards',
+                employeeProfilesTitle: '🪪 Employee Cards',
+                employeeProfilesSubtitle: 'Define employee cards and manually link monthly records for accurate reporting',
+                newProfile: 'New Card',
+                editProfileTitle: 'Edit Card',
+                profileName: 'Employee Name',
+                profileNameEn: 'Name (English)',
+                profileCode: 'Card Code',
+                profileCodeHint: 'Auto-generated — editable',
+                regenerateCode: 'Regenerate',
+                profileDefaultProject: 'Default Project',
+                linkedMonthsCount: 'Linked Months',
+                lastLinkedMonth: 'Last Month',
+                profileLinkStatus: 'Link Status',
+                linkMonthlyCards: 'Link Months',
+                manageProfileLink: 'Manage Link',
+                createProfileFromMonth: 'Generate Card',
+                profileReport: 'Card Report',
+                profileActive: 'Active',
+                profileInactive: 'Inactive',
+                profileNotes: 'Notes',
+                noProfiles: 'No employee cards yet',
+                noProfilesDesc: 'Create a new card or use the "Generate Card" button from the month table',
+                duplicateProfileName: 'An employee card with the same name exists',
+                duplicateProfileCode: 'Card code already in use',
+                openExistingProfile: 'Open existing card',
+                profileNameRequired: 'Employee name (Arabic) is required',
+                profileCodeRequired: 'Card code is required',
+                profileSaved: 'Card saved successfully',
+                profileDeleted: 'Card deleted',
+                deleteProfileConfirm: 'Are you sure you want to delete this card? All linked monthly records will be unlinked.',
+                linksSaved: 'Links saved successfully',
+                suggestionsNearby: 'Nearby suggestions',
+                allUnlinkedRecords: 'Other unlinked records',
+                linkedToOtherProfile: 'Linked to another card',
+                saveLinks: 'Save Links',
+                selectAtLeastOneMonth: 'Select at least one month',
+                createAndLink: 'Create card & link selected',
+                strongMatch: 'Strong match',
+                possibleMatch: 'Possible',
+                weakMatch: 'Weak',
+                alreadyLinkedHere: 'Currently linked',
+                noLinkedMonths: 'No months linked to this card. Use "Link Months".',
+                profilesCount: 'Cards count',
+                searchProfiles: 'Search cards...',
+                showActiveOnly: 'Active only',
+                linkComplete: 'Complete',
+                linkPartial: 'Partial',
+                linkNone: 'No links',
+                profileRecordLinkedNote: 'This record is already linked to a card',
+                noUnloadedYearsNote: 'Only records from loaded years are shown',
+                currentMonthRecord: 'Current month'
             }
         };
 
@@ -10683,6 +10823,7 @@
                 'navUsersText': t('navUsers'),
                 'navSettingsText': t('navSettings'),
                 'navBulkEditText': currentLang === 'ar' ? 'تعديل متعدد' : 'Bulk Edit',
+                'navEmployeeProfilesText': '🪪 ' + t('navEmployeeProfiles'),
                 'navReportsText': t('navReports'),
                 'navToolsText': currentLang === 'ar' ? 'أدوات' : 'Tools',
                 'employeeDepartmentLabel': t('department'),
@@ -13257,6 +13398,9 @@
                 if (typeof initSalaryChangeReportViewControls === 'function') {
                     initSalaryChangeReportViewControls();
                 }
+            } else if (currentView === 'employeeProfiles') {
+                if (!employeeProfilesLoaded) { await loadEmployeeProfiles(); employeeProfilesLoaded = true; }
+                setHTML(content, renderEmployeeProfilesView());
             }
             
             // تفعيل تغيير حجم الأعمدة بعد رسم المحتوى
@@ -14860,6 +15004,7 @@
                                 ${!emp.isPaid && netSalary === 0 ? `<button type="button" class="btn btn-warning btn-small" onclick="hideEmployee(${index})" title="${t('hideEmployee')}">${t('hideEmployee')}</button>` : ''}
                                 <button type="button" class="btn btn-warning btn-small btn-icon" onclick="openAttendanceModal(${index}, '${currentMonth}', ${currentYear})" title="${currentLang === 'ar' ? 'إدخال الدوام' : 'Enter Attendance'}" ${!canEditCurrentMonth(currentMonth, currentYear) ? 'disabled title=\"الشهر مقفل من التعديل\"' : (emp.isPaid ? 'disabled title=\"' + (currentLang === 'ar' ? 'تم الدفع - لا يمكن التعديل' : 'Paid - Cannot edit') + '\"' : '')}>⏰</button>
                                 <button type="button" class="btn btn-info btn-small btn-icon" onclick="openEmployeeReportModal(${index}, '${currentMonth}', ${currentYear})" title="${currentLang === 'ar' ? 'تقرير الموظف عبر الأشهر' : 'Employee Monthly Report'}">📊</button>
+                                ${emp.linkedToFirebaseId ? '' : `<button type="button" class="btn btn-secondary btn-small btn-icon" onclick="openCreateProfileFromMonthModal(${index})" title="${emp.profileId ? t('manageProfileLink') : t('createProfileFromMonth')}">🪪</button>`}
                                 <button type="button" class="btn btn-success btn-small" onclick="openCopyModal(${index})" ${!canEditCurrentMonth(currentMonth, currentYear) ? 'disabled title=\"الشهر مقفل من التعديل\"' : ''}>${t('copy')}</button>
                                 ${currentUser && currentUser.fullAccess ? `<button type="button" class="btn btn-danger btn-small" onclick="deleteEmployee(${index})" ${!canEditCurrentMonth(currentMonth, currentYear) ? 'disabled title=\"الشهر مقفل من التعديل\"' : (emp.isPaid ? 'disabled title=\"' + (currentLang === 'ar' ? 'تم الدفع - لا يمكن الحذف' : 'Paid - Cannot delete') + '\"' : '')}>${t('delete')}</button>` : ''}
                             </div>
@@ -16684,6 +16829,10 @@ function renderProjectView() {
                 return;
             }
             
+            renderEmployeeReportFromRecords(employeeRecords);
+        }
+
+        function renderEmployeeReportFromRecords(employeeRecords) {
             const firstRecord = employeeRecords[0];
             const emp = firstRecord.employee;
             const empName = currentLang === 'ar' ? (emp.nameAr || emp.nameEn) : (emp.nameEn || emp.nameAr);
@@ -17004,6 +17153,724 @@ function renderProjectView() {
             printWindow.document.write(printHTML);
             printWindow.document.close();
             printWindow.print();
+        }
+
+        // ========== Employee Profiles (بطاقات الموظفين) System ==========
+        let employeeProfiles = {}; // مفتاحها profileId
+        let employeeProfilesLoaded = false;
+        let profileFilters = { search: '', project: 'all', activeOnly: false };
+        let currentLinkProfileId = null; // البطاقة المفتوحة في نافذة الربط
+        let pendingProfileFromMonth = null; // بيانات السجل المصدر عند الإنشاء من الشهر
+
+        // --- التخزين ---
+        async function loadEmployeeProfiles() {
+            try {
+                if (getStorageMode() === 'local') {
+                    employeeProfiles = LocalData.loadEmployeeProfiles() || {};
+                    return;
+                }
+                if (!db || typeof getDocs !== 'function') { employeeProfiles = {}; return; }
+                const snapshot = await getDocs(collection(db, 'employee_profiles'));
+                employeeProfiles = {};
+                snapshot.forEach(docSnap => {
+                    employeeProfiles[docSnap.id] = { profileId: docSnap.id, ...docSnap.data() };
+                });
+                console.log('✅ تم تحميل بطاقات الموظفين:', Object.keys(employeeProfiles).length);
+            } catch (error) {
+                console.error('❌ خطأ في تحميل بطاقات الموظفين:', error);
+                employeeProfiles = {};
+            }
+        }
+
+        async function saveEmployeeProfileToStore(profile) {
+            const now = new Date().toISOString();
+            if (!profile.createdAt) profile.createdAt = now;
+            profile.updatedAt = now;
+            employeeProfiles[profile.profileId] = profile;
+            if (getStorageMode() === 'local') {
+                LocalData.saveEmployeeProfiles(employeeProfiles);
+                return;
+            }
+            const { profileId, ...data } = profile;
+            await setDoc(doc(db, 'employee_profiles', profileId), data);
+        }
+
+        async function deleteEmployeeProfileFromStore(profileId) {
+            delete employeeProfiles[profileId];
+            if (getStorageMode() === 'local') {
+                LocalData.saveEmployeeProfiles(employeeProfiles);
+                return;
+            }
+            await deleteDoc(doc(db, 'employee_profiles', profileId));
+        }
+
+        // --- أدوات مساعدة ---
+        function generateProfileId() {
+            return 'prof_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
+        }
+
+        function generateProfileCode(projectCode) {
+            const prefix = (projectCode && projectCode !== 'all') ? projectCode : 'EMP';
+            let maxNum = 0;
+            const re = new RegExp('^' + prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '-P-(\\d+)$');
+            Object.values(employeeProfiles).forEach(p => {
+                if (!p.profileCode) return;
+                const m = p.profileCode.match(re);
+                if (m) maxNum = Math.max(maxNum, parseInt(m[1]));
+            });
+            return `${prefix}-P-${String(maxNum + 1).padStart(3, '0')}`;
+        }
+
+        function checkDuplicateProfileName(nameAr, nameEn, excludeProfileId = null) {
+            for (const [id, p] of Object.entries(employeeProfiles)) {
+                if (excludeProfileId && id === excludeProfileId) continue;
+                if (nameAr && p.nameAr && p.nameAr.trim().toLowerCase() === nameAr.trim().toLowerCase()) {
+                    return { duplicate: true, field: 'nameAr', existing: p };
+                }
+                if (nameEn && p.nameEn && p.nameEn.trim().toLowerCase() === nameEn.trim().toLowerCase()) {
+                    return { duplicate: true, field: 'nameEn', existing: p };
+                }
+            }
+            return { duplicate: false };
+        }
+
+        function checkDuplicateProfileCode(code, excludeProfileId = null) {
+            if (!code) return { duplicate: false };
+            const norm = code.trim().toLowerCase();
+            for (const [id, p] of Object.entries(employeeProfiles)) {
+                if (excludeProfileId && id === excludeProfileId) continue;
+                if (p.profileCode && p.profileCode.trim().toLowerCase() === norm) {
+                    return { duplicate: true, existing: p };
+                }
+            }
+            return { duplicate: false };
+        }
+
+        // جمع كل السجلات الشهرية المرتبطة ببطاقة معينة (من السنوات المحمّلة)
+        function getProfileMonthlyRecords(profileId) {
+            const found = [];
+            for (const year of Object.keys(employeeData).sort((a, b) => parseInt(a) - parseInt(b))) {
+                const yearData = employeeData[year];
+                if (!yearData) continue;
+                for (const month of months) {
+                    const monthData = yearData[month];
+                    if (!Array.isArray(monthData)) continue;
+                    monthData.forEach(emp => {
+                        if (emp.profileId === profileId) {
+                            found.push({ employee: emp, month, year: parseInt(year), monthIndex: months.indexOf(month) });
+                        }
+                    });
+                }
+            }
+            found.sort((a, b) => a.year !== b.year ? a.year - b.year : a.monthIndex - b.monthIndex);
+            return found;
+        }
+
+        function getProfileStats(profileId) {
+            const records = getProfileMonthlyRecords(profileId);
+            let last = null;
+            if (records.length > 0) {
+                const r = records[records.length - 1];
+                last = `${t('monthNames')[r.month]} ${r.year}`;
+            }
+            return { count: records.length, last };
+        }
+
+        // تقييم مدى تطابق سجل شهري مع بطاقة (لترتيب الاقتراحات) — لا يقوم بالربط
+        function scoreMonthlyRecordForProfile(profile, emp) {
+            if (emp.profileId && emp.profileId === profile.profileId) {
+                return { score: 999, reasons: ['alreadyLinked'], linkedToOther: false };
+            }
+            if (emp.profileId && emp.profileId !== profile.profileId) {
+                return { score: 0, reasons: [], linkedToOther: true };
+            }
+            let score = 0;
+            const reasons = [];
+            const pCode = (profile.profileCode || '').trim().toLowerCase();
+            const eCode = (emp.employeeCode || '').trim().toLowerCase();
+            if (pCode && eCode && pCode === eCode) { score += 100; reasons.push('code'); }
+            const pAr = (profile.nameAr || '').trim().toLowerCase();
+            const eAr = (emp.nameAr || '').trim().toLowerCase();
+            const pEn = (profile.nameEn || '').trim().toLowerCase();
+            const eEn = (emp.nameEn || '').trim().toLowerCase();
+            if (pAr && eAr && pAr === eAr) {
+                score += 40; reasons.push('nameAr');
+                if (pEn && eEn && pEn === eEn) { score += 40; reasons.push('nameEn'); }
+            } else if (pEn && eEn && pEn === eEn) {
+                score += 40; reasons.push('nameEn');
+            }
+            if (profile.defaultProject && emp.project === profile.defaultProject) { score += 15; reasons.push('project'); }
+            if (!emp.profileId) score += 5;
+            return { score, reasons, linkedToOther: false };
+        }
+
+        function getProfileNetForRecord(emp, month, year) {
+            try {
+                return calculateNetSalary(emp, month, year);
+            } catch (e) { return 0; }
+        }
+
+        // --- شاشة بطاقات الموظفين ---
+        function renderEmployeeProfilesView() {
+            const isAr = currentLang === 'ar';
+            const allowedProjects = getAllowedProjects();
+            const filteredProjects = allowedProjects === null ? projects :
+                Object.fromEntries(Object.entries(projects).filter(([code]) => allowedProjects.includes(code)));
+
+            const projectOptions = '<option value="all">' + (isAr ? 'كل المشاريع' : 'All projects') + '</option>' +
+                Object.entries(filteredProjects).map(([code, name]) =>
+                    `<option value="${code}" ${profileFilters.project === code ? 'selected' : ''}>${code} - ${name}</option>`).join('');
+
+            let profilesArr = Object.values(employeeProfiles);
+            const search = (profileFilters.search || '').trim().toLowerCase();
+            if (search) {
+                profilesArr = profilesArr.filter(p =>
+                    (p.nameAr || '').toLowerCase().includes(search) ||
+                    (p.nameEn || '').toLowerCase().includes(search) ||
+                    (p.profileCode || '').toLowerCase().includes(search));
+            }
+            if (profileFilters.project !== 'all') {
+                profilesArr = profilesArr.filter(p => p.defaultProject === profileFilters.project);
+            }
+            if (profileFilters.activeOnly) {
+                profilesArr = profilesArr.filter(p => p.isActive !== false);
+            }
+            profilesArr.sort((a, b) => (a.nameAr || a.nameEn || '').localeCompare(b.nameAr || b.nameEn || '', 'ar'));
+
+            let rows = '';
+            if (profilesArr.length === 0) {
+                rows = `<tr><td colspan="7" style="padding:40px; text-align:center; color:var(--gray);">
+                    <div style="font-size:18px; font-weight:700; margin-bottom:8px;">${t('noProfiles')}</div>
+                    <div style="font-size:13px;">${t('noProfilesDesc')}</div></td></tr>`;
+            } else {
+                profilesArr.forEach(p => {
+                    const stats = getProfileStats(p.profileId);
+                    const name = isAr ? (p.nameAr || p.nameEn || '-') : (p.nameEn || p.nameAr || '-');
+                    const projName = projects[p.defaultProject] || p.defaultProject || '-';
+                    const linkStatus = stats.count === 0
+                        ? `<span style="color:#ef4444;">${t('linkNone')}</span>`
+                        : `<span style="color:#10b981;">${stats.count} ${isAr ? 'شهر' : 'mo'}</span>`;
+                    const activeBadge = p.isActive === false
+                        ? `<span style="background:#fee2e2; color:#991b1b; padding:2px 8px; border-radius:9999px; font-size:11px;">${t('profileInactive')}</span>`
+                        : `<span style="background:#dcfce7; color:#166534; padding:2px 8px; border-radius:9999px; font-size:11px;">${t('profileActive')}</span>`;
+                    rows += `
+                        <tr style="border-bottom:1px solid var(--border);">
+                            <td style="padding:10px; font-weight:600;">${name}</td>
+                            <td style="padding:10px; font-family:monospace;">${p.profileCode || '-'}</td>
+                            <td style="padding:10px;">${projName}</td>
+                            <td style="padding:10px; text-align:center;">${linkStatus}</td>
+                            <td style="padding:10px; text-align:center;">${stats.last || '-'}</td>
+                            <td style="padding:10px; text-align:center;">${activeBadge}</td>
+                            <td style="padding:10px; text-align:center;">
+                                <button type="button" class="btn btn-secondary btn-small" onclick="openLinkMonthlyCardsModal('${p.profileId}')">🔗 ${t('linkMonthlyCards')}</button>
+                                <button type="button" class="btn btn-info btn-small" onclick="openProfileReportModal('${p.profileId}')">📊 ${t('profileReport')}</button>
+                                <button type="button" class="btn btn-primary btn-small" onclick="openEmployeeProfileModal('${p.profileId}')">${t('edit')}</button>
+                                <button type="button" class="btn btn-danger btn-small" onclick="deleteEmployeeProfile('${p.profileId}')">${t('delete')}</button>
+                            </td>
+                        </tr>`;
+                });
+            }
+
+            return `
+                <div style="max-width:1300px; margin:0 auto; padding:10px 8px 40px;">
+                    <div style="text-align:center; margin-bottom:20px;">
+                        <h2 style="color:var(--primary); font-size:28px; margin-bottom:8px;">${t('employeeProfilesTitle')}</h2>
+                        <p style="color:var(--gray); font-size:15px; max-width:800px; margin:0 auto;">${t('employeeProfilesSubtitle')}</p>
+                    </div>
+                    <div class="card" style="margin-bottom:16px;">
+                        <div class="card-body" style="padding:16px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+                            <button class="btn btn-primary" type="button" onclick="openEmployeeProfileModal()">➕ ${t('newProfile')}</button>
+                            <input type="text" id="profileSearchBox" placeholder="${t('searchProfiles')}" value="${(profileFilters.search || '').replace(/"/g, '&quot;')}"
+                                style="flex:1; min-width:200px; padding:9px 12px; border:2px solid var(--border); border-radius:10px;"
+                                oninput="profileFilters.search=this.value; refreshEmployeeProfilesView();">
+                            <select id="profileProjectFilter" style="padding:9px 12px; border:2px solid var(--border); border-radius:10px;"
+                                onchange="profileFilters.project=this.value; refreshEmployeeProfilesView();">${projectOptions}</select>
+                            <label style="display:flex; align-items:center; gap:6px; font-weight:600; cursor:pointer;">
+                                <input type="checkbox" ${profileFilters.activeOnly ? 'checked' : ''} onchange="profileFilters.activeOnly=this.checked; refreshEmployeeProfilesView();">
+                                ${t('showActiveOnly')}
+                            </label>
+                            <span style="margin-inline-start:auto; color:var(--gray); font-size:13px;">${t('profilesCount')}: <strong>${profilesArr.length}</strong></span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-body" style="padding:0; overflow-x:auto;">
+                            <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                                <thead>
+                                    <tr style="background:var(--primary); color:#fff;">
+                                        <th style="padding:12px; text-align:start;">${t('profileName')}</th>
+                                        <th style="padding:12px;">${t('profileCode')}</th>
+                                        <th style="padding:12px;">${t('profileDefaultProject')}</th>
+                                        <th style="padding:12px;">${t('linkedMonthsCount')}</th>
+                                        <th style="padding:12px;">${t('lastLinkedMonth')}</th>
+                                        <th style="padding:12px;">${t('profileLinkStatus')}</th>
+                                        <th style="padding:12px;">${t('actions')}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${rows}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function refreshEmployeeProfilesView() {
+            if (currentView !== 'employeeProfiles') return;
+            const content = document.getElementById('mainContent');
+            if (!content) return;
+            const searchEl = document.getElementById('profileSearchBox');
+            const focused = searchEl && document.activeElement === searchEl;
+            const caret = focused ? searchEl.selectionStart : null;
+            setHTML(content, renderEmployeeProfilesView());
+            if (focused) {
+                const newSearch = document.getElementById('profileSearchBox');
+                if (newSearch) { newSearch.focus(); if (caret !== null) newSearch.setSelectionRange(caret, caret); }
+            }
+        }
+
+        // --- نافذة إنشاء/تعديل البطاقة ---
+        function buildProfileProjectOptions(selected) {
+            const allowedProjects = getAllowedProjects();
+            const filteredProjects = allowedProjects === null ? projects :
+                Object.fromEntries(Object.entries(projects).filter(([code]) => allowedProjects.includes(code)));
+            return '<option value="">-</option>' + Object.entries(filteredProjects).map(([code, name]) =>
+                `<option value="${code}" ${selected === code ? 'selected' : ''}>${code} - ${name}</option>`).join('');
+        }
+
+        function openEmployeeProfileModal(profileId = null) {
+            const isAr = currentLang === 'ar';
+            const p = profileId ? employeeProfiles[profileId] : null;
+            const title = p ? t('editProfileTitle') : t('newProfile');
+            const defProject = p ? (p.defaultProject || '') : (currentView === 'project' ? currentProject : '');
+            const code = p ? (p.profileCode || '') : generateProfileCode(defProject || 'all');
+            const content = document.getElementById('employeeProfileModalContent');
+            content.innerHTML = `
+                <div class="modal-header"><h2>🪪 ${title}</h2></div>
+                <div class="modal-body" style="padding:24px; max-height:calc(95vh - 160px); overflow-y:auto;">
+                    <input type="hidden" id="profileModalId" value="${p ? p.profileId : ''}">
+                    <div class="form-group">
+                        <label>${t('profileName')} (${isAr ? 'عربي' : 'AR'}) *</label>
+                        <input type="text" id="profileNameAr" value="${p ? (p.nameAr || '').replace(/"/g, '&quot;') : ''}" placeholder="${t('profileName')}">
+                    </div>
+                    <div class="form-group">
+                        <label>${t('profileNameEn')}</label>
+                        <input type="text" id="profileNameEn" value="${p ? (p.nameEn || '').replace(/"/g, '&quot;') : ''}" placeholder="${t('profileNameEn')}">
+                    </div>
+                    <div class="form-group">
+                        <label>${t('profileCode')} *</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="text" id="profileCodeInput" value="${code.replace(/"/g, '&quot;')}" style="flex:1;" placeholder="${t('profileCode')}">
+                            <button type="button" class="btn btn-secondary btn-small" onclick="regenerateProfileCodeInModal()">🔄 ${t('regenerateCode')}</button>
+                        </div>
+                        <small style="color:var(--gray);">${t('profileCodeHint')}</small>
+                    </div>
+                    <div class="form-group">
+                        <label>${t('profileDefaultProject')}</label>
+                        <select id="profileProjectInput" onchange="onProfileProjectChange()">${buildProfileProjectOptions(defProject)}</select>
+                    </div>
+                    <div class="form-group">
+                        <label>${t('position')}</label>
+                        <input type="text" id="profilePosition" value="${p ? (p.position || '').replace(/"/g, '&quot;') : ''}">
+                    </div>
+                    <div class="form-group">
+                        <label>${t('profileNotes')}</label>
+                        <textarea id="profileNotesInput" rows="2">${p ? (p.notes || '') : ''}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                            <input type="checkbox" id="profileActiveInput" ${(!p || p.isActive !== false) ? 'checked' : ''}> ${t('profileActive')}
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-success" onclick="saveEmployeeProfileFromModal()">💾 ${t('save')}</button>
+                    <button class="btn btn-tertiary" onclick="closeModal('employeeProfileModal')">${t('cancel')}</button>
+                </div>`;
+            document.getElementById('employeeProfileModal').classList.add('active');
+        }
+
+        function onProfileProjectChange() {
+            const codeInput = document.getElementById('profileCodeInput');
+            const idInput = document.getElementById('profileModalId');
+            // إعادة التوليد فقط للبطاقات الجديدة (لتفادي الكتابة فوق رمز مُعدّل)
+            if (codeInput && (!idInput || !idInput.value)) {
+                const proj = document.getElementById('profileProjectInput').value;
+                codeInput.value = generateProfileCode(proj || 'all');
+            }
+        }
+
+        function regenerateProfileCodeInModal() {
+            const proj = document.getElementById('profileProjectInput').value;
+            document.getElementById('profileCodeInput').value = generateProfileCode(proj || 'all');
+        }
+
+        async function saveEmployeeProfileFromModal() {
+            const id = document.getElementById('profileModalId').value || null;
+            const nameAr = document.getElementById('profileNameAr').value.trim();
+            const nameEn = document.getElementById('profileNameEn').value.trim();
+            const profileCode = document.getElementById('profileCodeInput').value.trim();
+            const defaultProject = document.getElementById('profileProjectInput').value;
+            const position = document.getElementById('profilePosition').value.trim();
+            const notes = document.getElementById('profileNotesInput').value.trim();
+            const isActive = document.getElementById('profileActiveInput').checked;
+
+            if (!nameAr) { showNotification('warning', t('warning'), t('profileNameRequired')); return; }
+            if (!profileCode) { showNotification('warning', t('warning'), t('profileCodeRequired')); return; }
+
+            const nameDup = checkDuplicateProfileName(nameAr, nameEn, id);
+            if (nameDup.duplicate) {
+                showNotification('error', t('error'), `${t('duplicateProfileName')}: ${nameDup.existing.nameAr || nameDup.existing.nameEn}`);
+                return;
+            }
+            const codeDup = checkDuplicateProfileCode(profileCode, id);
+            if (codeDup.duplicate) {
+                showNotification('error', t('error'), `${t('duplicateProfileCode')}: ${codeDup.existing.nameAr || codeDup.existing.profileCode}`);
+                return;
+            }
+
+            const existing = id ? employeeProfiles[id] : null;
+            const profile = {
+                profileId: id || generateProfileId(),
+                profileCode, nameAr, nameEn, defaultProject, position, notes, isActive,
+                createdAt: existing ? existing.createdAt : undefined
+            };
+            try {
+                showLoading();
+                await saveEmployeeProfileToStore(profile);
+                hideLoading();
+                closeModal('employeeProfileModal');
+                showNotification('success', t('success'), t('profileSaved'));
+                refreshEmployeeProfilesView();
+            } catch (e) {
+                hideLoading();
+                console.error(e);
+                showNotification('error', t('error'), e.message || 'Error');
+            }
+        }
+
+        async function deleteEmployeeProfile(profileId) {
+            if (!confirm(t('deleteProfileConfirm'))) return;
+            try {
+                showLoading();
+                // فك ربط كل السجلات الشهرية المرتبطة
+                const records = getProfileMonthlyRecords(profileId);
+                for (const r of records) {
+                    await setProfileIdOnRecord(r.employee, null, r.month, r.year);
+                }
+                await deleteEmployeeProfileFromStore(profileId);
+                hideLoading();
+                showNotification('success', t('success'), t('profileDeleted'));
+                refreshEmployeeProfilesView();
+            } catch (e) {
+                hideLoading();
+                console.error(e);
+                showNotification('error', t('error'), e.message || 'Error');
+            }
+        }
+
+        // كتابة/إزالة profileId على سجل شهري (يدعم المحلي والسحابي)
+        async function setProfileIdOnRecord(emp, profileId, month, year) {
+            if (!emp) return;
+            emp.profileId = profileId || null; // تحديث الذاكرة فوراً
+            if (getStorageMode() === 'local') {
+                LocalData.saveAllEmployees(employeeData);
+                return;
+            }
+            if (emp.firebaseId) {
+                await updateEmployeeInFirebase(emp.firebaseId, { profileId: profileId || null }, {
+                    skipReload: true, skipLoading: true, skipNotification: true, skipActivityLog: true
+                });
+            }
+        }
+
+        // --- نافذة ربط البطاقات الشهرية ---
+        function buildLinkCandidates(profile) {
+            const suggestions = [];
+            const others = [];
+            const linkedOther = [];
+            for (const year of Object.keys(employeeData).sort((a, b) => parseInt(a) - parseInt(b))) {
+                const yearData = employeeData[year];
+                if (!yearData) continue;
+                for (const month of months) {
+                    const monthData = yearData[month];
+                    if (!Array.isArray(monthData)) continue;
+                    monthData.forEach(emp => {
+                        if (emp.linkedToFirebaseId) return; // النسخ المرتبطة تُدار من الأصل
+                        const res = scoreMonthlyRecordForProfile(profile, emp);
+                        const item = {
+                            firebaseId: emp.firebaseId, month, year: parseInt(year),
+                            monthIndex: months.indexOf(month), emp,
+                            score: res.score, reasons: res.reasons, linkedToOther: res.linkedToOther
+                        };
+                        if (res.linkedToOther) linkedOther.push(item);
+                        else if (res.score >= 50 || res.reasons.includes('alreadyLinked')) suggestions.push(item);
+                        else others.push(item);
+                    });
+                }
+            }
+            const sortFn = (a, b) => (b.score - a.score) || (a.year - b.year) || (a.monthIndex - b.monthIndex);
+            suggestions.sort(sortFn);
+            others.sort((a, b) => (a.year - b.year) || (a.monthIndex - b.monthIndex));
+            linkedOther.sort((a, b) => (a.year - b.year) || (a.monthIndex - b.monthIndex));
+            return { suggestions, others, linkedOther };
+        }
+
+        function renderLinkCandidateRow(item, profile, defaultChecked) {
+            const isAr = currentLang === 'ar';
+            const emp = item.emp;
+            const name = isAr ? (emp.nameAr || emp.nameEn || '-') : (emp.nameEn || emp.nameAr || '-');
+            const monthName = t('monthNames')[item.month];
+            const projName = projects[emp.project] || emp.project || '-';
+            const net = getProfileNetForRecord(emp, item.month, item.year);
+            const alreadyHere = emp.profileId === profile.profileId;
+            let badge = '';
+            if (alreadyHere) badge = `<span style="color:#10b981; font-weight:700;">✔ ${t('alreadyLinkedHere')}</span>`;
+            else if (item.score >= 100) badge = `<span style="color:#059669;">🟢 ${t('strongMatch')}</span>`;
+            else if (item.score >= 50) badge = `<span style="color:#d97706;">🟡 ${t('possibleMatch')}</span>`;
+            else if (item.score > 0) badge = `<span style="color:#9ca3af;">⚪ ${t('weakMatch')}</span>`;
+            const paid = emp.isPaid ? '✅' : '⏳';
+            const disabled = item.linkedToOther ? 'disabled' : '';
+            const checked = (defaultChecked && !item.linkedToOther) ? 'checked' : '';
+            let otherNote = '';
+            if (item.linkedToOther) {
+                const op = employeeProfiles[emp.profileId];
+                otherNote = `<span style="color:#ef4444; font-size:11px;">⚠️ ${t('profileRecordLinkedNote')}${op ? ': ' + (op.nameAr || op.profileCode) : ''}</span>`;
+            }
+            return `
+                <label style="display:flex; align-items:center; gap:10px; padding:8px 10px; border-bottom:1px solid var(--border); cursor:${disabled ? 'not-allowed' : 'pointer'}; ${item.linkedToOther ? 'opacity:.7;' : ''}">
+                    <input type="checkbox" class="link-card-checkbox" data-fid="${item.firebaseId}" data-month="${item.month}" data-year="${item.year}" ${checked} ${disabled}>
+                    <span style="min-width:130px; font-weight:600;">${monthName} ${item.year}</span>
+                    <span style="min-width:90px; font-family:monospace;">${emp.employeeCode || '-'}</span>
+                    <span style="flex:1;">${name} — ${projName}</span>
+                    <span style="min-width:120px; text-align:end;">${formatCurrency(net)} ${emp.paymentCurrency || 'IQD'}</span>
+                    <span style="min-width:30px; text-align:center;">${paid}</span>
+                    <span style="min-width:120px; text-align:end;">${badge}${otherNote}</span>
+                </label>`;
+        }
+
+        function openLinkMonthlyCardsModal(profileId) {
+            const profile = employeeProfiles[profileId];
+            if (!profile) return;
+            currentLinkProfileId = profileId;
+            const isAr = currentLang === 'ar';
+            const name = isAr ? (profile.nameAr || profile.nameEn) : (profile.nameEn || profile.nameAr);
+            const { suggestions, others, linkedOther } = buildLinkCandidates(profile);
+
+            const suggestionsHTML = suggestions.length
+                ? suggestions.map(it => renderLinkCandidateRow(it, profile, true)).join('')
+                : `<div style="padding:14px; color:var(--gray); text-align:center;">—</div>`;
+            const othersHTML = others.length
+                ? others.map(it => renderLinkCandidateRow(it, profile, false)).join('')
+                : `<div style="padding:14px; color:var(--gray); text-align:center;">—</div>`;
+            const linkedOtherHTML = linkedOther.length
+                ? linkedOther.map(it => renderLinkCandidateRow(it, profile, false)).join('') : '';
+
+            const content = document.getElementById('linkMonthlyCardsContent');
+            content.innerHTML = `
+                <div class="modal-header">
+                    <h2>🔗 ${t('linkMonthlyCards')}: ${name} <span style="font-family:monospace; opacity:.8;">(${profile.profileCode || ''})</span></h2>
+                    <p style="color:rgba(255,255,255,0.85); font-size:12px; margin-top:4px;">${t('noUnloadedYearsNote')}</p>
+                </div>
+                <div class="modal-body" style="padding:16px 20px; max-height:calc(95vh - 170px); overflow-y:auto;">
+                    <div style="margin-bottom:14px;">
+                        <div style="font-weight:700; color:var(--primary); margin-bottom:6px;">💡 ${t('suggestionsNearby')} (${suggestions.length})</div>
+                        <div style="border:1px solid var(--border); border-radius:10px; overflow:hidden;">${suggestionsHTML}</div>
+                    </div>
+                    <details style="margin-bottom:14px;">
+                        <summary style="font-weight:700; color:var(--primary); cursor:pointer; padding:6px 0;">📋 ${t('allUnlinkedRecords')} (${others.length})</summary>
+                        <div style="border:1px solid var(--border); border-radius:10px; overflow:hidden; margin-top:8px;">${othersHTML}</div>
+                    </details>
+                    ${linkedOther.length ? `
+                    <details style="margin-bottom:6px;">
+                        <summary style="font-weight:700; color:#ef4444; cursor:pointer; padding:6px 0;">⚠️ ${t('linkedToOtherProfile')} (${linkedOther.length})</summary>
+                        <div style="border:1px solid var(--border); border-radius:10px; overflow:hidden; margin-top:8px;">${linkedOtherHTML}</div>
+                    </details>` : ''}
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-success" onclick="saveMonthlyLinks()">💾 ${t('saveLinks')}</button>
+                    <button class="btn btn-tertiary" onclick="closeModal('linkMonthlyCardsModal')">${t('cancel')}</button>
+                </div>`;
+            document.getElementById('linkMonthlyCardsModal').classList.add('active');
+        }
+
+        async function saveMonthlyLinks() {
+            const profileId = currentLinkProfileId;
+            if (!profileId) return;
+            const checkboxes = document.querySelectorAll('#linkMonthlyCardsContent .link-card-checkbox');
+            try {
+                showLoading();
+                let linked = 0, unlinked = 0;
+                for (const cb of checkboxes) {
+                    if (cb.disabled) continue;
+                    const fid = cb.getAttribute('data-fid');
+                    const month = cb.getAttribute('data-month');
+                    const year = parseInt(cb.getAttribute('data-year'));
+                    const emp = findEmployeeByFirebaseId(fid, month, year);
+                    if (!emp) continue;
+                    if (cb.checked) {
+                        if (emp.profileId !== profileId) { await setProfileIdOnRecord(emp, profileId, month, year); linked++; }
+                    } else if (emp.profileId === profileId) {
+                        await setProfileIdOnRecord(emp, null, month, year); unlinked++;
+                    }
+                }
+                hideLoading();
+                closeModal('linkMonthlyCardsModal');
+                showNotification('success', t('success'), `${t('linksSaved')} (+${linked} / -${unlinked})`);
+                refreshEmployeeProfilesView();
+                if (currentView === 'month' || currentView === 'project') renderContent();
+            } catch (e) {
+                hideLoading();
+                console.error(e);
+                showNotification('error', t('error'), e.message || 'Error');
+            }
+        }
+
+        // --- توليد بطاقة ربط من جدول الشهر ---
+        function openCreateProfileFromMonthModal(index) {
+            const monthKey = (currentView === 'project') ? (selectedProjectMonth || currentMonth) : currentMonth;
+            const emp = employeeData[currentYear] && employeeData[currentYear][monthKey]
+                ? employeeData[currentYear][monthKey][index] : null;
+            if (!emp) { showNotification('error', t('error'), t('employeeNotFound')); return; }
+
+            // إذا كان مرتبطاً ببطاقة بالفعل، افتح نافذة الربط مباشرة
+            if (emp.profileId && employeeProfiles[emp.profileId]) {
+                openLinkMonthlyCardsModal(emp.profileId);
+                return;
+            }
+
+            const isAr = currentLang === 'ar';
+            const tempProfile = {
+                profileId: '__pending__',
+                profileCode: '',
+                nameAr: emp.nameAr || '', nameEn: emp.nameEn || '',
+                defaultProject: emp.project || '', position: emp.position || ''
+            };
+            const code = generateProfileCode(emp.project || 'all');
+            tempProfile.profileCode = code;
+
+            const { suggestions, others } = buildLinkCandidates(tempProfile);
+            // ضمان أن السجل الحالي ضمن القائمة ومحدد
+            const currentFid = emp.firebaseId;
+            const rowsHTML = (list, defChecked) => list.map(it => {
+                const forceCurrent = it.firebaseId === currentFid;
+                return renderLinkCandidateRow(it, tempProfile, defChecked || forceCurrent);
+            }).join('');
+            const suggestionsHTML = suggestions.length ? rowsHTML(suggestions, true)
+                : `<div style="padding:14px; color:var(--gray); text-align:center;">—</div>`;
+            const othersHTML = others.length ? rowsHTML(others, false)
+                : `<div style="padding:14px; color:var(--gray); text-align:center;">—</div>`;
+
+            const content = document.getElementById('createProfileFromMonthContent');
+            content.innerHTML = `
+                <div class="modal-header"><h2>🪪 ${t('createProfileFromMonth')}</h2></div>
+                <div class="modal-body" style="padding:16px 20px; max-height:calc(95vh - 170px); overflow-y:auto;">
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin-bottom:16px;">
+                        <div class="form-group" style="margin:0;">
+                            <label>${t('profileName')} (${isAr ? 'عربي' : 'AR'}) *</label>
+                            <input type="text" id="cpfNameAr" value="${(emp.nameAr || '').replace(/"/g, '&quot;')}">
+                        </div>
+                        <div class="form-group" style="margin:0;">
+                            <label>${t('profileNameEn')}</label>
+                            <input type="text" id="cpfNameEn" value="${(emp.nameEn || '').replace(/"/g, '&quot;')}">
+                        </div>
+                        <div class="form-group" style="margin:0;">
+                            <label>${t('profileCode')} *</label>
+                            <div style="display:flex; gap:6px;">
+                                <input type="text" id="cpfCode" value="${code.replace(/"/g, '&quot;')}" style="flex:1;">
+                                <button type="button" class="btn btn-secondary btn-small" onclick="document.getElementById('cpfCode').value=generateProfileCode(document.getElementById('cpfProject').value||'all')">🔄</button>
+                            </div>
+                            <small style="color:var(--gray);">${t('profileCodeHint')}</small>
+                        </div>
+                        <div class="form-group" style="margin:0;">
+                            <label>${t('profileDefaultProject')}</label>
+                            <select id="cpfProject">${buildProfileProjectOptions(emp.project || '')}</select>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:14px;">
+                        <div style="font-weight:700; color:var(--primary); margin-bottom:6px;">💡 ${t('suggestionsNearby')} (${suggestions.length})</div>
+                        <div style="border:1px solid var(--border); border-radius:10px; overflow:hidden;">${suggestionsHTML}</div>
+                    </div>
+                    <details>
+                        <summary style="font-weight:700; color:var(--primary); cursor:pointer; padding:6px 0;">📋 ${t('allUnlinkedRecords')} (${others.length})</summary>
+                        <div style="border:1px solid var(--border); border-radius:10px; overflow:hidden; margin-top:8px;">${othersHTML}</div>
+                    </details>
+                    <p style="color:var(--gray); font-size:12px; margin-top:10px;">${t('noUnloadedYearsNote')}</p>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-success" onclick="confirmCreateProfileFromMonth()">✅ ${t('createAndLink')}</button>
+                    <button class="btn btn-tertiary" onclick="closeModal('createProfileFromMonthModal')">${t('cancel')}</button>
+                </div>`;
+            document.getElementById('createProfileFromMonthModal').classList.add('active');
+        }
+
+        async function confirmCreateProfileFromMonth() {
+            const nameAr = document.getElementById('cpfNameAr').value.trim();
+            const nameEn = document.getElementById('cpfNameEn').value.trim();
+            const profileCode = document.getElementById('cpfCode').value.trim();
+            const defaultProject = document.getElementById('cpfProject').value;
+
+            if (!nameAr) { showNotification('warning', t('warning'), t('profileNameRequired')); return; }
+            if (!profileCode) { showNotification('warning', t('warning'), t('profileCodeRequired')); return; }
+
+            const nameDup = checkDuplicateProfileName(nameAr, nameEn);
+            if (nameDup.duplicate) {
+                const existing = nameDup.existing;
+                if (confirm(`${t('duplicateProfileName')}: ${existing.nameAr || existing.nameEn}\n\n${t('openExistingProfile')}؟`)) {
+                    closeModal('createProfileFromMonthModal');
+                    openLinkMonthlyCardsModal(existing.profileId);
+                }
+                return;
+            }
+            const codeDup = checkDuplicateProfileCode(profileCode);
+            if (codeDup.duplicate) {
+                showNotification('error', t('error'), `${t('duplicateProfileCode')}: ${codeDup.existing.nameAr || codeDup.existing.profileCode}`);
+                return;
+            }
+
+            const selected = [];
+            document.querySelectorAll('#createProfileFromMonthContent .link-card-checkbox').forEach(cb => {
+                if (cb.checked && !cb.disabled) {
+                    selected.push({ fid: cb.getAttribute('data-fid'), month: cb.getAttribute('data-month'), year: parseInt(cb.getAttribute('data-year')) });
+                }
+            });
+            if (selected.length === 0) { showNotification('warning', t('warning'), t('selectAtLeastOneMonth')); return; }
+
+            try {
+                showLoading();
+                const profile = {
+                    profileId: generateProfileId(),
+                    profileCode, nameAr, nameEn, defaultProject,
+                    position: '', notes: '', isActive: true
+                };
+                await saveEmployeeProfileToStore(profile);
+                let linked = 0;
+                for (const s of selected) {
+                    const emp = findEmployeeByFirebaseId(s.fid, s.month, s.year);
+                    if (emp && (!emp.profileId || emp.profileId === profile.profileId)) {
+                        await setProfileIdOnRecord(emp, profile.profileId, s.month, s.year);
+                        linked++;
+                    }
+                }
+                hideLoading();
+                closeModal('createProfileFromMonthModal');
+                showNotification('success', t('success'), `${t('profileSaved')} (${linked})`);
+                if (currentView === 'month' || currentView === 'project') renderContent();
+            } catch (e) {
+                hideLoading();
+                console.error(e);
+                showNotification('error', t('error'), e.message || 'Error');
+            }
+        }
+
+        // --- تقرير البطاقة (يعتمد على الربط اليدوي) ---
+        function openProfileReportModal(profileId) {
+            const profile = employeeProfiles[profileId];
+            if (!profile) return;
+            const records = getProfileMonthlyRecords(profileId);
+            if (records.length === 0) {
+                showNotification('warning', t('warning'), t('noLinkedMonths'));
+                return;
+            }
+            renderEmployeeReportFromRecords(records);
         }
 
         // ========== Excel-Like Cell Editing System ==========
@@ -31092,6 +31959,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 await loadYearsFromFirebase(); // تحميل السنوات أولاً
                 await loadProjectsFromFirebase();
                 await loadEmployeesFromFirebase(currentYear);
+                await loadEmployeeProfiles(); employeeProfilesLoaded = true; // تحميل بطاقات الموظفين
                 // تحميل prevYear يتم كسولاً عند عرض لوحة التحكم (توفير القراءات)
                 
                 // تحميل الإعدادات والتوقيعات المشتركة
@@ -31317,7 +32185,8 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 years: 'navYears',
                 users: 'navUsers',
                 settings: 'navSettings',
-                bulkEdit: 'navBulkEdit'
+                bulkEdit: 'navBulkEdit',
+                employeeProfiles: 'navEmployeeProfiles'
             };
             const navId = navIdMap[tab];
             const navItem = navId ? document.getElementById(navId) : null;
@@ -31338,7 +32207,8 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 users: currentLang === 'ar' ? 'المستخدمين' : 'Users',
                 settings: currentLang === 'ar' ? 'الإعدادات' : 'Settings',
                 bulkEdit: currentLang === 'ar' ? 'تعديل متعدد' : 'Bulk Edit',
-                salaryChangeReport: currentLang === 'ar' ? 'تتبع الرواتب' : 'Salary tracking'
+                salaryChangeReport: currentLang === 'ar' ? 'تتبع الرواتب' : 'Salary tracking',
+                employeeProfiles: t('navEmployeeProfiles')
             };
 
             const breadcrumbCurrent = document.getElementById('breadcrumbCurrent');
@@ -31443,6 +32313,20 @@ function generateComparisonSummary(projectCode, month1, month2) {
         window.openReservationReport = openReservationReport;
         window.openEmployeeReportModal = openEmployeeReportModal;
         window.printEmployeeReport = printEmployeeReport;
+        // بطاقات الموظفين
+        window.refreshEmployeeProfilesView = refreshEmployeeProfilesView;
+        window.openEmployeeProfileModal = openEmployeeProfileModal;
+        window.saveEmployeeProfileFromModal = saveEmployeeProfileFromModal;
+        window.regenerateProfileCodeInModal = regenerateProfileCodeInModal;
+        window.onProfileProjectChange = onProfileProjectChange;
+        window.deleteEmployeeProfile = deleteEmployeeProfile;
+        window.openLinkMonthlyCardsModal = openLinkMonthlyCardsModal;
+        window.saveMonthlyLinks = saveMonthlyLinks;
+        window.openCreateProfileFromMonthModal = openCreateProfileFromMonthModal;
+        window.confirmCreateProfileFromMonth = confirmCreateProfileFromMonth;
+        window.openProfileReportModal = openProfileReportModal;
+        window.generateProfileCode = generateProfileCode;
+        window.profileFilters = profileFilters;
         window.updateReservationPercentage = updateReservationPercentage;
         window.updateReservedAmount = updateReservedAmount;
         window.enableReservationQuick = enableReservationQuick;
