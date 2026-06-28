@@ -5406,9 +5406,6 @@
                                 <div class="nav-dropdown-item" onclick="openSalaryVouchersModal(); closeNavToolsDropdown();">
                                     <span id="navVouchersText">قسائم الراتب</span>
                                 </div>
-                                <div class="nav-dropdown-item" onclick="showTab('salaryChangeReport'); closeNavToolsDropdown();">
-                                    <span id="navSalaryChangesText">تتبع الرواتب</span>
-                                </div>
                             </div>
                         </div>
                     </nav>
@@ -6769,6 +6766,13 @@
         </div>
     </div>
 
+    <!-- نافذة تقرير الحركة الجماعية للموظفين -->
+    <div class="modal" id="collectiveMovementModal">
+        <div class="modal-content" style="max-width: 98vw; width: 1600px; max-height: 96vh;">
+            <div id="collectiveMovementContent"><!-- يُملأ بالجافاسكريبت --></div>
+        </div>
+    </div>
+
     <!-- نافذة إضافة موظفين متعددين المحسّنة -->
     <div class="modal" id="multipleEmployeesModal">
         <div class="modal-content" style="max-width: 1400px; max-height: 95vh;">
@@ -7841,16 +7845,15 @@
         const LOCAL_STORAGE_PREFIX = 'payrose_local_';
         
         // تحديد وضع التخزين: 'firebase' أو 'local'
-        let storageMode = localStorage.getItem(STORAGE_MODE_KEY) || 'firebase';
+        // الوضع المحلي مُعطّل — النظام يعمل عبر Firebase فقط
+        let storageMode = 'firebase';
+        try { localStorage.setItem(STORAGE_MODE_KEY, 'firebase'); } catch (e) {}
         
         function setStorageMode(mode) {
-            if (mode === 'firebase' || mode === 'local') {
-                storageMode = mode;
-                localStorage.setItem(STORAGE_MODE_KEY, mode);
-                console.log('✅ تم تغيير وضع التخزين إلى:', mode);
-                return true;
-            }
-            return false;
+            // الوضع المحلي مُعطّل: لا يُسمح إلا بوضع Firebase
+            storageMode = 'firebase';
+            try { localStorage.setItem(STORAGE_MODE_KEY, 'firebase'); } catch (e) {}
+            return true;
         }
         
         function getStorageMode() {
@@ -8406,21 +8409,13 @@
         
         // دالة التبديل بين الأوضاع
         function switchStorageMode(mode) {
-            if (mode !== 'firebase' && mode !== 'local') {
-                showNotification('error', 'خطأ', 'وضع تخزين غير صالح');
-                return;
+            // الوضع المحلي مُعطّل — النظام يعمل عبر Firebase فقط
+            if (mode !== 'firebase') {
+                showNotification('info',
+                    currentLang === 'ar' ? 'الوضع المحلي مُعطّل' : 'Local mode disabled',
+                    currentLang === 'ar' ? 'النظام يعمل عبر Firebase فقط.' : 'The system runs on Firebase only.');
             }
-            
-            if (confirm(currentLang === 'ar' 
-                ? `⚠️ هل أنت متأكد من التبديل إلى الوضع ${mode === 'local' ? 'المحلي' : 'السحابي'}؟\n\nسيتم إعادة تحميل الصفحة.`
-                : `⚠️ Are you sure you want to switch to ${mode === 'local' ? 'Local' : 'Firebase'} mode?\n\nThe page will reload.`)) {
-                setStorageMode(mode);
-                location.reload();
-            } else {
-                // إعادة تحديد الزر السابق
-                const currentMode = getStorageMode();
-                document.querySelector(`input[name="storageMode"][value="${currentMode}"]`).checked = true;
-            }
+            setStorageMode('firebase');
         }
         
         window.switchStorageMode = switchStorageMode;
@@ -10899,14 +10894,9 @@
             elements['summaryBtn'] = currentLang === 'ar' ? '📊 الملخصات والمقارنات' : '📊 Summaries & Comparisons';
             elements['navActivityLogText'] = currentLang === 'ar' ? 'سجل التعديلات' : 'Activity Log';
             elements['navVouchersText'] = currentLang === 'ar' ? 'قسائم الراتب' : 'Salary Vouchers';
-            elements['navSalaryChangesText'] = currentLang === 'ar' ? 'تتبع الرواتب' : 'Salary tracking';
             elements['excelText'] = 'Excel';
             elements['printText'] = currentLang === 'ar' ? 'طباعة' : 'Print';
             elements['jsonText'] = 'JSON';
-            elements['salaryChangeReportPageTitle'] = currentLang === 'ar' ? '📈 تتبع الرواتب عبر فترة' : '📈 Salary tracking (period)';
-            elements['salaryChangeReportPageSubtitle'] = currentLang === 'ar'
-                ? 'صفوف = الموظفون، أعمدة = الأشهر داخل الفترة. لكل شهر: الراتب الأساسي، المكافآت، مكافأة CEO، زيادة CEO.'
-                : 'Rows = employees, columns = months in the range. Per month: base salary, bonuses, CEO bonus, CEO increase.';
             elements['appearanceBtn'] = currentLang === 'ar' ? 'التحكم في المظهر' : 'Appearance Control';
             
             // تحديث عناصر نافذة الملخصات
@@ -10924,56 +10914,6 @@
                 if (placeholder) placeholder.textContent = elements.summaryMonth2Placeholder || (currentLang === 'ar' ? 'بدون مقارنة' : 'No Comparison');
             }
 
-            // Salary change report page (labels + options; body may be absent if tab not rendered)
-
-            const scFromMonthLabel = document.getElementById('scFromMonthLabel');
-            if (scFromMonthLabel) scFromMonthLabel.textContent = currentLang === 'ar' ? 'من (الشهر)' : 'From (Month)';
-            const scFromYearLabel = document.getElementById('scFromYearLabel');
-            if (scFromYearLabel) scFromYearLabel.textContent = currentLang === 'ar' ? 'من (السنة)' : 'From (Year)';
-            const scToMonthLabel = document.getElementById('scToMonthLabel');
-            if (scToMonthLabel) scToMonthLabel.textContent = currentLang === 'ar' ? 'إلى (الشهر)' : 'To (Month)';
-            const scToYearLabel = document.getElementById('scToYearLabel');
-            if (scToYearLabel) scToYearLabel.textContent = currentLang === 'ar' ? 'إلى (السنة)' : 'To (Year)';
-            const scProjectLabel = document.getElementById('scProjectLabel');
-            if (scProjectLabel) scProjectLabel.textContent = currentLang === 'ar' ? 'المشروع' : 'Project';
-            const scEmployeeTypeLabel = document.getElementById('scEmployeeTypeLabel');
-            if (scEmployeeTypeLabel) scEmployeeTypeLabel.textContent = currentLang === 'ar' ? 'نوع الموظف' : 'Employee Type';
-
-            const scProjectAll = document.getElementById('scProjectAllOption');
-            if (scProjectAll) scProjectAll.textContent = currentLang === 'ar' ? 'جميع المشاريع' : 'All Projects';
-
-            const scEmpAll = document.getElementById('scEmployeeTypeAll');
-            if (scEmpAll) scEmpAll.textContent = currentLang === 'ar' ? 'الكل' : 'All';
-            const scEmpMonthly = document.getElementById('scEmployeeTypeMonthly');
-            if (scEmpMonthly) scEmpMonthly.textContent = currentLang === 'ar' ? 'شهري' : 'Monthly';
-            const scEmpDaily = document.getElementById('scEmployeeTypeDaily');
-            if (scEmpDaily) scEmpDaily.textContent = currentLang === 'ar' ? 'يومي' : 'Daily';
-            const scEmpVehicle = document.getElementById('scEmployeeTypeVehicle');
-            if (scEmpVehicle) scEmpVehicle.textContent = currentLang === 'ar' ? 'مركبة' : 'Vehicle';
-            const scEmpExternal = document.getElementById('scEmployeeTypeExternal');
-            if (scEmpExternal) scEmpExternal.textContent = currentLang === 'ar' ? 'خارجي' : 'External';
-            const scEmpMachinery = document.getElementById('scEmployeeTypeMachinery');
-            if (scEmpMachinery) scEmpMachinery.textContent = currentLang === 'ar' ? 'الآليات' : 'Machinery';
-
-            const scGenBtn = document.getElementById('scGenerateBtn');
-            if (scGenBtn) scGenBtn.textContent = currentLang === 'ar' ? 'عرض التقرير' : 'Generate report';
-            const scPrintBtn = document.getElementById('scPrintBtn');
-            if (scPrintBtn) scPrintBtn.textContent = currentLang === 'ar' ? '🖨️ طباعة' : '🖨️ Print';
-
-            // Refresh month names inside selects if modal was opened before
-            ['scFromMonth', 'scToMonth'].forEach(selectId => {
-                const sel = document.getElementById(selectId);
-                if (!sel) return;
-                const prev = sel.value;
-                Array.from(sel.options).forEach(opt => {
-                    const m = opt.value;
-                    if (m && translations[currentLang]?.monthNames?.[m]) {
-                        opt.textContent = translations[currentLang].monthNames[m];
-                    }
-                });
-                if (prev) sel.value = prev;
-            });
-            
             Object.entries(elements).forEach(([id, text]) => {
                 const element = document.getElementById(id);
                 if (element) {
@@ -11026,10 +10966,6 @@
             updateNavigation(currentView);
             
             populateDropdowns();
-
-            if (typeof currentView !== 'undefined' && currentView === 'salaryChangeReport' && typeof initSalaryChangeReportViewControls === 'function') {
-                initSalaryChangeReportViewControls();
-            }
         }
 // ========== Firebase Functions ==========
 
@@ -13256,66 +13192,6 @@
         window.showProjectMonthYearModal = showProjectMonthYearModal;
         window.confirmProjectMonthYear = confirmProjectMonthYear;
 
-        function renderSalaryChangeReportView() {
-            const isAr = currentLang === 'ar';
-            return `
-                <div class="salary-change-report-page" style="max-width: 100%; margin: 0 auto; padding: 10px 8px 40px;">
-                    <div style="text-align: center; margin-bottom: 24px;">
-                        <h2 id="salaryChangeReportPageTitle" style="color: var(--primary); font-size: 28px; margin-bottom: 8px;">📈 ${isAr ? 'تتبع الرواتب عبر فترة' : 'Salary tracking (period)'}</h2>
-                        <p id="salaryChangeReportPageSubtitle" style="color: var(--gray); font-size: 15px; max-width: 900px; margin: 0 auto; line-height: 1.6;">
-                            ${isAr ? 'صفوف = الموظفون، أعمدة = الأشهر داخل الفترة. لكل شهر: الراتب الأساسي، المكافآت، مكافأة CEO، زيادة CEO.' : 'Rows = employees, columns = months in the range. Per month: base salary, bonuses, CEO bonus, CEO increase.'}
-                        </p>
-                    </div>
-                    <div class="card" style="margin: 0 auto 20px; max-width: 1200px;">
-                        <div class="card-body" style="padding: 20px;">
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px;">
-                                <div class="form-group" style="margin: 0;">
-                                    <label id="scFromMonthLabel" for="scFromMonth" style="font-weight: 700;">من (الشهر)</label>
-                                    <select id="scFromMonth" style="width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 10px;"></select>
-                                </div>
-                                <div class="form-group" style="margin: 0;">
-                                    <label id="scFromYearLabel" for="scFromYear" style="font-weight: 700;">من (السنة)</label>
-                                    <select id="scFromYear" style="width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 10px;"></select>
-                                </div>
-                                <div class="form-group" style="margin: 0;">
-                                    <label id="scToMonthLabel" for="scToMonth" style="font-weight: 700;">إلى (الشهر)</label>
-                                    <select id="scToMonth" style="width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 10px;"></select>
-                                </div>
-                                <div class="form-group" style="margin: 0;">
-                                    <label id="scToYearLabel" for="scToYear" style="font-weight: 700;">إلى (السنة)</label>
-                                    <select id="scToYear" style="width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 10px;"></select>
-                                </div>
-                                <div class="form-group" style="margin: 0;">
-                                    <label id="scProjectLabel" for="scProject" style="font-weight: 700;">المشروع</label>
-                                    <select id="scProject" style="width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 10px;">
-                                        <option value="all" id="scProjectAllOption">جميع المشاريع</option>
-                                    </select>
-                                </div>
-                                <div class="form-group" style="margin: 0;">
-                                    <label id="scEmployeeTypeLabel" for="scEmployeeType" style="font-weight: 700;">نوع الموظف</label>
-                                    <select id="scEmployeeType" style="width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 10px;">
-                                        <option value="all" id="scEmployeeTypeAll">الكل</option>
-                                        <option value="monthly" id="scEmployeeTypeMonthly">شهري</option>
-                                        <option value="daily" id="scEmployeeTypeDaily">يومي</option>
-                                        <option value="vehicle" id="scEmployeeTypeVehicle">مركبة</option>
-                                        <option value="external" id="scEmployeeTypeExternal">خارجي</option>
-                                        <option value="machinery" id="scEmployeeTypeMachinery">الآليات</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div style="display:flex; gap:10px; flex-wrap: wrap;">
-                                <button class="btn btn-primary" type="button" onclick="generateSalaryChangeReport()" id="scGenerateBtn">${isAr ? 'عرض التقرير' : 'Generate report'}</button>
-                                <button class="btn btn-success" type="button" onclick="printSalaryChangeReport()" id="scPrintBtn" style="display:inline-flex;">🖨️ ${isAr ? 'طباعة' : 'Print'}</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="salaryChangeReportResults" class="salary-change-report-results" style="min-height: 160px; padding: 0 4px;">
-                        <p style="text-align:center;opacity:.65;padding:24px;">${isAr ? 'اضغط «عرض التقرير» لإنشاء الجدول.' : 'Click «Generate report» to build the table.'}</p>
-                    </div>
-                </div>
-            `;
-        }
-
         function clearMonthFiltersAndRefresh() {
             monthFilterSearch = '';
             monthFilterProject = 'all';
@@ -13393,11 +13269,6 @@
                 renderSettingsView();
             } else if (currentView === 'bulkEdit') {
                 renderBulkEditView();
-            } else if (currentView === 'salaryChangeReport') {
-                setHTML(content, renderSalaryChangeReportView());
-                if (typeof initSalaryChangeReportViewControls === 'function') {
-                    initSalaryChangeReportViewControls();
-                }
             } else if (currentView === 'employeeProfiles') {
                 if (!employeeProfilesLoaded) { await loadEmployeeProfiles(); employeeProfilesLoaded = true; }
                 setHTML(content, renderEmployeeProfilesView());
@@ -15003,7 +14874,6 @@
                                 ${emp.isPaid && !emp.linkedToFirebaseId ? `<button type="button" class="btn btn-small btn-linked" onclick="createLinkedDuplicate(${index})" title="${t('createLinkedDuplicate')}">${t('createLinkedDuplicate')}</button>` : ''}
                                 ${!emp.isPaid && netSalary === 0 ? `<button type="button" class="btn btn-warning btn-small" onclick="hideEmployee(${index})" title="${t('hideEmployee')}">${t('hideEmployee')}</button>` : ''}
                                 <button type="button" class="btn btn-warning btn-small btn-icon" onclick="openAttendanceModal(${index}, '${currentMonth}', ${currentYear})" title="${currentLang === 'ar' ? 'إدخال الدوام' : 'Enter Attendance'}" ${!canEditCurrentMonth(currentMonth, currentYear) ? 'disabled title=\"الشهر مقفل من التعديل\"' : (emp.isPaid ? 'disabled title=\"' + (currentLang === 'ar' ? 'تم الدفع - لا يمكن التعديل' : 'Paid - Cannot edit') + '\"' : '')}>⏰</button>
-                                <button type="button" class="btn btn-info btn-small btn-icon" onclick="openEmployeeReportModal(${index}, '${currentMonth}', ${currentYear})" title="${currentLang === 'ar' ? 'تقرير الموظف عبر الأشهر' : 'Employee Monthly Report'}">📊</button>
                                 ${emp.linkedToFirebaseId ? '' : `<button type="button" class="btn btn-secondary btn-small btn-icon" onclick="openCreateProfileFromMonthModal(${index})" title="${emp.profileId ? t('manageProfileLink') : t('createProfileFromMonth')}">🪪</button>`}
                                 <button type="button" class="btn btn-success btn-small" onclick="openCopyModal(${index})" ${!canEditCurrentMonth(currentMonth, currentYear) ? 'disabled title=\"الشهر مقفل من التعديل\"' : ''}>${t('copy')}</button>
                                 ${currentUser && currentUser.fullAccess ? `<button type="button" class="btn btn-danger btn-small" onclick="deleteEmployee(${index})" ${!canEditCurrentMonth(currentMonth, currentYear) ? 'disabled title=\"الشهر مقفل من التعديل\"' : (emp.isPaid ? 'disabled title=\"' + (currentLang === 'ar' ? 'تم الدفع - لا يمكن الحذف' : 'Paid - Cannot delete') + '\"' : '')}>${t('delete')}</button>` : ''}
@@ -16736,102 +16606,7 @@ function renderProjectView() {
             printWindow.print();
         }
 
-        // ========== Employee Monthly Report ==========
-        
-        // دالة البحث عن الموظف في جميع الأشهر
-        function findEmployeeAcrossMonths(employeeIndex, searchMonth, searchYear) {
-            const months = ['january', 'february', 'march', 'april', 'may', 'june', 
-                          'july', 'august', 'september', 'october', 'november', 'december'];
-            
-            // الحصول على الموظف الحالي
-            const currentEmp = employeeData[searchYear][searchMonth][employeeIndex];
-            if (!currentEmp) return [];
-            
-            // معايير البحث: اسم + اسم إنجليزي (للتأكد من نفس الشخص حتى لو تغير المشروع)
-            const searchNameAr = currentEmp.nameAr && currentEmp.nameAr.trim();
-            const searchNameEn = currentEmp.nameEn && currentEmp.nameEn.trim();
-            const searchEmployeeCode = currentEmp.employeeCode; // كمعيار أساسي إذا كان متوفراً
-            const searchProject = currentEmp.project; // للمساعدة في التمييز عند الحاجة
-            
-            const foundEmployees = [];
-            const processedKeys = new Set(); // لتجنب التكرار
-            
-            // البحث في جميع السنوات والأشهر
-            for (const year of Object.keys(employeeData).sort((a, b) => parseInt(a) - parseInt(b))) {
-                const yearData = employeeData[year];
-                if (!yearData) continue;
-                
-                for (const month of months) {
-                    const monthData = yearData[month];
-                    if (!monthData || monthData.length === 0) continue;
-                    
-                    // البحث عن الموظف
-                    let foundEmp = null;
-                    
-                    // الطريقة 1: البحث بـ employeeCode (الأفضل - فريد لكل موظف)
-                    if (searchEmployeeCode) {
-                        foundEmp = monthData.find(e => e.employeeCode === searchEmployeeCode);
-                    }
-                    
-                    // الطريقة 2: إذا لم نجد بـ employeeCode، نبحث بالاسم العربي + الإنجليزي (للتأكد من نفس الشخص)
-                    // هذا يضمن إيجاد الموظف حتى لو انتقل لمشروع آخر
-                    if (!foundEmp && searchNameAr && searchNameEn) {
-                        foundEmp = monthData.find(e => 
-                            e.nameAr && e.nameAr.trim().toLowerCase() === searchNameAr.toLowerCase() &&
-                            e.nameEn && e.nameEn.trim().toLowerCase() === searchNameEn.toLowerCase()
-                        );
-                    }
-                    
-                    // الطريقة 3: إذا لم نجد، نبحث بالاسم العربي فقط (كحل بديل)
-                    if (!foundEmp && searchNameAr) {
-                        foundEmp = monthData.find(e => 
-                            e.nameAr && e.nameAr.trim().toLowerCase() === searchNameAr.toLowerCase()
-                        );
-                    }
-                    
-                    // تجنب التكرار (نفس الموظف في نفس الشهر/السنة)
-                    if (foundEmp) {
-                        const uniqueKey = `${foundEmp.firebaseId || foundEmp.nameAr}_${month}_${year}`;
-                        if (!processedKeys.has(uniqueKey)) {
-                            processedKeys.add(uniqueKey);
-                            foundEmployees.push({
-                                employee: foundEmp,
-                                month: month,
-                                year: parseInt(year),
-                                monthIndex: months.indexOf(month)
-                            });
-                        }
-                    }
-                }
-            }
-            
-            // ترتيب حسب السنة والشهر
-            foundEmployees.sort((a, b) => {
-                if (a.year !== b.year) return a.year - b.year;
-                return a.monthIndex - b.monthIndex;
-            });
-            
-            return foundEmployees;
-        }
-        
-        // دالة فتح نافذة تقرير الموظف
-        function openEmployeeReportModal(employeeIndex, monthKey = currentMonth, year = currentYear) {
-            const months = ['january', 'february', 'march', 'april', 'may', 'june', 
-                          'july', 'august', 'september', 'october', 'november', 'december'];
-            
-            // البحث عن الموظف في جميع الأشهر
-            const employeeRecords = findEmployeeAcrossMonths(employeeIndex, monthKey, year);
-            
-            if (employeeRecords.length === 0) {
-                showNotification('warning', '⚠️ تنبيه', currentLang === 'ar' 
-                    ? 'لم يتم العثور على بيانات الموظف في أي شهر'
-                    : 'Employee data not found in any month');
-                return;
-            }
-            
-            renderEmployeeReportFromRecords(employeeRecords);
-        }
-
+        // ========== Employee report renderer (shared by profile card report) ==========
         function renderEmployeeReportFromRecords(employeeRecords) {
             const firstRecord = employeeRecords[0];
             const emp = firstRecord.employee;
@@ -17361,7 +17136,7 @@ function renderProjectView() {
                             <td style="padding:10px; text-align:center;">${linkStatus}</td>
                             <td style="padding:10px; text-align:center;">${stats.last || '-'}</td>
                             <td style="padding:10px; text-align:center;">${activeBadge}</td>
-                            <td style="padding:10px; text-align:center;">
+                            <td style="padding:10px; text-align:center; white-space:nowrap; min-width:420px;">
                                 <button type="button" class="btn btn-secondary btn-small" onclick="openLinkMonthlyCardsModal('${p.profileId}')">🔗 ${t('linkMonthlyCards')}</button>
                                 <button type="button" class="btn btn-info btn-small" onclick="openProfileReportModal('${p.profileId}')">📊 ${t('profileReport')}</button>
                                 <button type="button" class="btn btn-primary btn-small" onclick="openEmployeeProfileModal('${p.profileId}')">${t('edit')}</button>
@@ -17372,7 +17147,7 @@ function renderProjectView() {
             }
 
             return `
-                <div style="max-width:1300px; margin:0 auto; padding:10px 8px 40px;">
+                <div style="max-width:1600px; margin:0 auto; padding:10px 8px 40px;">
                     <div style="text-align:center; margin-bottom:20px;">
                         <h2 style="color:var(--primary); font-size:28px; margin-bottom:8px;">${t('employeeProfilesTitle')}</h2>
                         <p style="color:var(--gray); font-size:15px; max-width:800px; margin:0 auto;">${t('employeeProfilesSubtitle')}</p>
@@ -17380,6 +17155,7 @@ function renderProjectView() {
                     <div class="card" style="margin-bottom:16px;">
                         <div class="card-body" style="padding:16px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
                             <button class="btn btn-primary" type="button" onclick="openEmployeeProfileModal()">➕ ${t('newProfile')}</button>
+                            <button class="btn btn-success" type="button" onclick="openCollectiveMovementModal()">📈 ${isAr ? 'الحركة الجماعية' : 'Collective movement'}</button>
                             <input type="text" id="profileSearchBox" placeholder="${t('searchProfiles')}" value="${(profileFilters.search || '').replace(/"/g, '&quot;')}"
                                 style="flex:1; min-width:200px; padding:9px 12px; border:2px solid var(--border); border-radius:10px;"
                                 oninput="profileFilters.search=this.value; refreshEmployeeProfilesView();">
@@ -17394,16 +17170,16 @@ function renderProjectView() {
                     </div>
                     <div class="card">
                         <div class="card-body" style="padding:0; overflow-x:auto;">
-                            <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                            <table style="width:100%; min-width:1150px; border-collapse:collapse; font-size:13px;">
                                 <thead>
                                     <tr style="background:var(--primary); color:#fff;">
-                                        <th style="padding:12px; text-align:start;">${t('profileName')}</th>
-                                        <th style="padding:12px;">${t('profileCode')}</th>
-                                        <th style="padding:12px;">${t('profileDefaultProject')}</th>
-                                        <th style="padding:12px;">${t('linkedMonthsCount')}</th>
-                                        <th style="padding:12px;">${t('lastLinkedMonth')}</th>
-                                        <th style="padding:12px;">${t('profileLinkStatus')}</th>
-                                        <th style="padding:12px;">${t('actions')}</th>
+                                        <th style="padding:12px; text-align:start; min-width:180px;">${t('profileName')}</th>
+                                        <th style="padding:12px; min-width:120px;">${t('profileCode')}</th>
+                                        <th style="padding:12px; min-width:140px;">${t('profileDefaultProject')}</th>
+                                        <th style="padding:12px; min-width:110px;">${t('linkedMonthsCount')}</th>
+                                        <th style="padding:12px; min-width:120px;">${t('lastLinkedMonth')}</th>
+                                        <th style="padding:12px; min-width:90px;">${t('profileLinkStatus')}</th>
+                                        <th style="padding:12px; min-width:420px;">${t('actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>${rows}</tbody>
@@ -17647,9 +17423,12 @@ function renderProjectView() {
                 </label>`;
         }
 
-        function openLinkMonthlyCardsModal(profileId) {
+        async function openLinkMonthlyCardsModal(profileId) {
             const profile = employeeProfiles[profileId];
             if (!profile) return;
+            showLoading();
+            await ensureAllYearsLoaded(); // شمول كل السنوات السابقة للربط
+            hideLoading();
             currentLinkProfileId = profileId;
             const isAr = currentLang === 'ar';
             const name = isAr ? (profile.nameAr || profile.nameEn) : (profile.nameEn || profile.nameAr);
@@ -17668,7 +17447,6 @@ function renderProjectView() {
             content.innerHTML = `
                 <div class="modal-header">
                     <h2>🔗 ${t('linkMonthlyCards')}: ${name} <span style="font-family:monospace; opacity:.8;">(${profile.profileCode || ''})</span></h2>
-                    <p style="color:rgba(255,255,255,0.85); font-size:12px; margin-top:4px;">${t('noUnloadedYearsNote')}</p>
                 </div>
                 <div class="modal-body" style="padding:16px 20px; max-height:calc(95vh - 170px); overflow-y:auto;">
                     <div style="margin-bottom:14px;">
@@ -17725,8 +17503,11 @@ function renderProjectView() {
         }
 
         // --- توليد بطاقة ربط من جدول الشهر ---
-        function openCreateProfileFromMonthModal(index) {
+        async function openCreateProfileFromMonthModal(index) {
             const monthKey = (currentView === 'project') ? (selectedProjectMonth || currentMonth) : currentMonth;
+            showLoading();
+            await ensureAllYearsLoaded(); // شمول كل السنوات السابقة في الاقتراحات والربط
+            hideLoading();
             const emp = employeeData[currentYear] && employeeData[currentYear][monthKey]
                 ? employeeData[currentYear][monthKey][index] : null;
             if (!emp) { showNotification('error', t('error'), t('employeeNotFound')); return; }
@@ -17793,7 +17574,6 @@ function renderProjectView() {
                         <summary style="font-weight:700; color:var(--primary); cursor:pointer; padding:6px 0;">📋 ${t('allUnlinkedRecords')} (${others.length})</summary>
                         <div style="border:1px solid var(--border); border-radius:10px; overflow:hidden; margin-top:8px;">${othersHTML}</div>
                     </details>
-                    <p style="color:var(--gray); font-size:12px; margin-top:10px;">${t('noUnloadedYearsNote')}</p>
                 </div>
                 <div class="modal-actions">
                     <button class="btn btn-success" onclick="confirmCreateProfileFromMonth()">✅ ${t('createAndLink')}</button>
@@ -17861,16 +17641,335 @@ function renderProjectView() {
             }
         }
 
+        // تحميل كل السنوات المتاحة (لضمان شمول الأشهر/السنوات السابقة غير المحمّلة)
+        async function ensureAllYearsLoaded() {
+            if (getStorageMode() !== 'firebase' || typeof db === 'undefined' || !db || typeof loadEmployeesFromFirebase !== 'function') return;
+            const years = Array.isArray(availableYears) ? [...availableYears] : [];
+            for (const y of years) {
+                await loadEmployeesFromFirebase(y);
+            }
+        }
+
         // --- تقرير البطاقة (يعتمد على الربط اليدوي) ---
-        function openProfileReportModal(profileId) {
+        async function openProfileReportModal(profileId) {
             const profile = employeeProfiles[profileId];
             if (!profile) return;
+            showLoading();
+            await ensureAllYearsLoaded(); // شمول كل السنوات السابقة لا المحمّلة فقط
+            hideLoading();
             const records = getProfileMonthlyRecords(profileId);
             if (records.length === 0) {
                 showNotification('warning', t('warning'), t('noLinkedMonths'));
                 return;
             }
             renderEmployeeReportFromRecords(records);
+        }
+
+        // ========== تقرير الحركة الجماعية للموظفين (مصفوفة: موظفون × أشهر) ==========
+        let collectiveReportState = {
+            fromYear: null, fromMonth: 'january',
+            toYear: null, toMonth: null,
+            project: 'all',
+            activeOnly: false,
+            metric: 'net', // net | base | actual
+            detailed: false,
+            detailFields: { base: true, actual: true, bonus: true, ceoBonus: true, workdays: false, phoneBills: false, deductions: false, advance: false, reservation: false, net: false }
+        };
+
+        // تعريف حقول تفصيل الراتب للنمط المفصّل
+        function cmFieldDefs() {
+            const isAr = currentLang === 'ar';
+            const conv = (e, val, curKey) => {
+                try { return convertToPaymentCurrency(parseFloat(val) || 0, e[curKey] || 'IQD', e); } catch (_) { return parseFloat(val) || 0; }
+            };
+            return [
+                { key: 'base', label: isAr ? 'أساسي' : 'Base', calc: (e) => parseFloat(e.salary) || 0 },
+                { key: 'actual', label: isAr ? 'فعلي' : 'Actual', calc: (e, m, y) => { try { return calculateActualSalary(e, m, y) || 0; } catch (_) { return 0; } } },
+                { key: 'workdays', label: isAr ? 'أيام' : 'Days', calc: (e, m, y) => { try { return calculateWorkDaysFromAttendance(e, m, y) || 0; } catch (_) { return 0; } } },
+                { key: 'bonus', label: isAr ? 'مكافأة' : 'Bonus', calc: (e) => parseFloat(e.bonus) || 0 },
+                { key: 'ceoBonus', label: 'CEO', calc: (e) => parseFloat(e.ceoBonus) || 0 },
+                { key: 'phoneBills', label: isAr ? 'فواتير' : 'Phone', calc: (e) => parseFloat(e.phoneBills) || 0 },
+                { key: 'deductions', label: isAr ? 'خصم' : 'Deduct', calc: (e) => parseFloat(e.deductions) || 0 },
+                { key: 'advance', label: isAr ? 'سلفة' : 'Advance', calc: (e) => parseFloat(e.advance) || 0 },
+                { key: 'reservation', label: isAr ? 'حجز' : 'Reserve', calc: (e, m, y) => {
+                    try {
+                        const actualP = convertToPaymentCurrency(calculateActualSalary(e, m, y), 'USD', e);
+                        const nbr = actualP + conv(e, e.bonus, 'bonusCurrency') + conv(e, e.phoneBills, 'phoneBillsCurrency') + conv(e, e.ceoBonus, 'ceoBonusCurrency') - conv(e, e.deductions, 'deductionsCurrency') - conv(e, e.advance, 'advanceCurrency');
+                        const r = calculateReservation(e, nbr, m, y);
+                        return r.actual || 0;
+                    } catch (_) { return 0; }
+                } },
+                { key: 'net', label: isAr ? 'صافي' : 'Net', calc: (e, m, y) => { try { return calculateNetSalary(e, m, y) || 0; } catch (_) { return 0; } } }
+            ];
+        }
+
+        function cmFormatNum(v) {
+            if (v == null || !isFinite(v)) return '-';
+            return Math.round(v).toLocaleString('en-US');
+        }
+
+        function cmMetricLabel(metric) {
+            const isAr = currentLang === 'ar';
+            if (metric === 'base') return isAr ? 'الراتب الأساسي' : 'Base salary';
+            if (metric === 'actual') return isAr ? 'الراتب الفعلي' : 'Actual salary';
+            return isAr ? 'الصافي' : 'Net';
+        }
+
+        function cmGetMetricValue(emp, month, year, metric) {
+            try {
+                if (metric === 'base') return parseFloat(emp.salary) || 0;
+                if (metric === 'actual') return calculateActualSalary(emp, month, year) || 0;
+                return calculateNetSalary(emp, month, year) || 0;
+            } catch (e) { return 0; }
+        }
+
+        // بناء قائمة الفترات (سنة-شهر) بين البداية والنهاية شاملةً الطرفين
+        function cmBuildPeriods(fromY, fromM, toY, toM) {
+            const fi = months.indexOf(fromM), ti = months.indexOf(toM);
+            if (fromY == null || toY == null || fi < 0 || ti < 0) return [];
+            if (toY < fromY || (toY === fromY && ti < fi)) return [];
+            const periods = [];
+            let y = fromY, mi = fi;
+            while (y < toY || (y === toY && mi <= ti)) {
+                periods.push({ year: y, month: months[mi], monthIndex: mi });
+                mi++;
+                if (mi > 11) { mi = 0; y++; }
+                if (periods.length > 600) break; // أمان ضد الحلقات الطويلة
+            }
+            return periods;
+        }
+
+        function cmYearOptions(selected) {
+            const ys = (Array.isArray(availableYears) && availableYears.length ? [...availableYears] : [currentYear])
+                .map(Number).sort((a, b) => a - b);
+            return ys.map(y => `<option value="${y}" ${Number(selected) === y ? 'selected' : ''}>${y}</option>`).join('');
+        }
+
+        function cmMonthOptions(selected) {
+            const mnames = (translations[currentLang] && translations[currentLang].monthNames) || {};
+            return months.map(m => `<option value="${m}" ${selected === m ? 'selected' : ''}>${mnames[m] || m}</option>`).join('');
+        }
+
+        // تجميع بيانات المصفوفة (مشترك بين العرض والتصدير والطباعة)
+        function cmBuildMatrixData() {
+            const s = collectiveReportState;
+            const periods = cmBuildPeriods(s.fromYear, s.fromMonth, s.toYear, s.toMonth);
+            const allowed = getAllowedProjects();
+            let profilesArr = Object.values(employeeProfiles);
+            if (s.project !== 'all') profilesArr = profilesArr.filter(p => p.defaultProject === s.project);
+            else if (allowed !== null) profilesArr = profilesArr.filter(p => !p.defaultProject || allowed.includes(p.defaultProject));
+            if (s.activeOnly) profilesArr = profilesArr.filter(p => p.isActive !== false);
+            profilesArr.sort((a, b) => (a.nameAr || a.nameEn || '').localeCompare(b.nameAr || b.nameEn || '', 'ar'));
+
+            const rows = profilesArr.map(p => {
+                const recs = getProfileMonthlyRecords(p.profileId);
+                const byKey = {};
+                recs.forEach(r => { byKey[`${r.year}-${r.month}`] = r.employee; });
+                const cells = periods.map(pr => {
+                    const emp = byKey[`${pr.year}-${pr.month}`];
+                    return emp ? cmGetMetricValue(emp, pr.month, pr.year, s.metric) : null;
+                });
+                const present = cells.filter(v => v != null);
+                const sum = present.reduce((a, b) => a + b, 0);
+                const count = present.length;
+                const avg = count ? sum / count : 0;
+                return { profile: p, byKey, cells, sum, count, avg };
+            });
+
+            const colTotals = periods.map((_, i) => rows.reduce((a, r) => a + (r.cells[i] != null ? r.cells[i] : 0), 0));
+            const grandTotal = colTotals.reduce((a, b) => a + b, 0);
+            return { periods, rows, colTotals, grandTotal };
+        }
+
+        async function openCollectiveMovementModal() {
+            const s = collectiveReportState;
+            if (s.fromYear == null) {
+                const ys = (Array.isArray(availableYears) && availableYears.length ? [...availableYears] : [currentYear]).map(Number);
+                s.fromYear = Math.min(...ys);
+                s.toYear = Number(currentYear);
+                s.toMonth = currentMonth || 'december';
+                s.fromMonth = 'january';
+            }
+            showLoading();
+            await ensureAllYearsLoaded();
+            hideLoading();
+            openModal('collectiveMovementModal');
+            renderCollectiveMovement();
+        }
+
+        function renderCollectiveMovement() {
+            const isAr = currentLang === 'ar';
+            const s = collectiveReportState;
+            const mnames = (translations[currentLang] && translations[currentLang].monthNames) || {};
+            const allowedProjects = getAllowedProjects();
+            const filteredProjects = allowedProjects === null ? projects :
+                Object.fromEntries(Object.entries(projects).filter(([code]) => allowedProjects.includes(code)));
+            const projectOptions = `<option value="all">${isAr ? 'كل المشاريع' : 'All projects'}</option>` +
+                Object.entries(filteredProjects).map(([code, name]) =>
+                    `<option value="${code}" ${s.project === code ? 'selected' : ''}>${code} - ${name}</option>`).join('');
+
+            const { periods, rows, colTotals, grandTotal } = cmBuildMatrixData();
+
+            let tableHTML;
+            if (periods.length === 0) {
+                tableHTML = `<div style="padding:40px; text-align:center; color:var(--gray);">${isAr ? 'حدّد فترة صحيحة (من ≤ إلى).' : 'Select a valid range (from ≤ to).'}</div>`;
+            } else if (rows.length === 0) {
+                tableHTML = `<div style="padding:40px; text-align:center; color:var(--gray);">${isAr ? 'لا توجد بطاقات موظفين مطابقة.' : 'No matching employee cards.'}</div>`;
+            } else {
+                const selFields = cmFieldDefs().filter(f => s.detailFields[f.key]);
+                const colMinW = s.detailed ? 110 : 90;
+                const headCols = periods.map(pr => `<th style="padding:8px 10px; min-width:${colMinW}px; white-space:nowrap; border:1px solid var(--border);">${(mnames[pr.month] || pr.month).slice(0, 3)}<br><span style="font-weight:400; font-size:11px;">${pr.year}</span></th>`).join('');
+                const body = rows.map(r => {
+                    const name = isAr ? (r.profile.nameAr || r.profile.nameEn || '-') : (r.profile.nameEn || r.profile.nameAr || '-');
+                    const cellsHTML = periods.map((pr, i) => {
+                        const emp = r.byKey[`${pr.year}-${pr.month}`];
+                        if (!emp) return `<td style="padding:6px 10px; text-align:end; border:1px solid var(--border); color:#cbd5e1;">·</td>`;
+                        if (!s.detailed) {
+                            const v = r.cells[i];
+                            return `<td style="padding:6px 10px; text-align:end; border:1px solid var(--border);">${v == null ? '·' : cmFormatNum(v)}</td>`;
+                        }
+                        const lines = selFields.map(f => `<span><span style="color:var(--gray);">${f.label}:</span> ${cmFormatNum(f.calc(emp, pr.month, pr.year))}</span>`).join('');
+                        return `<td style="padding:5px 8px; border:1px solid var(--border); vertical-align:top;"><div style="display:flex; flex-direction:column; gap:1px; text-align:end; font-size:10px; line-height:1.35;">${lines || '<span style="color:#cbd5e1;">·</span>'}</div></td>`;
+                    }).join('');
+                    return `<tr>
+                        <td style="padding:6px 10px; position:sticky; inset-inline-start:0; background:#fff; border:1px solid var(--border); font-weight:600; white-space:nowrap;">${name}<div style="font-size:11px; color:var(--gray); font-family:monospace;">${r.profile.profileCode || ''}</div></td>
+                        ${cellsHTML}
+                        <td style="padding:6px 10px; text-align:end; border:1px solid var(--border); font-weight:700; background:#f1f5f9;">${cmFormatNum(r.sum)}</td>
+                        <td style="padding:6px 10px; text-align:center; border:1px solid var(--border); background:#f8fafc;">${r.count}</td>
+                        <td style="padding:6px 10px; text-align:end; border:1px solid var(--border); background:#f8fafc;">${cmFormatNum(r.avg)}</td>
+                    </tr>`;
+                }).join('');
+                const colTotalsHTML = colTotals.map(v => `<td style="padding:6px 10px; text-align:end; border:1px solid var(--border); font-weight:700;">${cmFormatNum(v)}</td>`).join('');
+                tableHTML = `
+                    <div style="overflow:auto; max-height:calc(96vh - 250px); border:1px solid var(--border); border-radius:8px;">
+                        <table style="border-collapse:collapse; font-size:12px; min-width:100%;">
+                            <thead>
+                                <tr style="background:var(--primary); color:#fff; position:sticky; top:0; z-index:2;">
+                                    <th style="padding:8px 10px; position:sticky; inset-inline-start:0; z-index:3; background:var(--primary); text-align:start; min-width:180px;">${isAr ? 'الموظف' : 'Employee'}</th>
+                                    ${headCols}
+                                    <th style="padding:8px 10px; min-width:100px;">${isAr ? 'الإجمالي' : 'Total'}</th>
+                                    <th style="padding:8px 10px; min-width:60px;">${isAr ? 'أشهر' : 'Months'}</th>
+                                    <th style="padding:8px 10px; min-width:90px;">${isAr ? 'المتوسط' : 'Avg'}</th>
+                                </tr>
+                            </thead>
+                            <tbody>${body}</tbody>
+                            <tfoot>
+                                <tr style="background:#e2e8f0; font-weight:700; position:sticky; bottom:0;">
+                                    <td style="padding:8px 10px; position:sticky; inset-inline-start:0; background:#e2e8f0; border:1px solid var(--border);">${isAr ? 'إجمالي الشهر' : 'Month total'}</td>
+                                    ${colTotalsHTML}
+                                    <td style="padding:8px 10px; text-align:end; border:1px solid var(--border); background:#cbd5e1;">${cmFormatNum(grandTotal)}</td>
+                                    <td colspan="2" style="border:1px solid var(--border); background:#cbd5e1;"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>`;
+            }
+
+            const content = document.getElementById('collectiveMovementContent');
+            content.innerHTML = `
+                <div class="modal-header"><h2>📈 ${isAr ? 'الحركة الجماعية للموظفين' : 'Collective employee movement'}</h2>
+                    <span class="modal-close" onclick="closeModal('collectiveMovementModal')" style="cursor:pointer; font-size:26px;">&times;</span></div>
+                <div class="modal-body" style="padding:16px 20px;">
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:end; margin-bottom:14px;">
+                        <div><label style="display:block; font-size:12px; font-weight:600;">${isAr ? 'من شهر' : 'From month'}</label>
+                            <select onchange="collectiveReportState.fromMonth=this.value; renderCollectiveMovement();" style="padding:7px; border:2px solid var(--border); border-radius:8px;">${cmMonthOptions(s.fromMonth)}</select></div>
+                        <div><label style="display:block; font-size:12px; font-weight:600;">${isAr ? 'من سنة' : 'From year'}</label>
+                            <select onchange="collectiveReportState.fromYear=parseInt(this.value); renderCollectiveMovement();" style="padding:7px; border:2px solid var(--border); border-radius:8px;">${cmYearOptions(s.fromYear)}</select></div>
+                        <div><label style="display:block; font-size:12px; font-weight:600;">${isAr ? 'إلى شهر' : 'To month'}</label>
+                            <select onchange="collectiveReportState.toMonth=this.value; renderCollectiveMovement();" style="padding:7px; border:2px solid var(--border); border-radius:8px;">${cmMonthOptions(s.toMonth)}</select></div>
+                        <div><label style="display:block; font-size:12px; font-weight:600;">${isAr ? 'إلى سنة' : 'To year'}</label>
+                            <select onchange="collectiveReportState.toYear=parseInt(this.value); renderCollectiveMovement();" style="padding:7px; border:2px solid var(--border); border-radius:8px;">${cmYearOptions(s.toYear)}</select></div>
+                        <div><label style="display:block; font-size:12px; font-weight:600;">${isAr ? 'القيمة' : 'Metric'}</label>
+                            <select onchange="collectiveReportState.metric=this.value; renderCollectiveMovement();" style="padding:7px; border:2px solid var(--border); border-radius:8px;">
+                                <option value="net" ${s.metric === 'net' ? 'selected' : ''}>${isAr ? 'الصافي' : 'Net'}</option>
+                                <option value="base" ${s.metric === 'base' ? 'selected' : ''}>${isAr ? 'الراتب الأساسي' : 'Base salary'}</option>
+                                <option value="actual" ${s.metric === 'actual' ? 'selected' : ''}>${isAr ? 'الراتب الفعلي' : 'Actual'}</option>
+                            </select></div>
+                        <div><label style="display:block; font-size:12px; font-weight:600;">${isAr ? 'المشروع' : 'Project'}</label>
+                            <select onchange="collectiveReportState.project=this.value; renderCollectiveMovement();" style="padding:7px; border:2px solid var(--border); border-radius:8px;">${projectOptions}</select></div>
+                        <label style="display:flex; align-items:center; gap:6px; font-weight:600; cursor:pointer; padding-bottom:6px;">
+                            <input type="checkbox" ${s.activeOnly ? 'checked' : ''} onchange="collectiveReportState.activeOnly=this.checked; renderCollectiveMovement();">
+                            ${isAr ? 'النشطون فقط' : 'Active only'}</label>
+                        <label style="display:flex; align-items:center; gap:6px; font-weight:600; cursor:pointer; padding-bottom:6px;">
+                            <input type="checkbox" ${s.detailed ? 'checked' : ''} onchange="collectiveReportState.detailed=this.checked; renderCollectiveMovement();">
+                            ${isAr ? 'نمط مفصّل' : 'Detailed'}</label>
+                        <div style="margin-inline-start:auto; display:flex; gap:8px;">
+                            <button class="btn btn-success btn-small" type="button" onclick="exportCollectiveMovement()">⬇️ ${isAr ? 'تصدير CSV' : 'Export CSV'}</button>
+                            <button class="btn btn-secondary btn-small" type="button" onclick="printCollectiveMovement()">🖨️ ${isAr ? 'طباعة' : 'Print'}</button>
+                        </div>
+                    </div>
+                    ${s.detailed ? `<div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; padding:8px 10px; background:#f8fafc; border:1px solid var(--border); border-radius:8px; align-items:center;">
+                        <span style="font-weight:700; font-size:12px;">${isAr ? 'حقول التفصيل:' : 'Detail fields:'}</span>
+                        ${cmFieldDefs().map(f => `<label style="display:flex; align-items:center; gap:4px; font-size:12px; cursor:pointer;"><input type="checkbox" ${s.detailFields[f.key] ? 'checked' : ''} onchange="collectiveReportState.detailFields['${f.key}']=this.checked; renderCollectiveMovement();"> ${f.label}</label>`).join('')}
+                    </div>` : ''}
+                    <div style="font-size:12px; color:var(--gray); margin-bottom:8px;">${isAr ? 'القيمة المعروضة' : 'Showing'}: <strong>${s.detailed ? (isAr ? 'تفصيل شهري' : 'monthly breakdown') : cmMetricLabel(s.metric)}</strong> · ${isAr ? 'الأرقام مقرّبة' : 'rounded'} · «·» = ${isAr ? 'غير مرتبط بهذا الشهر' : 'not linked'}${s.detailed ? ` · ${isAr ? 'أعمدة الإجمالي/المتوسط تعتمد على' : 'Total/Avg use'} <strong>${cmMetricLabel(s.metric)}</strong>` : ''}</div>
+                    ${tableHTML}
+                </div>`;
+        }
+
+        function exportCollectiveMovement() {
+            const isAr = currentLang === 'ar';
+            const s = collectiveReportState;
+            const mnames = (translations[currentLang] && translations[currentLang].monthNames) || {};
+            const { periods, rows, colTotals, grandTotal } = cmBuildMatrixData();
+            if (periods.length === 0 || rows.length === 0) {
+                showNotification('warning', isAr ? 'تنبيه' : 'Warning', isAr ? 'لا توجد بيانات للتصدير.' : 'No data to export.');
+                return;
+            }
+            const esc = (c) => {
+                const str = String(c == null ? '' : c);
+                return (str.includes(',') || str.includes('"') || str.includes('\n')) ? '"' + str.replace(/"/g, '""') + '"' : str;
+            };
+            let csv = '\ufeff';
+            csv += esc(`${isAr ? 'الحركة الجماعية' : 'Collective movement'} - ${cmMetricLabel(s.metric)}`) + '\n\n';
+            const selFields = cmFieldDefs().filter(f => s.detailFields[f.key]);
+            const periodHeader = s.detailed
+                ? periods.flatMap(pr => selFields.map(f => `${mnames[pr.month] || pr.month} ${pr.year} - ${f.label}`))
+                : periods.map(pr => `${mnames[pr.month] || pr.month} ${pr.year}`);
+            const header = [isAr ? 'الموظف' : 'Employee', isAr ? 'الرمز' : 'Code',
+                ...periodHeader,
+                isAr ? 'الإجمالي' : 'Total', isAr ? 'أشهر' : 'Months', isAr ? 'المتوسط' : 'Avg'];
+            csv += header.map(esc).join(',') + '\n';
+            rows.forEach(r => {
+                const name = isAr ? (r.profile.nameAr || r.profile.nameEn || '-') : (r.profile.nameEn || r.profile.nameAr || '-');
+                const periodCells = s.detailed
+                    ? periods.flatMap(pr => {
+                        const emp = r.byKey[`${pr.year}-${pr.month}`];
+                        return selFields.map(f => emp ? Math.round(f.calc(emp, pr.month, pr.year)) : '');
+                    })
+                    : r.cells.map(v => v == null ? '' : Math.round(v));
+                const line = [name, r.profile.profileCode || '',
+                    ...periodCells,
+                    Math.round(r.sum), r.count, Math.round(r.avg)];
+                csv += line.map(esc).join(',') + '\n';
+            });
+            if (!s.detailed) {
+                const totalLine = [isAr ? 'إجمالي الشهر' : 'Month total', '',
+                    ...colTotals.map(v => Math.round(v)), Math.round(grandTotal), '', ''];
+                csv += totalLine.map(esc).join(',') + '\n';
+            }
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `collective_movement_${s.metric}_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+            showNotification('success', isAr ? 'تم التصدير' : 'Exported', isAr ? 'تم تصدير التقرير بنجاح ✅' : 'Report exported ✅');
+        }
+
+        function printCollectiveMovement() {
+            const isAr = currentLang === 'ar';
+            const s = collectiveReportState;
+            const table = document.querySelector('#collectiveMovementContent .modal-body table');
+            if (!table) { showNotification('warning', isAr ? 'تنبيه' : 'Warning', isAr ? 'لا يوجد جدول للطباعة.' : 'Nothing to print.'); return; }
+            const w = window.open('', '_blank', 'width=1200,height=800');
+            if (!w) { showNotification('error', isAr ? 'خطأ' : 'Error', isAr ? 'تعذر فتح نافذة الطباعة.' : 'Cannot open print window.'); return; }
+            w.document.write(`<!DOCTYPE html><html dir="${isAr ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>${isAr ? 'الحركة الجماعية' : 'Collective movement'}</title>
+                <style>body{font-family:Arial,sans-serif;padding:16px;} h2{text-align:center;} table{border-collapse:collapse;width:100%;font-size:11px;} th,td{border:1px solid #999;padding:4px 6px;text-align:right;} th{background:#101d2d;color:#fff;} td:first-child,th:first-child{text-align:start;}</style>
+                </head><body><h2>📈 ${isAr ? 'الحركة الجماعية للموظفين' : 'Collective employee movement'} — ${cmMetricLabel(s.metric)}</h2>${table.outerHTML}</body></html>`);
+            w.document.close();
+            setTimeout(() => w.print(), 300);
         }
 
         // ========== Excel-Like Cell Editing System ==========
@@ -24248,23 +24347,15 @@ function renderProjectView() {
                                     💾 وضع التخزين الحالي
                                 </div>
                                 <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-                                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 12px 20px; background: white; border-radius: 8px; border: 2px solid #3b82f6; flex: 1; min-width: 200px;">
-                                        <input type="radio" name="storageMode" value="firebase" ${getStorageMode() === 'firebase' ? 'checked' : ''} onchange="switchStorageMode('firebase')" style="width: 18px; height: 18px; cursor: pointer;">
+                                    <div style="display: flex; align-items: center; gap: 10px; padding: 12px 20px; background: white; border-radius: 8px; border: 2px solid #3b82f6; flex: 1; min-width: 200px;">
                                         <div>
                                             <div style="font-weight: 600; color: #1e3a8a;">☁️ Firebase (سحابي)</div>
-                                            <div style="font-size: 12px; color: #64748b;">يتطلب اتصال بالإنترنت</div>
+                                            <div style="font-size: 12px; color: #64748b;">جميع البيانات تُحفظ في قاعدة البيانات السحابية</div>
                                         </div>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 12px 20px; background: white; border-radius: 8px; border: 2px solid #10b981; flex: 1; min-width: 200px;">
-                                        <input type="radio" name="storageMode" value="local" ${getStorageMode() === 'local' ? 'checked' : ''} onchange="switchStorageMode('local')" style="width: 18px; height: 18px; cursor: pointer;">
-                                        <div>
-                                            <div style="font-weight: 600; color: #065f46;">💾 Local (محلي)</div>
-                                            <div style="font-size: 12px; color: #64748b;">يعمل بدون إنترنت</div>
-                                        </div>
-                                    </label>
+                                    </div>
                                 </div>
-                                <div style="margin-top: 15px; padding: 12px; background: #fef3c7; border-radius: 8px; font-size: 12px; color: #92400e;">
-                                    <strong>⚠️ تحذير:</strong> عند التبديل بين الأوضاع، سيتم استخدام البيانات المحفوظة في الوضع المختار. تأكد من عمل نسخة احتياطية قبل التبديل.
+                                <div style="margin-top: 15px; padding: 12px; background: #ecfdf5; border-radius: 8px; font-size: 12px; color: #065f46;">
+                                    ℹ️ النظام يعمل عبر Firebase فقط. احرص على عمل نسخة احتياطية دورية (تصدير JSON) لحماية بياناتك.
                                 </div>
                             </div>
                             
@@ -25514,6 +25605,32 @@ function renderProjectView() {
         window.resetDatabaseConfig = resetDatabaseConfig;
 
         // ========== Export/Import Functions ==========
+        // ========== تذكير النسخ الاحتياطي ==========
+        const BACKUP_REMINDER_DAYS = 7;
+        function checkBackupReminder() {
+            try {
+                const last = localStorage.getItem('lastBackupDate');
+                let days = Infinity;
+                if (last) {
+                    const diff = Date.now() - new Date(last).getTime();
+                    days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                }
+                if (days >= BACKUP_REMINDER_DAYS) {
+                    const msg = currentLang === 'ar'
+                        ? (last
+                            ? `مضى ${days} يوماً على آخر نسخة احتياطية. يُنصح بتصدير نسخة (JSON) الآن لحماية بياناتك.`
+                            : 'لم يتم عمل نسخة احتياطية بعد. يُنصح بتصدير نسخة (JSON) لحماية بياناتك.')
+                        : (last
+                            ? `${days} days since the last backup. Please export a (JSON) backup to protect your data.`
+                            : 'No backup has been made yet. Please export a (JSON) backup to protect your data.');
+                    showNotification('warning',
+                        currentLang === 'ar' ? '🛟 تذكير بالنسخ الاحتياطي' : '🛟 Backup reminder',
+                        msg);
+                }
+            } catch (e) { console.warn('backup reminder check failed', e); }
+        }
+        window.checkBackupReminder = checkBackupReminder;
+
         function exportData() {
             // عرض خيارات التصدير
             const options = confirm(currentLang === 'ar' ? 
@@ -25532,7 +25649,9 @@ function renderProjectView() {
             try {
                 showLoading();
                 
-                // التأكد من تحميل أحدث البيانات
+                // التأكد من تحميل أحدث البيانات وكل السنوات (نسخة احتياطية كاملة)
+                await ensureAllYearsLoaded();
+                await loadEmployeeProfiles();
                 await loadCompanySettings();
                 await loadPrintSignatures();
                 
@@ -25541,9 +25660,10 @@ function renderProjectView() {
                 projects: projects,
                     companySettings: companySettings,
                     printSignatures: printSignatures,
+                    employeeProfiles: employeeProfiles,
                 exportDate: new Date().toISOString(),
                     exportedBy: currentUser?.email || 'unknown',
-                    version: '2.1.2'
+                    version: '2.2.0'
                 };
                 
                 const dataStr = JSON.stringify(backupData, null, 2);
@@ -25558,6 +25678,7 @@ function renderProjectView() {
                 // تنظيف URL
                 setTimeout(() => URL.revokeObjectURL(url), 100);
                 
+                try { localStorage.setItem('lastBackupDate', new Date().toISOString()); } catch (e) {}
                 hideLoading();
                 showNotification('success', 'تم التصدير', 'تم تصدير جميع البيانات بنجاح! ✅');
             } catch (error) {
@@ -25630,8 +25751,8 @@ function renderProjectView() {
                     totalPhoneBills += parseFloat(emp.phoneBills) || 0;
                     totalDeductions += parseFloat(emp.deductions) || 0;
                     totalAdvance += parseFloat(emp.advance) || 0;
-                    totalNetUSD += netUSD;
-                    totalNetIQD += netIQD;
+                    totalNetUSD += netSalaryValue;
+                    totalNetIQD += netSalaryValue * (parseFloat(emp.exchangeRate) || 1500);
                     
                     const empName = getEmployeeName(emp);
                     const typeText = getEmployeeTypeText(emp.employeeType || emp.type);
@@ -28872,456 +28993,6 @@ function renderProjectView() {
             openModal('salaryVouchersModal');
         }
 
-        // ========== تقرير تتبع الرواتب عبر فترة ==========
-        // المعلومات المهمة لكل شهر (كما طُلب): الراتب الأساسي - المكافآت - مكافأة CEO - زيادة CEO
-        const SALARY_CHANGE_TRACKED_FIELDS = [
-            { key: 'salary', labelAr: 'الراتب الأساسي', labelEn: 'Base salary', type: 'money', moneyCurrencyKey: 'salaryCurrency' },
-            { key: 'bonus', labelAr: 'المكافآت', labelEn: 'Bonuses', type: 'money', moneyCurrencyKey: 'bonusCurrency' },
-            { key: 'ceoBonus', labelAr: 'مكافأة CEO', labelEn: 'CEO bonus', type: 'money', moneyCurrencyKey: 'ceoBonusCurrency' },
-            { key: 'salaryIncrease', labelAr: 'زيادة CEO', labelEn: 'CEO increase', type: 'money', moneyCurrencyKey: 'salaryIncreaseCurrency' }
-        ];
-
-        function scNormalizeString(v) {
-            return (v === null || v === undefined) ? '' : String(v).trim();
-        }
-
-        function scNormalizeNumber(v) {
-            const n = parseFloat(v);
-            return isNaN(n) ? 0 : n;
-        }
-
-        function scNumbersClose(a, b, eps = 0.001) {
-            return Math.abs(a - b) <= eps;
-        }
-
-        function scFormatEmployeeType(empType) {
-            if (currentLang === 'ar') {
-                return empType === 'monthly' ? 'شهري' :
-                    empType === 'daily' ? 'يومي' :
-                    empType === 'vehicle' ? 'سيارة' :
-                    empType === 'external' ? 'خارجي' :
-                    empType === 'machinery' ? 'آليات' :
-                    (empType || '');
-            }
-            return empType === 'monthly' ? 'Monthly' :
-                empType === 'daily' ? 'Daily' :
-                empType === 'vehicle' ? 'Vehicle' :
-                empType === 'external' ? 'External' :
-                empType === 'machinery' ? 'Machinery' :
-                (empType || '');
-        }
-
-        function scFormatMachineryBasis(basis) {
-            const b = basis || 'monthly';
-            if (currentLang === 'ar') return b === 'daily' ? 'يومي' : 'شهري';
-            return b === 'daily' ? 'Daily' : 'Monthly';
-        }
-
-        function scFormatSnapshotValue(fieldMeta, snapshot) {
-            const key = fieldMeta.key;
-            const raw = snapshot ? snapshot[key] : '';
-
-            if (fieldMeta.type === 'money') {
-                const curKey = fieldMeta.moneyCurrencyKey || 'salaryCurrency';
-                const cur = scNormalizeString(snapshot?.[curKey] || 'IQD') || 'IQD';
-                return `${formatCurrency(scNormalizeNumber(raw))} ${cur}`;
-            }
-            if (fieldMeta.type === 'number') {
-                return String(scNormalizeNumber(raw));
-            }
-            if (fieldMeta.type === 'employeeType') {
-                return scFormatEmployeeType(raw);
-            }
-            if (fieldMeta.type === 'machineryBasis') {
-                return scFormatMachineryBasis(raw);
-            }
-            if (fieldMeta.type === 'project') {
-                const code = scNormalizeString(raw);
-                if (!code) return '';
-                return `${code} - ${projects[code] || code}`;
-            }
-            return scNormalizeString(raw);
-        }
-
-        function scBuildEmployeeSnapshot(emp) {
-            return {
-                salary: scNormalizeNumber(emp.salary),
-                salaryCurrency: scNormalizeString(emp.salaryCurrency || 'USD') || 'USD',
-                bonus: scNormalizeNumber(emp.bonus || 0),
-                bonusCurrency: scNormalizeString(emp.bonusCurrency || 'IQD') || 'IQD',
-                ceoBonus: scNormalizeNumber(emp.ceoBonus || 0),
-                ceoBonusCurrency: scNormalizeString(emp.ceoBonusCurrency || 'IQD') || 'IQD',
-                salaryIncrease: scNormalizeNumber(emp.salaryIncrease || 0),
-                salaryIncreaseCurrency: scNormalizeString(emp.salaryIncreaseCurrency || 'IQD') || 'IQD'
-            };
-        }
-
-        function scSnapshotsEqual(fieldMeta, a, b) {
-            const va = a ? a[fieldMeta.key] : undefined;
-            const vb = b ? b[fieldMeta.key] : undefined;
-
-            if (fieldMeta.type === 'money' || fieldMeta.type === 'number') {
-                return scNumbersClose(scNormalizeNumber(va), scNormalizeNumber(vb));
-            }
-            return scNormalizeString(va) === scNormalizeString(vb);
-        }
-
-        function scStableEmployeeKey(emp) {
-            const code = scNormalizeString(emp.employeeCode);
-            if (code) return `code:${code}`;
-            const ar = scNormalizeString(emp.nameAr).toLowerCase();
-            const en = scNormalizeString(emp.nameEn).toLowerCase();
-            if (ar && en) return `name:${ar}||${en}`;
-            if (ar) return `namear:${ar}`;
-            if (en) return `nameen:${en}`;
-            return `fb:${scNormalizeString(emp.firebaseId) || Math.random().toString(16).slice(2)}`;
-        }
-
-        function scFindEmployeeInMonth(identity, year, month) {
-            const list = employeeData?.[year]?.[month];
-            if (!Array.isArray(list) || list.length === 0) return null;
-
-            if (identity.matchType === 'code') {
-                return list.find(e => scNormalizeString(e.employeeCode) === identity.code) || null;
-            }
-
-            const ar = identity.nameArNorm;
-            const en = identity.nameEnNorm;
-            if (ar && en) {
-                const hit = list.find(e =>
-                    scNormalizeString(e.nameAr).toLowerCase() === ar &&
-                    scNormalizeString(e.nameEn).toLowerCase() === en
-                );
-                if (hit) return hit;
-            }
-            if (ar) {
-                const hit2 = list.find(e => scNormalizeString(e.nameAr).toLowerCase() === ar);
-                if (hit2) return hit2;
-            }
-            if (en) {
-                const hit3 = list.find(e => scNormalizeString(e.nameEn).toLowerCase() === en);
-                if (hit3) return hit3;
-            }
-            return null;
-        }
-
-        function scIteratePeriodsInclusive(fromYear, fromMonthKey, toYear, toMonthKey) {
-            const out = [];
-            let y = parseInt(fromYear);
-            let mIdx = months.indexOf(fromMonthKey);
-            const endY = parseInt(toYear);
-            let endIdx = months.indexOf(toMonthKey);
-
-            if (mIdx < 0 || endIdx < 0 || isNaN(y) || isNaN(endY)) {
-                return [];
-            }
-
-            // إذا كانت الفترة معكوسة، نعكسها تلقائياً
-            const startTs = y * 12 + mIdx;
-            const endTs = endY * 12 + endIdx;
-            if (startTs > endTs) {
-                return scIteratePeriodsInclusive(toYear, toMonthKey, fromYear, fromMonthKey);
-            }
-
-            while (y * 12 + mIdx <= endY * 12 + endIdx) {
-                out.push({ year: y, monthKey: months[mIdx] });
-                mIdx++;
-                if (mIdx >= months.length) {
-                    mIdx = 0;
-                    y++;
-                }
-            }
-            return out;
-        }
-
-        function scDisplayEmployeeName(emp) {
-            return currentLang === 'ar'
-                ? (emp.nameAr || emp.nameEn || emp.name || '')
-                : (emp.nameEn || emp.nameAr || emp.name || '');
-        }
-
-        function initSalaryChangeReportViewControls() {
-            const fillMonths = (selectId) => {
-                const sel = document.getElementById(selectId);
-                if (!sel) return;
-                const prev = sel.value;
-                sel.innerHTML = '';
-                months.forEach(m => {
-                    const option = document.createElement('option');
-                    option.value = m;
-                    option.textContent = translations[currentLang].monthNames[m];
-                    sel.appendChild(option);
-                });
-                if (prev && months.includes(prev)) sel.value = prev;
-            };
-
-            fillMonths('scFromMonth');
-            fillMonths('scToMonth');
-
-            const fillYears = (selectId) => {
-                const sel = document.getElementById(selectId);
-                if (!sel) return;
-                const prev = String(sel.value || '');
-                sel.innerHTML = '';
-                (availableYears || []).forEach(y => {
-                    const option = document.createElement('option');
-                    option.value = String(y);
-                    option.textContent = String(y);
-                    sel.appendChild(option);
-                });
-                if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
-            };
-
-            fillYears('scFromYear');
-            fillYears('scToYear');
-
-            const fromM = document.getElementById('scFromMonth');
-            const toM = document.getElementById('scToMonth');
-            const fromY = document.getElementById('scFromYear');
-            const toY = document.getElementById('scToYear');
-            if (fromM && !fromM.value) fromM.value = currentMonth;
-            if (toM && !toM.value) toM.value = currentMonth;
-            if (fromY && !fromY.value) fromY.value = String(currentYear);
-            if (toY && !toY.value) toY.value = String(currentYear);
-
-            const projectSelect = document.getElementById('scProject');
-            if (projectSelect) {
-                const allowedProjects = getAllowedProjects();
-                const filteredProjects = allowedProjects === null ? projects :
-                    Object.fromEntries(Object.entries(projects).filter(([code]) => allowedProjects.includes(code)));
-
-                const prev = projectSelect.value || 'all';
-                projectSelect.innerHTML = '';
-                const allOpt = document.createElement('option');
-                allOpt.value = 'all';
-                allOpt.id = 'scProjectAllOption';
-                allOpt.textContent = currentLang === 'ar' ? 'جميع المشاريع' : 'All Projects';
-                projectSelect.appendChild(allOpt);
-
-                Object.entries(filteredProjects).forEach(([code, name]) => {
-                    const option = document.createElement('option');
-                    option.value = code;
-                    option.textContent = `${code} - ${name}`;
-                    projectSelect.appendChild(option);
-                });
-
-                if ([...projectSelect.options].some(o => o.value === prev)) {
-                    projectSelect.value = prev;
-                } else {
-                    projectSelect.value = 'all';
-                }
-            }
-        }
-
-        function scCollectIdentitiesForPeriod(periods, projectFilter, employeeTypeFilter) {
-            const map = new Map();
-
-            periods.forEach(({ year, monthKey }) => {
-                const list = employeeData?.[year]?.[monthKey];
-                if (!Array.isArray(list)) return;
-
-                list.forEach(emp => {
-                    if (!emp) return;
-                    if (!hasProjectAccess(emp.project)) return;
-                    if (projectFilter !== 'all' && emp.project !== projectFilter) return;
-                    if (employeeTypeFilter !== 'all' && emp.employeeType !== employeeTypeFilter) return;
-
-                    const key = scStableEmployeeKey(emp);
-                    if (map.has(key)) return;
-
-                    const code = scNormalizeString(emp.employeeCode);
-                    const identity = code
-                        ? { key, matchType: 'code', code, displayName: scDisplayEmployeeName(emp) }
-                        : {
-                            key,
-                            matchType: 'name',
-                            nameArNorm: scNormalizeString(emp.nameAr).toLowerCase(),
-                            nameEnNorm: scNormalizeString(emp.nameEn).toLowerCase(),
-                            displayName: scDisplayEmployeeName(emp)
-                        };
-
-                    map.set(key, identity);
-                });
-            });
-
-            return [...map.values()].sort((a, b) => (a.displayName || '').localeCompare(b.displayName || '', currentLang === 'ar' ? 'ar' : 'en', { sensitivity: 'base' }));
-        }
-
-        function scEscapeHtml(str) {
-            return String(str ?? '')
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;');
-        }
-
-        function scFormatSnapshotBlockHTML(snap) {
-            if (!snap) return '';
-            return SALARY_CHANGE_TRACKED_FIELDS.map(field => {
-                const lab = currentLang === 'ar' ? field.labelAr : field.labelEn;
-                const val = scFormatSnapshotValue(field, snap);
-                return `<div style="margin:0 0 3px 0;"><span style="opacity:.78;font-size:10px;">${scEscapeHtml(lab)}:</span> <span style="font-weight:600;">${scEscapeHtml(val)}</span></div>`;
-            }).join('');
-        }
-
-        function scRenderMatrixReport(identities, periods, meta) {
-            const isAr = currentLang === 'ar';
-            const title = isAr ? 'جدول الرواتب حسب الأشهر' : 'Salary data by month';
-            const emptyMark = '—';
-            const stickySide = isAr ? 'right' : 'left';
-
-            let headerHtml = `<div style="margin-bottom:12px;color:var(--text);">`;
-            headerHtml += `<div style="font-weight:800;font-size:17px;">${title}</div>`;
-            headerHtml += `<div style="opacity:.85;margin-top:4px;font-size:13px;">${meta.rangeText}</div>`;
-            headerHtml += `<div style="opacity:.85;font-size:13px;margin-top:2px;">${isAr ? 'الموظفون' : 'Employees'}: <strong>${identities.length}</strong> — ${isAr ? 'الأشهر' : 'Months'}: <strong>${periods.length}</strong></div>`;
-            headerHtml += `</div>`;
-
-            let tableHtml = `<div class="report-table-container salary-change-matrix-wrap" style="overflow:auto;max-height:72vh;border:1px solid var(--border);border-radius:10px;">`;
-            tableHtml += `<table class="report-table salary-change-matrix" style="border-collapse:collapse;min-width:max(100%,720px);">`;
-            tableHtml += `<thead><tr>`;
-            tableHtml += `<th style="position:sticky;top:0;${stickySide}:0;z-index:3;background:#f2f4f6;color:#111827;min-width:170px;max-width:220px;padding:10px;border-bottom:2px solid var(--border);text-align:${isAr ? 'right' : 'left'};vertical-align:bottom;font-weight:900;">${isAr ? 'الموظف' : 'Employee'}</th>`;
-            periods.forEach(({ year, monthKey }) => {
-                const mn = translations[currentLang].monthNames[monthKey];
-                tableHtml += `<th style="position:sticky;top:0;z-index:2;background:#f2f4f6;color:#111827;min-width:150px;padding:8px;border-bottom:2px solid var(--border);text-align:center;vertical-align:bottom;font-size:12px;line-height:1.25;font-weight:900;">${scEscapeHtml(mn)}<br><span style="opacity:.9;font-weight:800;">${year}</span></th>`;
-            });
-            tableHtml += `</tr></thead><tbody>`;
-
-            if (identities.length === 0) {
-                tableHtml += `<tr><td colspan="${periods.length + 1}" style="padding:18px;text-align:center;opacity:.8;">${isAr ? 'لا يوجد موظفون ضمن المرشحات في هذه الفترة.' : 'No employees match the filters for this period.'}</td></tr>`;
-            } else {
-                identities.forEach(id => {
-                    const codeLine = id.matchType === 'code' && id.code
-                        ? `<div style="opacity:.75;font-size:11px;margin-top:2px;">${scEscapeHtml(id.code)}</div>`
-                        : '';
-                    tableHtml += `<tr>`;
-                    tableHtml += `<td style="position:sticky;${stickySide}:0;z-index:1;background:var(--card-bg,#f9fafb);padding:8px;border-bottom:1px solid var(--border);vertical-align:top;font-weight:700;">${scEscapeHtml(id.displayName || '')}${codeLine}</td>`;
-                    periods.forEach(({ year, monthKey }) => {
-                        const emp = scFindEmployeeInMonth(id, year, monthKey);
-                        if (!emp) {
-                            tableHtml += `<td style="padding:6px;border-bottom:1px solid var(--border);vertical-align:top;color:#9ca3af;font-size:12px;text-align:center;">${emptyMark}</td>`;
-                        } else {
-                            if (!id.displayName) id.displayName = scDisplayEmployeeName(emp);
-                            const snap = scBuildEmployeeSnapshot(emp);
-                            tableHtml += `<td style="padding:6px;border-bottom:1px solid var(--border);vertical-align:top;font-size:11px;line-height:1.3;text-align:${isAr ? 'right' : 'left'};">${scFormatSnapshotBlockHTML(snap)}</td>`;
-                        }
-                    });
-                    tableHtml += `</tr>`;
-                });
-            }
-
-            tableHtml += `</tbody></table></div>`;
-            const printInner = `${headerHtml}${tableHtml}`;
-            const wrapper = `<div class="salary-change-matrix-root">${printInner}</div>`;
-            return { wrapper, printInner };
-        }
-
-        function scBuildPrintableHtml(innerTableHtml, meta) {
-            const isAr = currentLang === 'ar';
-            const dir = isAr ? 'rtl' : 'ltr';
-            const lang = isAr ? 'ar' : 'en';
-            const title = isAr ? 'تتبع الرواتب' : 'Salary tracking';
-
-            return `<!DOCTYPE html>
-<html lang="${lang}" dir="${dir}">
-<head>
-  <meta charset="UTF-8" />
-  <title>${title}</title>
-  <style>
-    @page { size: A4 landscape; margin: 16px 16px 160px 16px; }
-    body { font-family: Segoe UI, Tahoma, Arial, sans-serif; color: #111; font-size: 10px; padding: 16px; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { border: 1px solid #ccc; padding: 4px; vertical-align: top; }
-    th { background: #f3f4f6; }
-    .meta { margin-bottom: 8px; font-size: 11px; color: #333; }
-  </style>
-</head>
-<body>
-  <div class="meta"><strong>${title}</strong> — ${meta.rangeText} — ${meta.summaryLine || ''}</div>
-  ${innerTableHtml}
-  <script>
-    window.onload = function() {
-      setTimeout(function() { window.print(); }, 500);
-    };
-  <\/script>
-</body>
-</html>`;
-        }
-
-        async function generateSalaryChangeReport() {
-            const isAr = currentLang === 'ar';
-            try {
-                const fromMonth = document.getElementById('scFromMonth')?.value;
-                const toMonth = document.getElementById('scToMonth')?.value;
-                const fromYear = parseInt(document.getElementById('scFromYear')?.value || currentYear);
-                const toYear = parseInt(document.getElementById('scToYear')?.value || currentYear);
-                const projectFilter = document.getElementById('scProject')?.value || 'all';
-                const employeeTypeFilter = document.getElementById('scEmployeeType')?.value || 'all';
-
-                if (!fromMonth || !toMonth) {
-                    showNotification('warning', isAr ? 'تنبيه' : 'Warning', isAr ? 'يرجى اختيار الشهر.' : 'Please select months.');
-                    return;
-                }
-
-                const periods = scIteratePeriodsInclusive(fromYear, fromMonth, toYear, toMonth);
-                if (!periods.length) {
-                    showNotification('error', isAr ? 'خطأ' : 'Error', isAr ? 'فترة غير صالحة.' : 'Invalid period.');
-                    return;
-                }
-
-                if (getStorageMode() === 'firebase' && typeof db !== 'undefined' && db && typeof loadEmployeesFromFirebase === 'function') {
-                    const years = [...new Set(periods.map(p => p.year))];
-                    for (const y of years) {
-                        await loadEmployeesFromFirebase(y);
-                    }
-                }
-
-                const identities = scCollectIdentitiesForPeriod(periods, projectFilter, employeeTypeFilter);
-
-                const rangeText = isAr
-                    ? `الفترة: ${translations.ar.monthNames[fromMonth]} ${fromYear} → ${translations.ar.monthNames[toMonth]} ${toYear}`
-                    : `Period: ${translations.en.monthNames[fromMonth]} ${fromYear} → ${translations.en.monthNames[toMonth]} ${toYear}`;
-                const summaryLine = isAr
-                    ? `الموظفون: ${identities.length} — الأشهر: ${periods.length}`
-                    : `Employees: ${identities.length} — Months: ${periods.length}`;
-
-                const rendered = scRenderMatrixReport(identities, periods, { rangeText });
-
-                const results = document.getElementById('salaryChangeReportResults');
-                if (results) {
-                    results.innerHTML = rendered.wrapper;
-                    results.dataset.printHtml = scBuildPrintableHtml(rendered.printInner, { rangeText, summaryLine });
-                }
-
-                showNotification(
-                    'success',
-                    isAr ? 'تم' : 'Done',
-                    isAr
-                        ? `تم توليد الجدول (${identities.length} موظف × ${periods.length} شهر).`
-                        : `Table generated (${identities.length} employees × ${periods.length} months).`
-                );
-            } catch (e) {
-                console.error(e);
-                showNotification('error', isAr ? 'خطأ' : 'Error', isAr ? 'تعذر توليد التقرير.' : 'Could not generate the report.');
-            }
-        }
-
-        function printSalaryChangeReport() {
-            const results = document.getElementById('salaryChangeReportResults');
-            const html = results?.dataset?.printHtml;
-            if (!html) {
-                showNotification('warning', currentLang === 'ar' ? 'تنبيه' : 'Warning', currentLang === 'ar' ? 'لا يوجد تقرير للطباعة. اضغط "عرض التقرير" أولاً.' : 'Nothing to print. Generate the report first.');
-                return;
-            }
-
-            const printWindow = window.open('', '_blank', 'width=1200,height=800');
-            if (!printWindow) {
-                showNotification('error', 'خطأ', 'تعذر فتح نافذة الطباعة. تأكد من السماح بالنوافذ المنبثقة.');
-                return;
-            }
-            printWindow.document.write(html);
-            printWindow.document.close();
-        }
-        
         function printSalaryVouchers() {
             const month = document.getElementById('voucherMonthSelect')?.value || currentMonth;
             const year = parseInt(document.getElementById('voucherYearSelect')?.value || currentYear);
@@ -29790,9 +29461,6 @@ function renderProjectView() {
         // تصدير الوظائف للاستخدام العالمي
         window.openSalaryVouchersModal = openSalaryVouchersModal;
         window.printSalaryVouchers = printSalaryVouchers;
-        window.initSalaryChangeReportViewControls = initSalaryChangeReportViewControls;
-        window.generateSalaryChangeReport = generateSalaryChangeReport;
-        window.printSalaryChangeReport = printSalaryChangeReport;
 
         function executePrintNow(htmlContent, settings) {
             const printWindow = window.open('', '_blank', 'width=1200,height=800');
@@ -29849,6 +29517,7 @@ function renderProjectView() {
                     let importedCount = {
                         projects: 0,
                         employees: 0,
+                        profiles: 0,
                         settings: false,
                         signatures: false
                     };
@@ -29901,11 +29570,22 @@ function renderProjectView() {
                         importedCount.signatures = true;
                     }
                     
+                    // استيراد بطاقات الموظفين
+                    if (data.employeeProfiles && typeof data.employeeProfiles === 'object') {
+                        for (const profile of Object.values(data.employeeProfiles)) {
+                            if (profile && profile.profileId) {
+                                await saveEmployeeProfileToStore({ ...profile });
+                                importedCount.profiles++;
+                            }
+                        }
+                    }
+                    
                     // إعادة تحميل البيانات
                         await loadProjectsFromFirebase();
                         await loadEmployeesFromFirebase(null, null, true); // تحميل كامل بعد الاستيراد
                     await loadCompanySettings();
                     await loadPrintSignatures();
+                    await loadEmployeeProfiles();
                     
                         hideLoading();
                     
@@ -29914,11 +29594,13 @@ function renderProjectView() {
                         ? `✅ تم الاستيراد بنجاح!\n\n` +
                           `📊 المشاريع: ${importedCount.projects}\n` +
                           `👥 الموظفون: ${importedCount.employees}\n` +
+                          `🪪 بطاقات الموظفين: ${importedCount.profiles}\n` +
                           `⚙️ الإعدادات: ${importedCount.settings ? '✅' : '❌'}\n` +
                           `✍️ التوقيعات: ${importedCount.signatures ? '✅' : '❌'}`
                         : `✅ Import successful!\n\n` +
                           `📊 Projects: ${importedCount.projects}\n` +
                           `👥 Employees: ${importedCount.employees}\n` +
+                          `🪪 Employee cards: ${importedCount.profiles}\n` +
                           `⚙️ Settings: ${importedCount.settings ? '✅' : '❌'}\n` +
                           `✍️ Signatures: ${importedCount.signatures ? '✅' : '❌'}`;
                     
@@ -31972,6 +31654,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 setTimeout(() => {
                     showNotification('success', 'مرحباً!', 'النظام متصل بـ Firebase بنجاح 🎉');
                 }, 500);
+                setTimeout(checkBackupReminder, 4000); // تذكير النسخ الاحتياطي إن لزم
                 
             } catch (error) {
                 console.error('❌ خطأ في تهيئة النظام:', error);
@@ -32207,7 +31890,6 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 users: currentLang === 'ar' ? 'المستخدمين' : 'Users',
                 settings: currentLang === 'ar' ? 'الإعدادات' : 'Settings',
                 bulkEdit: currentLang === 'ar' ? 'تعديل متعدد' : 'Bulk Edit',
-                salaryChangeReport: currentLang === 'ar' ? 'تتبع الرواتب' : 'Salary tracking',
                 employeeProfiles: t('navEmployeeProfiles')
             };
 
@@ -32311,7 +31993,6 @@ function generateComparisonSummary(projectCode, month1, month2) {
         window.toggleReservationEnabled = toggleReservationEnabled;
         window.updateReservationCalculation = updateReservationCalculation;
         window.openReservationReport = openReservationReport;
-        window.openEmployeeReportModal = openEmployeeReportModal;
         window.printEmployeeReport = printEmployeeReport;
         // بطاقات الموظفين
         window.refreshEmployeeProfilesView = refreshEmployeeProfilesView;
@@ -32327,6 +32008,12 @@ function generateComparisonSummary(projectCode, month1, month2) {
         window.openProfileReportModal = openProfileReportModal;
         window.generateProfileCode = generateProfileCode;
         window.profileFilters = profileFilters;
+        // تقرير الحركة الجماعية
+        window.openCollectiveMovementModal = openCollectiveMovementModal;
+        window.renderCollectiveMovement = renderCollectiveMovement;
+        window.exportCollectiveMovement = exportCollectiveMovement;
+        window.printCollectiveMovement = printCollectiveMovement;
+        window.collectiveReportState = collectiveReportState;
         window.updateReservationPercentage = updateReservationPercentage;
         window.updateReservedAmount = updateReservedAmount;
         window.enableReservationQuick = enableReservationQuick;
