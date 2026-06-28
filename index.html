@@ -6773,6 +6773,13 @@
         </div>
     </div>
 
+    <!-- نافذة إشعار التحديث -->
+    <div class="modal" id="updateNoticeModal">
+        <div class="modal-content" style="max-width: 540px; width: 92vw;">
+            <div id="updateNoticeContent"><!-- يُملأ بالجافاسكريبت --></div>
+        </div>
+    </div>
+
     <!-- نافذة إضافة موظفين متعددين المحسّنة -->
     <div class="modal" id="multipleEmployeesModal">
         <div class="modal-content" style="max-width: 1400px; max-height: 95vh;">
@@ -8849,12 +8856,125 @@
         // وقد تفشل بعض محاولات الاتصال الأولية، لكن Firebase سيعيد المحاولة تلقائياً
         console.log('ℹ️ Note: 404 errors from Firebase WebChannel in Network tab are normal and can be ignored.');
 
+        // ========== نظام إشعار التحديثات (Update Notice System) ==========
+        const APP_VERSION = '2.3.0';
+        const SEEN_VERSION_KEY = 'payrose_seen_version';
+        const APP_CHANGELOG = {
+            '2.3.0': {
+                ar: [
+                    'تقرير «الحركة الجماعية» للموظفين (مصفوفة موظفون × أشهر + نمط مفصّل)',
+                    'تذكير دوري بالنسخ الاحتياطي + تضمين بطاقات الموظفين في النسخة',
+                    'إصلاح تزامن الشهر بين لوحة التحكم والأشهر والمشاريع',
+                    'إيقاف الوضع المحلي — النظام يعمل عبر Firebase فقط'
+                ],
+                en: [
+                    'Collective employee movement report (employees × months matrix + detailed mode)',
+                    'Periodic backup reminder + employee cards included in backup',
+                    'Month sync fix across dashboard / months / projects',
+                    'Local mode disabled — Firebase only'
+                ]
+            }
+        };
+
+        function compareVersions(a, b) {
+            const pa = String(a || '0').split('.').map(n => parseInt(n) || 0);
+            const pb = String(b || '0').split('.').map(n => parseInt(n) || 0);
+            for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+                const x = pa[i] || 0, y = pb[i] || 0;
+                if (x > y) return 1;
+                if (x < y) return -1;
+            }
+            return 0;
+        }
+
+        // (3) ضبط المحددات الآمن عند التحديث: تصفير الفلاتر ومزامنة الفترة على آخر شهر مُعدَّل
+        function applyUpdateSelectorsReset() {
+            try {
+                if (typeof monthFilterSearch !== 'undefined') monthFilterSearch = '';
+                if (typeof monthFilterProject !== 'undefined') monthFilterProject = 'all';
+                if (typeof monthFilterType !== 'undefined') monthFilterType = 'all';
+                if (typeof paymentFilter !== 'undefined') paymentFilter = 'all';
+                if (typeof reservationFilter !== 'undefined') reservationFilter = 'all';
+                if (typeof linkedFilter !== 'undefined') linkedFilter = 'all';
+                if (typeof duplicateCodeFilter !== 'undefined') duplicateCodeFilter = 'all';
+                if (typeof columnFilters !== 'undefined') columnFilters = {};
+                const latest = (typeof getLatestUpdatedPeriod === 'function') ? getLatestUpdatedPeriod() : null;
+                if (latest && latest.year && latest.month) {
+                    currentYear = latest.year;
+                    currentMonth = latest.month;
+                    dashboardSelectedMonth = latest.month;
+                    selectedProjectMonth = latest.month;
+                    if (typeof updateYearSelector === 'function') updateYearSelector();
+                }
+            } catch (e) { console.warn('applyUpdateSelectorsReset failed', e); }
+        }
+
+        // (2) نافذة «تحديث جديد» — تظهر مرة واحدة لكل إصدار في كل متصفح
+        function showUpdateModalIfNeeded() {
+            try {
+                const seen = localStorage.getItem(SEEN_VERSION_KEY);
+                if (seen === APP_VERSION) return;
+                const isUpgrade = !seen || compareVersions(APP_VERSION, seen) > 0;
+                if (isUpgrade) {
+                    applyUpdateSelectorsReset();
+                    if (typeof currentView !== 'undefined' && currentView === 'dashboard' && typeof renderContent === 'function') {
+                        renderContent();
+                    }
+                }
+                const isAr = currentLang === 'ar';
+                const items = (APP_CHANGELOG[APP_VERSION] && APP_CHANGELOG[APP_VERSION][isAr ? 'ar' : 'en']) || [];
+                const list = items.map(it => `<li style="margin-bottom:6px;">${it}</li>`).join('');
+                const content = document.getElementById('updateNoticeContent');
+                if (!content) { localStorage.setItem(SEEN_VERSION_KEY, APP_VERSION); return; }
+                content.innerHTML = `
+                    <div class="modal-header"><h2>🎉 ${isAr ? 'تم رفع تحديث جديد' : 'New update deployed'}</h2></div>
+                    <div class="modal-body" style="padding:22px;">
+                        <p style="font-size:15px; margin-bottom:14px;">${isAr ? 'تم تحديث النظام إلى الإصدار' : 'The system was updated to version'} <strong>${APP_VERSION}</strong>${seen ? ` <span style="color:var(--gray);">(${isAr ? 'من' : 'from'} ${seen})</span>` : ''}.</p>
+                        ${list ? `<div style="background:#f8fafc; border:1px solid var(--border); border-radius:10px; padding:14px 18px;">
+                            <div style="font-weight:700; margin-bottom:8px;">${isAr ? '✨ ما الجديد:' : '✨ What\'s new:'}</div>
+                            <ul style="padding-inline-start:20px; margin:0;">${list}</ul></div>` : ''}
+                        ${isUpgrade ? `<p style="font-size:13px; color:var(--gray); margin-top:14px;">ℹ️ ${isAr ? 'تمت إعادة ضبط المحددات (الشهر/السنة/الفلاتر) إلى آخر فترة مُعدَّلة.' : 'Selectors (month/year/filters) were reset to the latest edited period.'}</p>` : ''}
+                    </div>
+                    <div class="modal-actions" style="padding:0 22px 22px; display:flex; justify-content:flex-end; gap:10px;">
+                        <button class="btn btn-primary" onclick="dismissUpdateNotice()">${isAr ? 'حسناً، فهمت' : 'Got it'}</button>
+                    </div>`;
+                openModal('updateNoticeModal');
+                localStorage.setItem(SEEN_VERSION_KEY, APP_VERSION);
+            } catch (e) { console.warn('showUpdateModalIfNeeded failed', e); }
+        }
+        function dismissUpdateNotice() { try { closeModal('updateNoticeModal'); } catch (e) {} }
+
+        // (4) كشف توفّر نسخة أحدث على الخادم (لمعالجة الكاش)
+        async function checkServerVersion() {
+            try {
+                const res = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+                if (!res.ok) return;
+                const data = await res.json();
+                const serverV = data && data.version;
+                if (serverV && compareVersions(serverV, APP_VERSION) > 0) showUpdateReloadBanner(serverV);
+            } catch (e) { /* version.json غير موجود — تجاهل بصمت */ }
+        }
+        function showUpdateReloadBanner(serverV) {
+            if (document.getElementById('updateReloadBanner')) return;
+            const isAr = currentLang === 'ar';
+            const bar = document.createElement('div');
+            bar.id = 'updateReloadBanner';
+            bar.style.cssText = 'position:fixed; bottom:0; inset-inline:0; z-index:99999; background:#101d2d; color:#fff; padding:12px 18px; display:flex; align-items:center; gap:14px; justify-content:center; box-shadow:0 -2px 12px rgba(0,0,0,.25); font-size:14px; flex-wrap:wrap;';
+            bar.innerHTML = `<span>🚀 ${isAr ? `يتوفّر إصدار أحدث (${serverV}).` : `A newer version (${serverV}) is available.`}</span>
+                <button onclick="location.href=location.pathname+'?u='+Date.now()" style="background:#10b981; color:#fff; border:none; padding:8px 16px; border-radius:8px; font-weight:700; cursor:pointer;">${isAr ? 'إعادة التحميل' : 'Reload'}</button>
+                <button onclick="this.parentElement.remove()" style="background:transparent; color:#cbd5e1; border:1px solid #334155; padding:8px 12px; border-radius:8px; cursor:pointer;">${isAr ? 'لاحقاً' : 'Later'}</button>`;
+            document.body.appendChild(bar);
+        }
+        window.dismissUpdateNotice = dismissUpdateNotice;
+        window.showUpdateModalIfNeeded = showUpdateModalIfNeeded;
+        window.checkServerVersion = checkServerVersion;
+
         // ========== Security & Protection System ==========
         
         // معلومات الترخيص والحماية
         const SYSTEM_INFO = {
             name: 'PayRose',
-            version: '2.0.9',
+            version: APP_VERSION,
             developer: 'ROSEMARY',
             copyright: '© 2024 ROSEMARY - All Rights Reserved',
             licensed: true,
@@ -8929,7 +9049,7 @@
         console.log(`
 ╔═══════════════════════════════════════════════════╗
 ║                                                   ║
-║              🌿 PayRose System v2.0.9            ║
+║              🌿 PayRose System v${APP_VERSION}            ║
 ║           Professional Payroll Management         ║
 ║                                                   ║
 ╠═══════════════════════════════════════════════════╣
@@ -10294,7 +10414,7 @@
                 // تحديث رقم الإصدار وآخر نشاط
                 try {
                     await updateDoc(doc(db, 'users', user.uid), {
-                        appVersion: '2.0.9',
+                        appVersion: APP_VERSION,
                         lastAppUpdate: new Date(),
                         lastLogin: new Date().toISOString()
                     });
@@ -13058,6 +13178,8 @@
 
         async function selectMonth(month) {
             currentMonth = month;
+            dashboardSelectedMonth = month;   // إبقاء لوحة التحكم متوافقة
+            selectedProjectMonth = month;      // مزامنة شهر عرض «المشاريع»
             currentView = 'month';
             monthFilterSearch = '';
             monthFilterProject = 'all';
@@ -13177,6 +13299,7 @@
             currentYear = isNaN(year) ? currentYear : year;
             selectedProjectMonth = month;
             currentMonth = month;
+            dashboardSelectedMonth = month;   // إبقاء لوحة التحكم متوافقة
             currentView = 'project';
             closeModal('projectPickerModal');
             updateYearSelector();
@@ -13326,6 +13449,8 @@
         // دالة لتغيير الشهر في لوحة التحكم
         async function changeDashboardMonth(month) {
             dashboardSelectedMonth = month;
+            currentMonth = month;          // مزامنة شهر عرض «الأشهر»
+            selectedProjectMonth = month;  // مزامنة شهر عرض «المشاريع»
             if (getStorageMode() === 'firebase' && db && typeof loadEmployeesFromFirebase === 'function') {
                 await loadEmployeesFromFirebase(currentYear);
                 const idx = months.indexOf(month);
@@ -23291,7 +23416,7 @@ function renderProjectView() {
                     role: role,
                     fullAccess: fullAccess,
                     permissions: permissions,
-                    appVersion: '2.0.9',
+                    appVersion: APP_VERSION,
                     lastAppUpdate: new Date(),
                     createdAt: new Date().toISOString(),
                     status: 'active'
@@ -23371,7 +23496,7 @@ function renderProjectView() {
                     role: role,
                     fullAccess: fullAccess,
                     permissions: permissions,
-                    appVersion: '2.0.9',
+                    appVersion: APP_VERSION,
                     lastAppUpdate: new Date(),
                     createdAt: new Date().toISOString(),
                     status: 'active'
@@ -25663,7 +25788,7 @@ function renderProjectView() {
                     employeeProfiles: employeeProfiles,
                 exportDate: new Date().toISOString(),
                     exportedBy: currentUser?.email || 'unknown',
-                    version: '2.2.0'
+                    version: APP_VERSION
                 };
                 
                 const dataStr = JSON.stringify(backupData, null, 2);
@@ -31604,7 +31729,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
                                 reports: { view: true, export: true, print: true },
                                 settings: true
                             },
-                            appVersion: '2.0.9',
+                            appVersion: APP_VERSION,
                             lastAppUpdate: new Date(),
                             createdAt: new Date().toISOString()
                         });
@@ -31655,6 +31780,8 @@ function generateComparisonSummary(projectCode, month1, month2) {
                     showNotification('success', 'مرحباً!', 'النظام متصل بـ Firebase بنجاح 🎉');
                 }, 500);
                 setTimeout(checkBackupReminder, 4000); // تذكير النسخ الاحتياطي إن لزم
+                setTimeout(showUpdateModalIfNeeded, 1200); // إشعار «تحديث جديد» إن تغيّر الإصدار
+                setTimeout(checkServerVersion, 6000);       // كشف توفّر نسخة أحدث على الخادم
                 
             } catch (error) {
                 console.error('❌ خطأ في تهيئة النظام:', error);
@@ -32940,7 +33067,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
                     role: role,
                     fullAccess: fullAccess,
                     permissions: permissions,
-                    appVersion: '2.0.9',
+                    appVersion: APP_VERSION,
                     lastAppUpdate: new Date(),
                     createdAt: new Date().toISOString()
                 });
@@ -33023,7 +33150,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
                     role: role,
                     fullAccess: fullAccess,
                     permissions: permissions,
-                    appVersion: '2.0.9',
+                    appVersion: APP_VERSION,
                     lastAppUpdate: new Date(),
                     linkedAt: new Date().toISOString()
                 });
