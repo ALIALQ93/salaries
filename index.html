@@ -6115,6 +6115,7 @@
                         <div id="printColumnsContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; max-height: 180px; overflow-y: auto;">
                             <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="index" checked> الرقم</label>
                             <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="name" checked> الاسم</label>
+                            <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="phoneNumber"> رقم الهاتف</label>
                             <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="position" checked> المنصب</label>
                             <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="department" checked> القسم</label>
                             <label class="print-column-check-label"><input type="checkbox" class="print-column-check" value="project" checked> المشروع</label>
@@ -27359,6 +27360,7 @@ function renderProjectView() {
         const PRINT_COLUMNS_CONFIG = [
             { id: 'index', labelAr: '#', labelEn: '#' },
             { id: 'name', labelAr: 'الاسم', labelEn: 'Name' },
+            { id: 'phoneNumber', labelAr: 'رقم الهاتف', labelEn: 'Phone' },
             { id: 'position', labelAr: 'المنصب', labelEn: 'Position' },
             { id: 'department', labelAr: 'القسم', labelEn: 'Department' },
             { id: 'project', labelAr: 'المشروع', labelEn: 'Project' },
@@ -27424,6 +27426,7 @@ function renderProjectView() {
                     let n = isArabic ? (emp.nameAr || emp.name || '') : (emp.nameEn || emp.name || '');
                     if (emp.linkedToFirebaseId) n = '🔗 ' + n + ' (' + t('linkedDuplicate') + ')';
                     return n;
+                case 'phoneNumber': return emp.phoneNumber || '';
                 case 'position': return emp.position || '';
                 case 'department': return getDepartmentLabel(emp.department);
                 case 'project': return projects[emp.project] || emp.project || '';
