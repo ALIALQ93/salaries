@@ -8858,9 +8858,17 @@
         console.log('ℹ️ Note: 404 errors from Firebase WebChannel in Network tab are normal and can be ignored.');
 
         // ========== نظام إشعار التحديثات (Update Notice System) ==========
-        const APP_VERSION = '2.3.0';
+        const APP_VERSION = '2.4.0';
         const SEEN_VERSION_KEY = 'payrose_seen_version';
         const APP_CHANGELOG = {
+            '2.4.0': {
+                ar: [
+                    'إضافة عمود «رقم الهاتف» ضمن خيارات الطباعة (اختياري وقابل للتحديد)'
+                ],
+                en: [
+                    'Added optional "Phone Number" column to print options'
+                ]
+            },
             '2.3.0': {
                 ar: [
                     'تقرير «الحركة الجماعية» للموظفين (مصفوفة موظفون × أشهر + نمط مفصّل)',
