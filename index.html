@@ -2284,6 +2284,19 @@
             min-width: 36px;
         }
 
+        .btn-whatsapp {
+            background: #25d366 !important;
+            color: #fff !important;
+            border-color: #1ebe57 !important;
+        }
+        .btn-whatsapp:hover:not(:disabled) {
+            background: #1ebe57 !important;
+        }
+        .btn-whatsapp:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
         tbody tr:nth-child(even) td:not(.pinned-column) {
             background: var(--slate-50);
         }
@@ -5494,7 +5507,10 @@
                     </div>
                     <div class="form-group">
                         <label id="employeePhoneLabel">رقم الهاتف</label>
-                        <input type="tel" id="employeePhone" inputmode="tel" autocomplete="tel" placeholder="07xxxxxxxx">
+                        <div style="display: flex; gap: 6px;">
+                            <select id="employeeCountryCode" style="max-width: 140px; direction: ltr;"></select>
+                            <input type="tel" id="employeePhone" inputmode="tel" autocomplete="tel" placeholder="7xxxxxxxxx" style="flex: 1;">
+                        </div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -5690,7 +5706,10 @@
                     </div>
                     <div class="form-group">
                         <label id="editPhoneLabel">رقم الهاتف</label>
-                        <input type="tel" id="editPhone" inputmode="tel" autocomplete="tel" placeholder="07xxxxxxxx">
+                        <div style="display: flex; gap: 6px;">
+                            <select id="editCountryCode" style="max-width: 140px; direction: ltr;"></select>
+                            <input type="tel" id="editPhone" inputmode="tel" autocomplete="tel" placeholder="7xxxxxxxxx" style="flex: 1;">
+                        </div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -8858,9 +8877,25 @@
         console.log('ℹ️ Note: 404 errors from Firebase WebChannel in Network tab are normal and can be ignored.');
 
         // ========== نظام إشعار التحديثات (Update Notice System) ==========
-        const APP_VERSION = '2.4.0';
+        const APP_VERSION = '2.6.0';
         const SEEN_VERSION_KEY = 'payrose_seen_version';
         const APP_CHANGELOG = {
+            '2.6.0': {
+                ar: [
+                    'زر واتساب لكل موظف لإرسال تفاصيل الراتب عبر رسالة جاهزة'
+                ],
+                en: [
+                    'WhatsApp button per employee to send a ready salary details message'
+                ]
+            },
+            '2.5.0': {
+                ar: [
+                    'إضافة رمز البلد لرقم هاتف الموظف في البطاقة (افتراضي: العراق +964)'
+                ],
+                en: [
+                    'Added country dial code to employee phone (default: Iraq +964)'
+                ]
+            },
             '2.4.0': {
                 ar: [
                     'إضافة عمود «رقم الهاتف» ضمن خيارات الطباعة (اختياري وقابل للتحديد)'
@@ -9181,6 +9216,8 @@
                 advance: 'سلفة', netSalary: 'الصافي', actions: 'إجراءات',
                 monthly: 'شهري', daily: 'يومي', vehicle: 'سيارة', machinery: 'الآليات', external: 'خارجي',
                 edit: '✏️', copy: '📋', delete: '🗑️', print: '🖨️ طباعة',
+                sendWhatsApp: 'إرسال تفاصيل الراتب عبر واتساب',
+                noPhoneNumber: 'لا يوجد رقم هاتف لهذا الموظف',
                 search: '🔍 البحث', all: 'الكل', total: 'المجموع',
                 selected: 'محدد', allProjects: 'جميع المشاريع',
                 // User Management
@@ -9657,6 +9694,8 @@
                 advance: 'Advance', netSalary: 'Net', actions: 'Actions',
                 monthly: 'Monthly', daily: 'Daily', vehicle: 'Vehicle', machinery: 'Machinery', external: 'External',
                 edit: '✏️', copy: '📋', delete: '🗑️', print: '🖨️ Print',
+                sendWhatsApp: 'Send salary details via WhatsApp',
+                noPhoneNumber: 'No phone number for this employee',
                 search: '🔍 Search', all: 'All', total: 'Total',
                 selected: 'selected', allProjects: 'All Projects',
                 // User Management
@@ -12206,6 +12245,153 @@
             fillDepartmentSelect(document.getElementById('editDepartment'), selectedDepartment || '');
         }
 
+        // ========== رموز الدول (لحقل الهاتف في بطاقة الموظف) ==========
+        const DEFAULT_COUNTRY_CODE = '964'; // العراق افتراضياً
+        const COUNTRY_DIAL_CODES = [
+            { code: '964', flag: '🇮🇶', ar: 'العراق', en: 'Iraq' },
+            { code: '966', flag: '🇸🇦', ar: 'السعودية', en: 'Saudi Arabia' },
+            { code: '971', flag: '🇦🇪', ar: 'الإمارات', en: 'UAE' },
+            { code: '965', flag: '🇰🇼', ar: 'الكويت', en: 'Kuwait' },
+            { code: '974', flag: '🇶🇦', ar: 'قطر', en: 'Qatar' },
+            { code: '973', flag: '🇧🇭', ar: 'البحرين', en: 'Bahrain' },
+            { code: '968', flag: '🇴🇲', ar: 'عُمان', en: 'Oman' },
+            { code: '962', flag: '🇯🇴', ar: 'الأردن', en: 'Jordan' },
+            { code: '963', flag: '🇸🇾', ar: 'سوريا', en: 'Syria' },
+            { code: '961', flag: '🇱🇧', ar: 'لبنان', en: 'Lebanon' },
+            { code: '20',  flag: '🇪🇬', ar: 'مصر', en: 'Egypt' },
+            { code: '90',  flag: '🇹🇷', ar: 'تركيا', en: 'Turkey' },
+            { code: '98',  flag: '🇮🇷', ar: 'إيران', en: 'Iran' },
+            { code: '1',   flag: '🇺🇸', ar: 'أمريكا/كندا', en: 'USA/Canada' },
+            { code: '44',  flag: '🇬🇧', ar: 'بريطانيا', en: 'UK' }
+        ];
+
+        function fillCountryCodeSelect(selectEl, selectedCode) {
+            if (!selectEl) return;
+            const chosen = (selectedCode ? String(selectedCode).replace(/\D/g, '') : '') || DEFAULT_COUNTRY_CODE;
+            const isAr = currentLang === 'ar';
+            selectEl.innerHTML = COUNTRY_DIAL_CODES.map(c => {
+                const name = isAr ? c.ar : c.en;
+                const sel = c.code === chosen ? ' selected' : '';
+                return `<option value="${c.code}"${sel}>${c.flag} ${name} +${c.code}</option>`;
+            }).join('');
+            selectEl.value = COUNTRY_DIAL_CODES.some(c => c.code === chosen) ? chosen : DEFAULT_COUNTRY_CODE;
+        }
+
+        /** رقم محلي بدون صفر بادئ (لدمجه مع رمز البلد) */
+        function normalizeLocalPhone(phone) {
+            let digits = String(phone || '').replace(/\D/g, '');
+            if (digits.startsWith('0')) digits = digits.replace(/^0+/, '');
+            return digits;
+        }
+
+        /** عرض الرقم مع رمز البلد: +964 7701234567 */
+        function formatPhoneWithCountry(emp) {
+            const local = normalizeLocalPhone(emp && emp.phoneNumber);
+            if (!local) return '';
+            const code = String((emp && emp.phoneCountryCode) || DEFAULT_COUNTRY_CODE).replace(/\D/g, '') || DEFAULT_COUNTRY_CODE;
+            return '+' + code + ' ' + local;
+        }
+
+        /** رقم دولي للأدوات الخارجية (واتساب وغيره): 9647701234567 */
+        function getInternationalPhoneDigits(emp) {
+            const local = normalizeLocalPhone(emp && emp.phoneNumber);
+            if (!local) return '';
+            const code = String((emp && emp.phoneCountryCode) || DEFAULT_COUNTRY_CODE).replace(/\D/g, '') || DEFAULT_COUNTRY_CODE;
+            // إذا كان الرقم مخزّناً مسبقاً بصيغة دولية تبدأ برمز البلد
+            if (local.startsWith(code) && local.length > code.length + 6) return local;
+            return code + local;
+        }
+
+        function buildSalaryWhatsAppMessage(emp, month, year) {
+            const isAr = currentLang === 'ar';
+            const name = isAr
+                ? (emp.nameAr || emp.name || emp.nameEn || '')
+                : (emp.nameEn || emp.name || emp.nameAr || '');
+            const monthName = (translations[currentLang] && translations[currentLang].monthNames)
+                ? (translations[currentLang].monthNames[month] || month)
+                : month;
+            const curr = emp.paymentCurrency || 'IQD';
+            const line = (label, amount, showZero) => {
+                const n = parseFloat(amount) || 0;
+                if (!showZero && n === 0) return '';
+                return `• ${label}: ${formatCurrency(n)} ${curr}\n`;
+            };
+
+            const actualUSD = calculateActualSalary(emp, month, year);
+            const actual = convertToPaymentCurrency(actualUSD, 'USD', emp);
+            const bonus = convertToPaymentCurrency(emp.bonus || 0, emp.bonusCurrency || 'IQD', emp);
+            const phoneBills = convertToPaymentCurrency(emp.phoneBills || 0, emp.phoneBillsCurrency || 'IQD', emp);
+            const ceoBonus = convertToPaymentCurrency(emp.ceoBonus || 0, emp.ceoBonusCurrency || 'IQD', emp);
+            const deductions = convertToPaymentCurrency(emp.deductions || 0, emp.deductionsCurrency || 'IQD', emp);
+            const advance = convertToPaymentCurrency(emp.advance || 0, emp.advanceCurrency || 'IQD', emp);
+            // صافي الرسالة بدون خصم الحجز (الحجز لا يُعرض للموظف)
+            const net = actual + bonus + phoneBills + ceoBonus - deductions - advance;
+
+            const pm = emp.paymentMethod || 'cash';
+            const pmLabels = isAr
+                ? { cash: 'نقداً', mastercard: 'ماستر كارت', banking: 'صيرفة', transfer: 'تحويل بنكي', check: 'شيك', other: 'أخرى' }
+                : { cash: 'Cash', mastercard: 'Mastercard', banking: 'Banking', transfer: 'Transfer', check: 'Check', other: 'Other' };
+
+            let msg = '';
+            if (isAr) {
+                msg += `مرحباً ${name}،\n`;
+                msg += `كشف راتب ${monthName} ${year}\n\n`;
+                msg += line('الراتب الفعلي', actual, true);
+                msg += line('بونص', bonus, false);
+                msg += line('فواتير', phoneBills, false);
+                msg += line('مكافأة', ceoBonus, false);
+                msg += line('خصومات', deductions, false);
+                msg += line('سلفة', advance, false);
+                msg += `────────────────\n`;
+                msg += `✅ الصافي: ${formatCurrency(net)} ${curr}\n`;
+                msg += `طريقة الدفع: ${pmLabels[pm] || pm}\n`;
+                if (pm === 'mastercard' && emp.mastercardNumber) {
+                    msg += `رقم الماستر: ${emp.mastercardNumber}\n`;
+                }
+                msg += `\nشكراً لجهودك.`;
+            } else {
+                msg += `Hello ${name},\n`;
+                msg += `Salary slip for ${monthName} ${year}\n\n`;
+                msg += line('Actual salary', actual, true);
+                msg += line('Bonus', bonus, false);
+                msg += line('Phone bills', phoneBills, false);
+                msg += line('CEO bonus', ceoBonus, false);
+                msg += line('Deductions', deductions, false);
+                msg += line('Advance', advance, false);
+                msg += `────────────────\n`;
+                msg += `✅ Net: ${formatCurrency(net)} ${curr}\n`;
+                msg += `Payment method: ${pmLabels[pm] || pm}\n`;
+                if (pm === 'mastercard' && emp.mastercardNumber) {
+                    msg += `Mastercard #: ${emp.mastercardNumber}\n`;
+                }
+                msg += `\nThank you for your work.`;
+            }
+            return msg;
+        }
+
+        function sendSalaryWhatsApp(index, monthKey, yearKey) {
+            try {
+                const month = monthKey || currentMonth;
+                const year = yearKey != null ? yearKey : currentYear;
+                if (!employeeData[year] || !employeeData[year][month] || !employeeData[year][month][index]) {
+                    showNotification('error', t('error'), currentLang === 'ar' ? 'الموظف غير موجود' : 'Employee not found');
+                    return;
+                }
+                const emp = employeeData[year][month][index];
+                const phone = getInternationalPhoneDigits(emp);
+                if (!phone) {
+                    showNotification('warning', t('warning'), t('noPhoneNumber'));
+                    return;
+                }
+                const text = buildSalaryWhatsAppMessage(emp, month, year);
+                const url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(text);
+                window.open(url, '_blank', 'noopener,noreferrer');
+            } catch (e) {
+                console.error('sendSalaryWhatsApp failed', e);
+                showNotification('error', t('error'), currentLang === 'ar' ? 'تعذر فتح واتساب' : 'Could not open WhatsApp');
+            }
+        }
+
         function renderBulkDepartmentSelectOptions(selectedValue) {
             const emptyLabel = currentLang === 'ar' ? '— بدون قسم —' : '— No department —';
             let html = `<option value="">${emptyLabel}</option>`;
@@ -12215,6 +12401,16 @@
                 html += `<option value="${d.value}"${sel}>${label}</option>`;
             });
             return html;
+        }
+
+        function renderBulkCountryCodeOptions(selectedCode) {
+            const chosen = (selectedCode ? String(selectedCode).replace(/\D/g, '') : '') || DEFAULT_COUNTRY_CODE;
+            const isAr = currentLang === 'ar';
+            return COUNTRY_DIAL_CODES.map(c => {
+                const name = isAr ? c.ar : c.en;
+                const sel = c.code === chosen ? ' selected' : '';
+                return `<option value="${c.code}"${sel}>${c.flag} +${c.code}</option>`;
+            }).join('');
         }
 
         // دالة مساعدة لتحويل نوع الموظف إلى نص
@@ -15009,6 +15205,7 @@
                                 ${!emp.isPaid && netSalary === 0 ? `<button type="button" class="btn btn-warning btn-small" onclick="hideEmployee(${index})" title="${t('hideEmployee')}">${t('hideEmployee')}</button>` : ''}
                                 <button type="button" class="btn btn-warning btn-small btn-icon" onclick="openAttendanceModal(${index}, '${currentMonth}', ${currentYear})" title="${currentLang === 'ar' ? 'إدخال الدوام' : 'Enter Attendance'}" ${!canEditCurrentMonth(currentMonth, currentYear) ? 'disabled title=\"الشهر مقفل من التعديل\"' : (emp.isPaid ? 'disabled title=\"' + (currentLang === 'ar' ? 'تم الدفع - لا يمكن التعديل' : 'Paid - Cannot edit') + '\"' : '')}>⏰</button>
                                 ${emp.linkedToFirebaseId ? '' : `<button type="button" class="btn btn-secondary btn-small btn-icon" onclick="openCreateProfileFromMonthModal(${index})" title="${emp.profileId ? t('manageProfileLink') : t('createProfileFromMonth')}">🪪</button>`}
+                                <button type="button" class="btn btn-whatsapp btn-small btn-icon" onclick="sendSalaryWhatsApp(${index}, '${currentMonth}', ${currentYear})" ${getInternationalPhoneDigits(emp) ? '' : 'disabled'} title="${getInternationalPhoneDigits(emp) ? t('sendWhatsApp') : t('noPhoneNumber')}">💬</button>
                                 <button type="button" class="btn btn-success btn-small" onclick="openCopyModal(${index})" ${!canEditCurrentMonth(currentMonth, currentYear) ? 'disabled title=\"الشهر مقفل من التعديل\"' : ''}>${t('copy')}</button>
                                 ${currentUser && currentUser.fullAccess ? `<button type="button" class="btn btn-danger btn-small" onclick="deleteEmployee(${index})" ${!canEditCurrentMonth(currentMonth, currentYear) ? 'disabled title=\"الشهر مقفل من التعديل\"' : (emp.isPaid ? 'disabled title=\"' + (currentLang === 'ar' ? 'تم الدفع - لا يمكن الحذف' : 'Paid - Cannot delete') + '\"' : '')}>${t('delete')}</button>` : ''}
                             </div>
@@ -19379,6 +19576,7 @@ function renderProjectView() {
             }
             if (modalId === 'employeeModal') {
                 initEmployeeCardDepartmentSelects('');
+                fillCountryCodeSelect(document.getElementById('employeeCountryCode'), DEFAULT_COUNTRY_CODE);
                 const phoneAdd = document.getElementById('employeePhone');
                 if (phoneAdd) phoneAdd.value = '';
             }
@@ -19448,6 +19646,7 @@ function renderProjectView() {
                     document.getElementById('editNameEn').value = emp.nameEn || '';
                     document.getElementById('editPosition').value = emp.position || '';
                     fillDepartmentSelect(document.getElementById('editDepartment'), emp.department || '');
+                    fillCountryCodeSelect(document.getElementById('editCountryCode'), emp.phoneCountryCode || DEFAULT_COUNTRY_CODE);
                     const editPhoneEl = document.getElementById('editPhone');
                     if (editPhoneEl) editPhoneEl.value = emp.phoneNumber || '';
                     document.getElementById('editEmployeeType').value = emp.employeeType || 'monthly';
@@ -24857,14 +25056,23 @@ function renderProjectView() {
                                             </select>
                                         </td>
                                         <td style="padding: 8px;">
-                                            <input type="tel" 
-                                                class="bulk-edit-field" 
-                                                data-field="phoneNumber" 
-                                                data-emp-id="${empId}"
-                                                value="${(emp.phoneNumber || '').replace(/"/g, '&quot;')}" 
-                                                inputmode="tel"
-                                                placeholder="07xxxxxxxx"
-                                                style="width: 100%; padding: 8px; font-size: 12px; border: 1px solid var(--border); border-radius: 4px; background: white;">
+                                            <div style="display:flex; gap:4px; align-items:center;">
+                                                <select
+                                                    class="bulk-edit-field"
+                                                    data-field="phoneCountryCode"
+                                                    data-emp-id="${empId}"
+                                                    style="max-width: 92px; padding: 8px 4px; font-size: 11px; border: 1px solid var(--border); border-radius: 4px; background: white; direction: ltr;">
+                                                    ${renderBulkCountryCodeOptions(emp.phoneCountryCode || DEFAULT_COUNTRY_CODE)}
+                                                </select>
+                                                <input type="tel"
+                                                    class="bulk-edit-field"
+                                                    data-field="phoneNumber"
+                                                    data-emp-id="${empId}"
+                                                    value="${(emp.phoneNumber || '').replace(/"/g, '&quot;')}"
+                                                    inputmode="tel"
+                                                    placeholder="7xxxxxxxxx"
+                                                    style="flex:1; min-width:0; padding: 8px; font-size: 12px; border: 1px solid var(--border); border-radius: 4px; background: white;">
+                                            </div>
                                         </td>
                                         <td style="padding: 8px;">
                                             <select 
@@ -25206,6 +25414,7 @@ function renderProjectView() {
             const nameEnField = row.querySelector('[data-field="nameEn"]');
             const positionField = row.querySelector('[data-field="position"]');
             const departmentField = row.querySelector('[data-field="department"]');
+            const phoneCountryCodeField = row.querySelector('[data-field="phoneCountryCode"]');
             const phoneNumberField = row.querySelector('[data-field="phoneNumber"]');
             const employeeTypeField = row.querySelector('[data-field="employeeType"]');
             const projectField = row.querySelector('[data-field="project"]');
@@ -25251,6 +25460,10 @@ function renderProjectView() {
 
             if (departmentField) {
                 updates.department = departmentField.value || '';
+            }
+
+            if (phoneCountryCodeField) {
+                updates.phoneCountryCode = (phoneCountryCodeField.value || DEFAULT_COUNTRY_CODE).replace(/\D/g, '') || DEFAULT_COUNTRY_CODE;
             }
 
             if (phoneNumberField) {
@@ -27434,7 +27647,7 @@ function renderProjectView() {
                     let n = isArabic ? (emp.nameAr || emp.name || '') : (emp.nameEn || emp.name || '');
                     if (emp.linkedToFirebaseId) n = '🔗 ' + n + ' (' + t('linkedDuplicate') + ')';
                     return n;
-                case 'phoneNumber': return emp.phoneNumber || '';
+                case 'phoneNumber': return formatPhoneWithCountry(emp);
                 case 'position': return emp.position || '';
                 case 'department': return getDepartmentLabel(emp.department);
                 case 'project': return projects[emp.project] || emp.project || '';
@@ -32091,6 +32304,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
         window.switchProject = switchProject;
         window.openEditModal = openEditModal;
         window.openCopyModal = openCopyModal;
+        window.sendSalaryWhatsApp = sendSalaryWhatsApp;
         window.confirmCopy = confirmCopy;
         window.openCopyAllModal = openCopyAllModal;
         window.confirmCopyAll = confirmCopyAll;
@@ -32834,6 +33048,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 nameEn: nameEn,
                 position: document.getElementById('position').value,
                 department: document.getElementById('employeeDepartment')?.value || '',
+                phoneCountryCode: (document.getElementById('employeeCountryCode')?.value || DEFAULT_COUNTRY_CODE).replace(/\D/g, '') || DEFAULT_COUNTRY_CODE,
                 phoneNumber: (document.getElementById('employeePhone')?.value || '').trim(),
                 employeeType: document.getElementById('employeeType').value,
                 project: projectCode,
@@ -32972,6 +33187,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 nameEn: nameEn,
                 position: document.getElementById('editPosition').value.trim(),
                 department: document.getElementById('editDepartment')?.value || '',
+                phoneCountryCode: (document.getElementById('editCountryCode')?.value || DEFAULT_COUNTRY_CODE).replace(/\D/g, '') || DEFAULT_COUNTRY_CODE,
                 phoneNumber: (document.getElementById('editPhone')?.value || '').trim(),
                 employeeType: document.getElementById('editEmployeeType').value,
                 project: document.getElementById('editProject').value,
