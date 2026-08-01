@@ -6219,13 +6219,17 @@
                                 <li>سيتم طباعة الجداول حسب اختيارك</li>
                                 <li>التوقيعات ستظهر تلقائياً</li>
                                 <li>استخدم أفقي للجداول الكبيرة</li>
+                                <li><strong>HTML لمنفذ التحويل:</strong> ملف تفاعلي (اسم · صافي · بطاقة · هاتف) مع نسخ جاهز للصق في Excel — يُفضّل اختيار «ماستر كارت فقط»</li>
                             </ul>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-actions">
+            <div class="modal-actions" style="flex-wrap: wrap; gap: 8px;">
                 <button class="btn btn-tertiary" onclick="closeModal('printOptionsModal')">❌ إلغاء</button>
+                <button class="btn" onclick="exportTransferOutletHTML()" title="ملف HTML لمنفذ التحويل — جاهز للنسخ واللصق في Excel" style="background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%); color: white; font-weight: 600;">
+                    📤 HTML لمنفذ التحويل
+                </button>
                 <button class="btn" onclick="openPrintPreview()" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; font-weight: 600;">
                     👁️ معاينة قبل الطباعة
                 </button>
@@ -8877,9 +8881,25 @@
         console.log('ℹ️ Note: 404 errors from Firebase WebChannel in Network tab are normal and can be ignored.');
 
         // ========== نظام إشعار التحديثات (Update Notice System) ==========
-        const APP_VERSION = '2.6.0';
+        const APP_VERSION = '2.7.0';
         const SEEN_VERSION_KEY = 'payrose_seen_version';
+        const VERSION_CHECK_INTERVAL_MS = 5 * 60 * 1000; // كل 5 دقائق
+        let _versionCheckTimer = null;
         const APP_CHANGELOG = {
+            '2.7.0': {
+                ar: [
+                    'قائمة HTML لمنفذ التحويل من خيارات الطباعة المتقدمة',
+                    'حذف صفوف مع تحديث المجموع تلقائياً + عمود العملة منفصل',
+                    'حفظ الملف بعد التعديل للإرسال ونسخ جاهز للصق في Excel',
+                    'تحسين إشعار التحديث: إعادة تحميل إلزامية عند توفّر نسخة أحدث'
+                ],
+                en: [
+                    'Transfer-outlet HTML list from advanced print options',
+                    'Delete rows with live totals + separate currency column',
+                    'Save after edits for sending + Excel-ready copy',
+                    'Update notice: mandatory reload when a newer version is available'
+                ]
+            },
             '2.6.0': {
                 ar: [
                     'زر واتساب لكل موظف لإرسال تفاصيل الراتب عبر رسالة جاهزة'
@@ -8988,30 +9008,70 @@
         }
         function dismissUpdateNotice() { try { closeModal('updateNoticeModal'); } catch (e) {} }
 
-        // (4) كشف توفّر نسخة أحدث على الخادم (لمعالجة الكاش)
+        // (4) كشف توفّر نسخة أحدث على الخادم — إعادة تحميل إلزامية (لا يمكن التأجيل)
         async function checkServerVersion() {
             try {
                 const res = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
                 if (!res.ok) return;
                 const data = await res.json();
                 const serverV = data && data.version;
-                if (serverV && compareVersions(serverV, APP_VERSION) > 0) showUpdateReloadBanner(serverV);
+                if (serverV && compareVersions(serverV, APP_VERSION) > 0) {
+                    showUpdateReloadBanner(serverV);
+                }
             } catch (e) { /* version.json غير موجود — تجاهل بصمت */ }
         }
+
+        function forceReloadFresh() {
+            try {
+                const url = new URL(location.href);
+                url.searchParams.set('u', String(Date.now()));
+                location.replace(url.pathname + url.search + url.hash);
+            } catch (e) {
+                location.href = location.pathname + '?u=' + Date.now();
+            }
+        }
+
         function showUpdateReloadBanner(serverV) {
             if (document.getElementById('updateReloadBanner')) return;
             const isAr = currentLang === 'ar';
-            const bar = document.createElement('div');
-            bar.id = 'updateReloadBanner';
-            bar.style.cssText = 'position:fixed; bottom:0; inset-inline:0; z-index:99999; background:#101d2d; color:#fff; padding:12px 18px; display:flex; align-items:center; gap:14px; justify-content:center; box-shadow:0 -2px 12px rgba(0,0,0,.25); font-size:14px; flex-wrap:wrap;';
-            bar.innerHTML = `<span>🚀 ${isAr ? `يتوفّر إصدار أحدث (${serverV}).` : `A newer version (${serverV}) is available.`}</span>
-                <button onclick="location.href=location.pathname+'?u='+Date.now()" style="background:#10b981; color:#fff; border:none; padding:8px 16px; border-radius:8px; font-weight:700; cursor:pointer;">${isAr ? 'إعادة التحميل' : 'Reload'}</button>
-                <button onclick="this.parentElement.remove()" style="background:transparent; color:#cbd5e1; border:1px solid #334155; padding:8px 12px; border-radius:8px; cursor:pointer;">${isAr ? 'لاحقاً' : 'Later'}</button>`;
-            document.body.appendChild(bar);
+            const overlay = document.createElement('div');
+            overlay.id = 'updateReloadBanner';
+            overlay.setAttribute('role', 'alertdialog');
+            overlay.setAttribute('aria-modal', 'true');
+            overlay.style.cssText = 'position:fixed; inset:0; z-index:99999; background:rgba(15,23,42,.72); display:flex; align-items:center; justify-content:center; padding:20px;';
+            overlay.innerHTML = `
+                <div style="background:#0f172a; color:#fff; max-width:420px; width:100%; border-radius:14px; padding:22px 24px; box-shadow:0 20px 50px rgba(0,0,0,.4); text-align:center;">
+                    <div style="font-size:28px; margin-bottom:8px;">🚀</div>
+                    <div style="font-size:17px; font-weight:700; margin-bottom:8px;">${isAr ? 'يتوفّر إصدار أحدث من النظام' : 'A newer version is available'}</div>
+                    <p style="font-size:14px; color:#cbd5e1; margin:0 0 18px; line-height:1.6;">
+                        ${isAr
+                            ? `نسختك الحالية <strong>${APP_VERSION}</strong> — المتاح على الخادم <strong>${serverV}</strong>. يجب إعادة التحميل لمتابعة العمل بأمان.`
+                            : `You are on <strong>${APP_VERSION}</strong> — server has <strong>${serverV}</strong>. Please reload to continue safely.`}
+                    </p>
+                    <button type="button" id="btnForceReloadUpdate" style="background:#10b981; color:#fff; border:none; padding:12px 22px; border-radius:10px; font-weight:700; cursor:pointer; font-size:15px; width:100%;">
+                        ${isAr ? 'إعادة التحميل الآن' : 'Reload now'}
+                    </button>
+                </div>`;
+            document.body.appendChild(overlay);
+            const btn = document.getElementById('btnForceReloadUpdate');
+            if (btn) btn.addEventListener('click', forceReloadFresh);
+            // منع إغلاق النافذة بالنقر خارجها — التحديث إلزامي
         }
+
+        function startVersionWatch() {
+            checkServerVersion();
+            if (_versionCheckTimer) clearInterval(_versionCheckTimer);
+            _versionCheckTimer = setInterval(checkServerVersion, VERSION_CHECK_INTERVAL_MS);
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'visible') checkServerVersion();
+            });
+        }
+
         window.dismissUpdateNotice = dismissUpdateNotice;
         window.showUpdateModalIfNeeded = showUpdateModalIfNeeded;
         window.checkServerVersion = checkServerVersion;
+        window.startVersionWatch = startVersionWatch;
+        window.forceReloadFresh = forceReloadFresh;
 
         // ========== Security & Protection System ==========
         
@@ -27171,6 +27231,348 @@ function renderProjectView() {
             // طباعة بسيطة
             await printSimple(settings);
         }
+
+        /** جمع موظفين وفق فلاتر خيارات الطباعة (بدون طباعة) */
+        function getEmployeesForPrintFilters(settings) {
+            settings = settings || {};
+            let employeesToPrint = [];
+            if (currentView === 'project') {
+                employeesToPrint = (employeeData[currentYear][selectedProjectMonth || currentMonth] || []).filter(emp =>
+                    emp.project === currentProject
+                );
+            } else if (settings.selectedProject === 'all') {
+                employeesToPrint = employeeData[currentYear][currentMonth] || [];
+            } else {
+                employeesToPrint = (employeeData[currentYear][currentMonth] || []).filter(emp =>
+                    emp.project === settings.selectedProject
+                );
+            }
+
+            let filtered = employeesToPrint;
+            if (settings.reportType && settings.reportType !== 'all') {
+                filtered = filtered.filter(emp => emp.employeeType === settings.reportType);
+            }
+            if (settings.paymentStatus && settings.paymentStatus !== 'all') {
+                filtered = filtered.filter(emp => {
+                    if (settings.paymentStatus === 'paid') return emp.isPaid === true;
+                    if (settings.paymentStatus === 'unpaid') return !emp.isPaid;
+                    return true;
+                });
+            }
+            if (settings.paymentMethod && settings.paymentMethod !== 'all') {
+                filtered = filtered.filter(emp => (emp.paymentMethod || 'cash') === settings.paymentMethod);
+            }
+            return filtered;
+        }
+
+        /**
+         * تنزيل ملف HTML تفاعلي لمنفذ التحويل:
+         * الاسم · الراتب الصافي · رقم البطاقة · رقم الهاتف
+         * مع زر نسخ جاهز للصق مباشرة في Excel (قيم مفصولة بـ Tab)
+         */
+        function exportTransferOutletHTML() {
+            const settings = {
+                selectedProject: document.getElementById('printProjectSelect').value,
+                reportType: document.getElementById('printReportType').value,
+                paymentStatus: document.getElementById('printPaymentStatus').value,
+                paymentMethod: document.getElementById('printPaymentMethod')?.value || 'all'
+            };
+
+            const filtered = getEmployeesForPrintFilters(settings);
+            if (!filtered.length) {
+                showNotification('warning', 'تحذير', 'لا توجد بيانات لتصدير قائمة التحويل');
+                return;
+            }
+
+            const monthKey = (currentView === 'project') ? (selectedProjectMonth || currentMonth) : currentMonth;
+            const monthLabel = (t('monthNames') && t('monthNames')[monthKey]) ? t('monthNames')[monthKey] : monthKey;
+            const projectLabel = settings.selectedProject === 'all'
+                ? 'جميع المشاريع'
+                : (projects[settings.selectedProject] || settings.selectedProject);
+            const esc = (s) => String(s ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+
+            const rows = filtered.map((emp, index) => {
+                const isArabic = currentLang === 'ar';
+                const name = isArabic
+                    ? (emp.nameAr || emp.name || emp.nameEn || '')
+                    : (emp.nameEn || emp.name || emp.nameAr || '');
+                const net = calculateNetSalary(emp, monthKey, currentYear);
+                const currency = emp.paymentCurrency || 'IQD';
+                const card = emp.mastercardNumber ? String(emp.mastercardNumber).trim() : '';
+                const phone = formatPhoneWithCountry(emp) || '';
+                return {
+                    index: index + 1,
+                    name,
+                    net,
+                    netDisplay: formatCurrency(net),
+                    currency,
+                    card,
+                    phone
+                };
+            });
+
+            const tableBodyHtml = rows.map(r => `
+                <tr data-net="${r.net}" data-currency="${esc(r.currency)}">
+                    <td class="col-idx">${r.index}</td>
+                    <td class="col-name">${esc(r.name)}</td>
+                    <td class="num col-net">${esc(r.netDisplay)}</td>
+                    <td class="col-currency">${esc(r.currency)}</td>
+                    <td class="text-cell col-card" style="mso-number-format:'\\@';">${esc(r.card)}</td>
+                    <td class="text-cell col-phone" style="mso-number-format:'\\@';">${esc(r.phone)}</td>
+                    <td class="col-actions no-export"><button type="button" class="btn-del" title="حذف الصف">🗑</button></td>
+                </tr>`).join('');
+
+            const fileStamp = `${currentYear}-${monthKey}`;
+            const fileName = `transfer-outlet-${fileStamp}.html`;
+            const metaBase = `${esc(monthLabel)} ${currentYear} · ${esc(projectLabel)}`;
+
+            const htmlDoc = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>قائمة التحويل — ${esc(monthLabel)} ${currentYear}</title>
+<style>
+  :root { --bg:#f1f5f9; --card:#fff; --line:#cbd5e1; --primary:#0369a1; --ok:#059669; --danger:#dc2626; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: "Segoe UI", Tahoma, Arial, sans-serif; background:var(--bg); color:#0f172a; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 20px 16px 40px; }
+  h1 { margin: 0 0 6px; font-size: 1.35rem; color: var(--primary); }
+  .meta { color:#64748b; font-size: 13px; margin-bottom: 16px; }
+  .toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom: 14px; }
+  button, .toolbar button {
+    border:0; border-radius:8px; padding:10px 16px; font-size:14px; font-weight:600; cursor:pointer;
+    background: var(--ok); color:#fff;
+  }
+  button.secondary { background:#334155; }
+  button.save { background: var(--primary); }
+  button:active { transform: scale(0.98); }
+  .btn-del {
+    background: transparent; color: var(--danger); padding: 4px 8px; font-size: 16px;
+    border-radius: 6px; line-height: 1;
+  }
+  .btn-del:hover { background: #fee2e2; }
+  #status { font-size:13px; color:var(--ok); min-height:1.2em; }
+  input[type="search"] {
+    flex:1; min-width:180px; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:14px;
+  }
+  .hint {
+    background:#e0f2fe; border:1px solid #7dd3fc; border-radius:8px; padding:12px 14px; font-size:13px; color:#075985; margin-bottom:14px;
+  }
+  .table-wrap { background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:auto; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { border-bottom:1px solid var(--line); padding:10px 12px; text-align:right; white-space:nowrap; }
+  th { background:#e2e8f0; position:sticky; top:0; z-index:1; }
+  tr:hover td { background:#f8fafc; }
+  .num { font-variant-numeric: tabular-nums; direction:ltr; text-align:left; }
+  .text-cell { direction:ltr; text-align:left; font-family: Consolas, monospace; }
+  .footer { margin-top:12px; font-size:14px; color:#334155; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; align-items:flex-start; }
+  .totals { font-weight: 700; color: var(--primary); }
+  .totals span { display:inline-block; margin-left: 12px; }
+  @media print {
+    .toolbar, .hint, #status, .col-actions, .btn-del { display:none !important; }
+    body { background:#fff; }
+    .table-wrap { border:none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>قائمة التحويل — منفذ التحويل</h1>
+  <div class="meta" id="metaLine">${metaBase} · <span id="rowCount">${rows.length}</span> سجل</div>
+  <div class="hint">
+    احذف الصفوف غير المطلوبة بزر 🗑 — المجموع يتحدّث تلقائياً.
+    ثم اضغط <strong>حفظ للإرسال</strong> لتنزيل الملف النهائي، أو <strong>نسخ للصق في Excel</strong>.
+    الأعمدة: الاسم · الصافي · العملة · رقم البطاقة · رقم الهاتف.
+  </div>
+  <div class="toolbar">
+    <button type="button" id="btnCopy">📋 نسخ للصق في Excel</button>
+    <button type="button" class="save" id="btnSave">💾 حفظ للإرسال</button>
+    <button type="button" class="secondary" id="btnSelect">تحديد الجدول</button>
+    <input type="search" id="q" placeholder="بحث بالاسم / البطاقة / الهاتف…" autocomplete="off">
+  </div>
+  <div id="status"></div>
+  <div class="table-wrap">
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>الاسم</th>
+          <th>الراتب الصافي</th>
+          <th>العملة</th>
+          <th>رقم البطاقة</th>
+          <th>رقم الهاتف</th>
+          <th class="col-actions no-export">حذف</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${tableBodyHtml}
+      </tbody>
+    </table>
+  </div>
+  <div class="footer">
+    <div class="totals" id="totalsBox"></div>
+    <span>بعد الحذف احفظ الملف ثم أرسله — يعمل بدون إنترنت</span>
+  </div>
+</div>
+<script>
+(function(){
+  var META_BASE = ${JSON.stringify(monthLabel + ' ' + currentYear + ' · ' + (settings.selectedProject === 'all' ? 'جميع المشاريع' : (projects[settings.selectedProject] || settings.selectedProject)))};
+  var FILE_NAME = ${JSON.stringify(fileName)};
+  var statusEl = document.getElementById('status');
+  var tbody = document.querySelector('#dataTable tbody');
+
+  function setStatus(msg){ statusEl.textContent = msg || ''; }
+
+  function fmtNum(n){
+    return Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+  }
+
+  function visibleRows(){
+    return Array.prototype.slice.call(tbody.querySelectorAll('tr')).filter(function(tr){
+      return tr.style.display !== 'none';
+    });
+  }
+
+  function allRows(){
+    return Array.prototype.slice.call(tbody.querySelectorAll('tr'));
+  }
+
+  function renumber(){
+    allRows().forEach(function(tr, i){
+      var cell = tr.querySelector('.col-idx');
+      if (cell) cell.textContent = String(i + 1);
+    });
+  }
+
+  function updateTotals(){
+    var rows = allRows();
+    var byCur = {};
+    rows.forEach(function(tr){
+      var net = parseFloat(tr.getAttribute('data-net')) || 0;
+      var cur = tr.getAttribute('data-currency') || 'IQD';
+      byCur[cur] = (byCur[cur] || 0) + net;
+    });
+    var parts = Object.keys(byCur).map(function(cur){
+      return '<span>' + fmtNum(byCur[cur]) + ' ' + cur + '</span>';
+    });
+    document.getElementById('totalsBox').innerHTML = rows.length
+      ? ('المجموع: ' + parts.join(' · '))
+      : 'المجموع: 0';
+    document.getElementById('rowCount').textContent = String(rows.length);
+  }
+
+  function buildTsv(){
+    var header = ['#','الاسم','الراتب الصافي','العملة','رقم البطاقة','رقم الهاتف'].join('\\t');
+    var lines = [header];
+    allRows().forEach(function(tr, i){
+      var name = (tr.querySelector('.col-name') || {}).textContent || '';
+      var net = tr.getAttribute('data-net') || '0';
+      var cur = tr.getAttribute('data-currency') || '';
+      var card = ((tr.querySelector('.col-card') || {}).textContent || '').trim();
+      var phone = ((tr.querySelector('.col-phone') || {}).textContent || '').replace(/\\s+/g, '');
+      var asText = function(v){ return v ? ('="' + String(v).replace(/"/g, '') + '"') : ''; };
+      lines.push([i + 1, name, net, cur, asText(card), asText(phone)].join('\\t'));
+    });
+    return lines.join('\\n');
+  }
+
+  function copyText(text, okMsg){
+    function ok(){ setStatus(okMsg); }
+    function fail(){
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed'; ta.style.left = '-9999px';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); ok(); } catch(e){ setStatus('فشل النسخ'); }
+      document.body.removeChild(ta);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(ok).catch(fail);
+    } else { fail(); }
+  }
+
+  tbody.addEventListener('click', function(e){
+    var btn = e.target.closest ? e.target.closest('.btn-del') : null;
+    if (!btn) return;
+    var tr = btn.closest('tr');
+    if (!tr) return;
+    var name = ((tr.querySelector('.col-name') || {}).textContent || '').trim();
+    if (!confirm('حذف «' + name + '» من القائمة؟')) return;
+    tr.parentNode.removeChild(tr);
+    renumber();
+    updateTotals();
+    setStatus('تم الحذف — المجموع محدّث. احفظ الملف قبل الإرسال.');
+  });
+
+  document.getElementById('btnCopy').addEventListener('click', function(){
+    copyText(buildTsv(), 'تم النسخ — الصق الآن في Excel (Ctrl+V)');
+  });
+
+  document.getElementById('btnSelect').addEventListener('click', function(){
+    var table = document.getElementById('dataTable');
+    var range = document.createRange();
+    range.selectNode(table);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    setStatus('تم تحديد الجدول — اضغط Ctrl+C ثم الصق في Excel');
+  });
+
+  document.getElementById('q').addEventListener('input', function(){
+    var q = (this.value || '').trim().toLowerCase();
+    allRows().forEach(function(tr){
+      var text = tr.textContent.toLowerCase();
+      tr.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+    });
+  });
+
+  document.getElementById('btnSave').addEventListener('click', function(){
+    // تنزيل نسخة من الصفحة الحالية بعد الحذف (للإرسال)
+    var clone = document.documentElement.cloneNode(true);
+    var statusClone = clone.querySelector('#status');
+    if (statusClone) statusClone.textContent = '';
+    var qClone = clone.querySelector('#q');
+    if (qClone) qClone.value = '';
+    clone.querySelectorAll('tbody tr').forEach(function(tr){ tr.style.display = ''; });
+    var html = '<!DOCTYPE html>\\n' + clone.outerHTML;
+    var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = FILE_NAME.replace(/\\.html$/i, '') + '-ready.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+    setStatus('تم حفظ الملف للإرسال: ' + a.download);
+  });
+
+  updateTotals();
+})();
+</` + 'script>' + `
+</body>
+</html>`;
+
+            // فتح للتعديل أولاً — التنزيل فقط عبر «حفظ للإرسال» بعد الحذف
+            const preview = window.open('', '_blank');
+            if (preview) {
+                preview.document.open();
+                preview.document.write(htmlDoc);
+                preview.document.close();
+                try { preview.document.title = fileName; } catch (e) {}
+            } else {
+                showNotification('warning', 'تحذير', 'اسمح بالنوافذ المنبثقة لتعديل قائمة التحويل ثم احفظها');
+                return;
+            }
+
+            closeModal('printOptionsModal');
+            showNotification('success', 'جاهز للتعديل', 'احذف ما يلزم ثم اضغط «حفظ للإرسال» في النافذة');
+        }
         
         // دالة معاينة الطباعة مع إمكانية تعديل عرض الأعمدة
         async function openPrintPreview() {
@@ -32005,7 +32407,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 }, 500);
                 setTimeout(checkBackupReminder, 4000); // تذكير النسخ الاحتياطي إن لزم
                 setTimeout(showUpdateModalIfNeeded, 1200); // إشعار «تحديث جديد» إن تغيّر الإصدار
-                setTimeout(checkServerVersion, 6000);       // كشف توفّر نسخة أحدث على الخادم
+                setTimeout(startVersionWatch, 4000);        // مراقبة version.json + إعادة تحميل إلزامية
                 
             } catch (error) {
                 console.error('❌ خطأ في تهيئة النظام:', error);
@@ -32411,6 +32813,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
         window.selectAllPrintColumns = selectAllPrintColumns;
         window.selectEssentialPrintColumns = selectEssentialPrintColumns;
         window.executePrintWithOptions = executePrintWithOptions;
+        window.exportTransferOutletHTML = exportTransferOutletHTML;
         window.printFromPreview = printFromPreview;
         window.savePDFFromPreview = savePDFFromPreview;
         window.adjustPrintSettings = adjustPrintSettings;
