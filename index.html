@@ -2079,6 +2079,16 @@
             flex: 1;
         }
 
+        .month-actionbar__rate-input {
+            width: 92px;
+            padding: 8px 10px;
+            font-weight: 700;
+            text-align: center;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fffbeb;
+        }
+
         .btn.btn-sm {
             padding: 10px 12px;
             font-weight: 700;
@@ -8169,6 +8179,14 @@
             loadMonthChangeNotes: function() {
                 return LocalStorage.load('month_change_notes') || {};
             },
+
+            saveMonthExchangeRates: function(rates) {
+                return LocalStorage.save('month_exchange_rates', rates);
+            },
+
+            loadMonthExchangeRates: function() {
+                return LocalStorage.load('month_exchange_rates') || {};
+            },
             
             // حفظ السنوات المتاحة
             saveYears: function(years) {
@@ -9300,6 +9318,8 @@
         let companySettings = {};
         let printSignatures = {};
         let monthChangeNotes = {};
+        let monthExchangeRates = {};
+        const DEFAULT_EXCHANGE_RATE = 1420;
         
         const months = ['january', 'february', 'march', 'april', 'may', 'june', 
                        'july', 'august', 'september', 'october', 'november', 'december'];
@@ -9358,6 +9378,9 @@
                 type: 'النوع', project: 'المشروع',
                 salary: 'الراتب', salaryCurrency: 'عملة الراتب',
                 paymentCurrency: 'عملة الدفع', exchangeRate: 'سعر الصرف',
+                monthDefaultRate: 'سعر الصرف الافتراضي',
+                saveMonthDefaultRate: 'حفظ الافتراضي',
+                applyMonthDefaultRate: 'تطبيق على غير المدفوعين',
                 workDays: '⏰ الدوام', dailySalary: 'الراتب اليومي',
                 actualSalaryUSD: 'الفعلي (USD)', actualSalaryIQD: 'الفعلي (IQD)',
                 bonus: 'بونص', phoneBills: 'فواتير', deductions: 'خصومات',
@@ -9837,6 +9860,9 @@
                 type: 'Type', project: 'Project',
                 salary: 'Salary', salaryCurrency: 'Salary Currency',
                 paymentCurrency: 'Payment Currency', exchangeRate: 'Exchange Rate',
+                monthDefaultRate: 'Default exchange rate',
+                saveMonthDefaultRate: 'Save default',
+                applyMonthDefaultRate: 'Apply to unpaid',
                 workDays: '⏰ Attendance', dailySalary: 'Daily Salary',
                 actualSalaryUSD: 'Actual (USD)', actualSalaryIQD: 'Actual (IQD)',
                 bonus: 'Bonus', phoneBills: 'Bills', deductions: 'Deductions',
@@ -10298,6 +10324,7 @@
         let companySettingsCache = null;
         let printSignaturesCache = null;
         let monthChangeNotesCache = null;
+        let monthExchangeRatesCache = null;
         
         // المصطلحات المخصصة (Custom Translations)
         let customTranslations = {
@@ -10632,6 +10659,7 @@
                 await loadCompanySettings();
                 await loadPrintSignatures();
                 await loadMonthChangeNotes();
+                await loadMonthExchangeRates();
                 
                 hideLoading();
                 init();
@@ -11540,6 +11568,187 @@
             } catch (error) {
                 console.error('خطأ في حفظ ملاحظات التغيّر:', error);
                 return false;
+            }
+        }
+
+        function monthExchangeRateKey(year, month) {
+            return String(year) + '_' + month;
+        }
+
+        function parsePositiveExchangeRate(value) {
+            const n = parseFloat(value);
+            return (!isNaN(n) && n > 0) ? n : null;
+        }
+
+        function hasMonthDefaultExchangeRate(year, month) {
+            const stored = monthExchangeRates && monthExchangeRates[monthExchangeRateKey(year, month)];
+            return parsePositiveExchangeRate(stored) != null;
+        }
+
+        function getDefaultExchangeRate(year, month) {
+            const y = year != null ? year : currentYear;
+            const m = month || currentMonth;
+            const stored = monthExchangeRates && monthExchangeRates[monthExchangeRateKey(y, m)];
+            return parsePositiveExchangeRate(stored) || DEFAULT_EXCHANGE_RATE;
+        }
+
+        function applyStoredMonthRateIfSet(emp, year, month) {
+            if (!emp || !hasMonthDefaultExchangeRate(year, month)) return emp;
+            emp.exchangeRate = getDefaultExchangeRate(year, month);
+            return emp;
+        }
+
+        async function loadMonthExchangeRates(forceRefresh = false) {
+            try {
+                if (getStorageMode() === 'local') {
+                    monthExchangeRates = LocalData.loadMonthExchangeRates() || {};
+                    return;
+                }
+                if (!forceRefresh && monthExchangeRatesCache !== null) {
+                    monthExchangeRates = monthExchangeRatesCache;
+                    return;
+                }
+                const ratesDoc = await getDoc(doc(db, 'settings', 'monthExchangeRates'));
+                if (ratesDoc.exists()) {
+                    const data = ratesDoc.data() || {};
+                    monthExchangeRates = data.rates && typeof data.rates === 'object' ? data.rates : data;
+                    delete monthExchangeRates.updatedAt;
+                    delete monthExchangeRates.updatedBy;
+                    monthExchangeRatesCache = monthExchangeRates;
+                } else {
+                    monthExchangeRates = {};
+                    monthExchangeRatesCache = {};
+                }
+            } catch (error) {
+                console.error('خطأ في تحميل أسعار الصرف الافتراضية:', error);
+                monthExchangeRates = monthExchangeRates || {};
+            }
+        }
+
+        async function saveMonthExchangeRatesStore(rates) {
+            try {
+                const payload = rates || monthExchangeRates || {};
+                if (getStorageMode() === 'local') {
+                    LocalData.saveMonthExchangeRates(payload);
+                    monthExchangeRates = payload;
+                    return true;
+                }
+                await setDoc(doc(db, 'settings', 'monthExchangeRates'), {
+                    rates: payload,
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: currentUser?.email || 'unknown'
+                });
+                monthExchangeRates = payload;
+                monthExchangeRatesCache = payload;
+                return true;
+            } catch (error) {
+                console.error('خطأ في حفظ أسعار الصرف الافتراضية:', error);
+                return false;
+            }
+        }
+
+        async function setMonthDefaultExchangeRate(year, month, rate) {
+            const parsed = parsePositiveExchangeRate(rate);
+            if (parsed == null) return false;
+            if (!monthExchangeRates || typeof monthExchangeRates !== 'object') monthExchangeRates = {};
+            monthExchangeRates[monthExchangeRateKey(year, month)] = parsed;
+            return saveMonthExchangeRatesStore(monthExchangeRates);
+        }
+
+        function readMonthDefaultRateFromToolbar() {
+            const input = document.getElementById('monthDefaultExchangeRate');
+            return parsePositiveExchangeRate(input && input.value);
+        }
+
+        async function saveMonthDefaultExchangeRateFromToolbar() {
+            const rate = readMonthDefaultRateFromToolbar();
+            if (rate == null) {
+                showNotification('warning', currentLang === 'ar' ? 'تنبيه' : 'Warning',
+                    currentLang === 'ar' ? 'أدخل سعر صرف أكبر من صفر' : 'Enter an exchange rate greater than zero');
+                return;
+            }
+            const ok = await setMonthDefaultExchangeRate(currentYear, currentMonth, rate);
+            if (ok) {
+                showNotification('success', currentLang === 'ar' ? 'تم الحفظ' : 'Saved',
+                    currentLang === 'ar'
+                        ? ('سعر صرف ' + currentYear + ' / ' + (t('monthNames')[currentMonth] || currentMonth) + ' أصبح ' + rate)
+                        : ('Default rate for ' + (t('monthNames')[currentMonth] || currentMonth) + ' ' + currentYear + ' is now ' + rate));
+            } else {
+                showNotification('error', t('error'), currentLang === 'ar' ? 'تعذر حفظ سعر الصرف الافتراضي' : 'Could not save the default exchange rate');
+            }
+        }
+
+        function refreshReservationAfterExchangeRateChange(emp, monthKey, yearKey) {
+            if (!emp || !emp.salaryReservationEnabled) return;
+            const netBeforeReservation = calculateActualSalary(emp, monthKey, yearKey);
+            const netInPaymentCurrency = convertToPaymentCurrency(netBeforeReservation, 'USD', emp);
+            const bonus = convertToPaymentCurrency(emp.bonus || 0, emp.bonusCurrency || 'IQD', emp);
+            const phoneBills = convertToPaymentCurrency(emp.phoneBills || 0, emp.phoneBillsCurrency || 'IQD', emp);
+            const ceoBonus = convertToPaymentCurrency(emp.ceoBonus || 0, emp.ceoBonusCurrency || 'IQD', emp);
+            const deductions = convertToPaymentCurrency(emp.deductions || 0, emp.deductionsCurrency || 'IQD', emp);
+            const advance = convertToPaymentCurrency(emp.advance || 0, emp.advanceCurrency || 'IQD', emp);
+            const netSalary = netInPaymentCurrency + bonus + phoneBills + ceoBonus - deductions - advance;
+            const reservation = calculateReservation(emp, netSalary, monthKey, yearKey);
+            emp.reservedAmount = reservation.actual;
+        }
+
+        async function applyMonthDefaultExchangeRateToUnpaid() {
+            if (!canEditCurrentMonth(currentMonth, currentYear)) {
+                showNotification('warning', t('warning'), t('monthLocked'));
+                return;
+            }
+            const rate = readMonthDefaultRateFromToolbar();
+            if (rate == null) {
+                showNotification('warning', currentLang === 'ar' ? 'تنبيه' : 'Warning',
+                    currentLang === 'ar' ? 'أدخل سعر صرف أكبر من صفر' : 'Enter an exchange rate greater than zero');
+                return;
+            }
+            await setMonthDefaultExchangeRate(currentYear, currentMonth, rate);
+            const list = (employeeData[currentYear] && employeeData[currentYear][currentMonth]) || [];
+            const targets = list.filter(emp => {
+                if (!emp || emp.isPaid === true) return false;
+                if (typeof hasProjectAccess === 'function' && !hasProjectAccess(emp.project)) return false;
+                return parsePositiveExchangeRate(emp.exchangeRate) !== rate;
+            });
+            if (!targets.length) {
+                showNotification('info', currentLang === 'ar' ? 'لا تغيير' : 'No change',
+                    currentLang === 'ar' ? 'لا يوجد موظفون غير مدفوعين يحتاجون هذا السعر' : 'No unpaid employees need this rate');
+                return;
+            }
+            const monthLabel = (t('monthNames')[currentMonth] || currentMonth) + ' ' + currentYear;
+            const confirmed = confirm(currentLang === 'ar'
+                ? ('سيتم تطبيق سعر الصرف ' + rate + ' على ' + targets.length + ' موظف غير مدفوع في ' + monthLabel + '.\nمن دُفع لهم لن يتغيّروا. متابعة؟')
+                : ('Apply exchange rate ' + rate + ' to ' + targets.length + ' unpaid employees in ' + monthLabel + '.\nPaid employees will not change. Continue?'));
+            if (!confirmed) return;
+            showLoading();
+            try {
+                for (const emp of targets) {
+                    emp.exchangeRate = rate;
+                    refreshReservationAfterExchangeRateChange(emp, currentMonth, currentYear);
+                    const updates = { exchangeRate: rate };
+                    if (emp.salaryReservationEnabled) updates.reservedAmount = emp.reservedAmount;
+                    if (emp.firebaseId) {
+                        await updateEmployeeInFirebase(emp.firebaseId, updates, {
+                            skipReload: true,
+                            skipLoading: true,
+                            skipNotification: true,
+                            skipActivityLog: true
+                        });
+                    }
+                }
+                if (typeof getStorageMode === 'function' && getStorageMode() === 'local') {
+                    LocalData.saveAllEmployees(employeeData);
+                }
+                renderContent();
+                showNotification('success', currentLang === 'ar' ? 'تم التطبيق' : 'Applied',
+                    currentLang === 'ar'
+                        ? ('تم تحديث سعر الصرف لـ ' + targets.length + ' موظف')
+                        : ('Updated exchange rate for ' + targets.length + ' employees'));
+            } catch (error) {
+                console.error('applyMonthDefaultExchangeRateToUnpaid', error);
+                showNotification('error', t('error'), currentLang === 'ar' ? 'تعذر تطبيق سعر الصرف' : 'Could not apply the exchange rate');
+            } finally {
+                hideLoading();
             }
         }
 
@@ -15068,6 +15277,17 @@
                     <span class="month-actionbar__group-title">${currentLang === 'ar' ? 'نسخ' : 'Copy'}</span>
                     <button type="button" class="btn btn-primary btn-sm" onclick="openCopyAllModal()" ${isMonthLocked ? 'disabled' : ''}>${t('copyAll')}</button>
                     ${selectedEmployees.size > 0 ? `<button type="button" class="btn btn-primary btn-sm" onclick="openCopySelectedModal()">${t('copySelected')}</button>` : ''}
+                </div>
+
+                <div class="month-actionbar__group">
+                    <span class="month-actionbar__group-title">${t('monthDefaultRate')}</span>
+                    <input type="number" id="monthDefaultExchangeRate" class="month-actionbar__rate-input" min="1" step="1"
+                        value="${getDefaultExchangeRate(currentYear, currentMonth)}"
+                        ${isMonthLocked ? 'disabled' : ''}
+                        title="${t('monthDefaultRate')}"
+                        onkeydown="if(event.key==='Enter'){event.preventDefault();saveMonthDefaultExchangeRateFromToolbar();}">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="saveMonthDefaultExchangeRateFromToolbar()" ${isMonthLocked ? 'disabled' : ''}>${t('saveMonthDefaultRate')}</button>
+                    <button type="button" class="btn btn-warning btn-sm" onclick="applyMonthDefaultExchangeRateToUnpaid()" ${isMonthLocked ? 'disabled' : ''}>${t('applyMonthDefaultRate')}</button>
                 </div>
 
                 <div class="month-actionbar__group">
@@ -19786,6 +20006,8 @@ function renderProjectView() {
                 fillCountryCodeSelect(document.getElementById('employeeCountryCode'), DEFAULT_COUNTRY_CODE);
                 const phoneAdd = document.getElementById('employeePhone');
                 if (phoneAdd) phoneAdd.value = '';
+                const rateAdd = document.getElementById('exchangeRate');
+                if (rateAdd) rateAdd.value = getDefaultExchangeRate(currentYear, currentMonth);
             }
         }
 
@@ -20522,6 +20744,7 @@ function renderProjectView() {
                         attendance: {}, // إعادة تعيين الدوام
                         isPaid: false // إعادة تعيين حالة الدفع
                     };
+                    applyStoredMonthRateIfSet(copiedEmployee, targetYear, month);
                     delete copiedEmployee.attendanceEntryMode;
                     delete copiedEmployee.attendanceAggregate;
                     // حذف الحقول التي لا يجب أن تكون موجودة في النسخة الجديدة
@@ -21402,6 +21625,7 @@ function renderProjectView() {
                         attendance: {}, // إعادة تعيين الدوام
                         isPaid: false // إعادة تعيين حالة الدفع
                     };
+                    applyStoredMonthRateIfSet(copiedEmployee, targetYear, targetMonth);
                     delete copiedEmployee.attendanceEntryMode;
                     delete copiedEmployee.attendanceAggregate;
                     // حذف الحقول التي لا يجب أن تكون موجودة في النسخة الجديدة
@@ -21589,6 +21813,7 @@ function renderProjectView() {
                                 attendance: {}, // إعادة تعيين الدوام
                                 isPaid: false // إعادة تعيين حالة الدفع
                             };
+                            applyStoredMonthRateIfSet(copiedEmployee, targetYear, targetMonth);
                             delete copiedEmployee.attendanceEntryMode;
                             delete copiedEmployee.attendanceAggregate;
                             // حذف الحقول التي لا يجب أن تكون موجودة في النسخة الجديدة
@@ -22067,7 +22292,7 @@ function renderProjectView() {
                         <option value="IQD" selected>IQD</option>
                     </select>
                 </td>
-                <td><input type="number" class="multi-emp-cell" data-field="exchangeRate" data-col="9" value="1420" min="0" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px;"></td>
+                <td><input type="number" class="multi-emp-cell" data-field="exchangeRate" data-col="9" value="${getDefaultExchangeRate(currentYear, currentMonth)}" min="0" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px;"></td>
                 <td>
                     <select class="multi-emp-cell" data-field="attendanceSystem" data-col="10" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px;">
                         <option value="hours" selected>بالساعات</option>
@@ -22878,7 +23103,7 @@ function renderProjectView() {
                         salary: parseFloat(data.salary) || 0,
                         salaryCurrency: data.salaryCurrency || 'USD',
                         paymentCurrency: data.paymentCurrency || data.salaryCurrency || 'IQD',
-                        exchangeRate: parseFloat(data.exchangeRate) || 1420,
+                        exchangeRate: parseFloat(data.exchangeRate) || getDefaultExchangeRate(currentYear, currentMonth),
                         workDays: 30,
                         bonus: 0, bonusCurrency: 'IQD',
                         phoneBills: 0, phoneBillsCurrency: 'IQD',
@@ -26249,6 +26474,7 @@ function renderProjectView() {
                 await loadCompanySettings();
                 await loadPrintSignatures();
                 await loadMonthChangeNotes();
+                await loadMonthExchangeRates();
                 
                 const backupData = {
                 employeeData: employeeData,
@@ -32379,6 +32605,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 await loadCompanySettings();
                 await loadPrintSignatures();
                 await loadMonthChangeNotes();
+                await loadMonthExchangeRates();
                 
                 hideLoading();
                 console.log('✅ النظام جاهز! بدء من لوحة التحكم');
@@ -32791,6 +33018,8 @@ function generateComparisonSummary(projectCode, month1, month2) {
         window.printProjectTables = printProjectTables;
         window.exportTableToPDF = exportTableToPDF;
         window.openPrintOptionsModal = openPrintOptionsModal;
+        window.saveMonthDefaultExchangeRateFromToolbar = saveMonthDefaultExchangeRateFromToolbar;
+        window.applyMonthDefaultExchangeRateToUnpaid = applyMonthDefaultExchangeRateToUnpaid;
         window.openMonthChangeNotesModal = openMonthChangeNotesModal;
         window.saveMonthChangeNotesFromModal = saveMonthChangeNotesFromModal;
         window.renderPrintChangeNotes = renderPrintChangeNotes;
@@ -33443,7 +33672,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
                 salary: parseFloat(document.getElementById('salary').value),
                 salaryCurrency: document.getElementById('salaryCurrency').value,
                 paymentCurrency: document.getElementById('paymentCurrency').value,
-                exchangeRate: parseFloat(document.getElementById('exchangeRate').value),
+                exchangeRate: parseFloat(document.getElementById('exchangeRate').value) || getDefaultExchangeRate(currentYear, currentMonth),
                 paymentMethod: document.getElementById('paymentMethodAdd')?.value || 'cash',
                 mastercardNumber: document.getElementById('paymentMethodAdd')?.value === 'mastercard' 
                     ? (document.getElementById('mastercardNumberAdd')?.value || '').trim() || null 
