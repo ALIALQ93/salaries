@@ -8969,11 +8969,25 @@
         console.log('ℹ️ Note: 404 errors from Firebase WebChannel in Network tab are normal and can be ignored.');
 
         // ========== نظام إشعار التحديثات (Update Notice System) ==========
-        const APP_VERSION = '2.8.0';
+        const APP_VERSION = '2.9.0';
         const SEEN_VERSION_KEY = 'payrose_seen_version';
         const VERSION_CHECK_INTERVAL_MS = 5 * 60 * 1000; // كل 5 دقائق
         let _versionCheckTimer = null;
         const APP_CHANGELOG = {
+            '2.9.0': {
+                ar: [
+                    'سعر صرف افتراضي مرتبط بالشهر من شريط إجراءات الشهر',
+                    'حفظ الافتراضي لاستخدامه عند إضافة موظف أو إضافة متعددة',
+                    'النسخ إلى شهر له سعر محفوظ يستخدم سعر ذلك الشهر',
+                    'زر تطبيق السعر على الموظفين غير المدفوعين دون المساس بمن دُفع لهم'
+                ],
+                en: [
+                    'Month-linked default exchange rate on the month action bar',
+                    'Saved default is used when adding a single or multiple employees',
+                    'Copying into a month with a saved rate uses that month\'s rate',
+                    'Apply the rate to unpaid employees only; paid employees stay unchanged'
+                ]
+            },
             '2.8.0': {
                 ar: [
                     'نموذج طباعة رسمي أوضح: ترويسة مختصرة وجداول مجمّعة حسب النوع',
