@@ -2038,37 +2038,89 @@
         }
 
         /* ===== Months action bar (منظم) ===== */
+        .month-page-hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            background: var(--primary);
+            color: #fff;
+            padding: 14px 18px;
+            border-radius: var(--radius-md);
+            margin-bottom: 10px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .month-page-hero h2 {
+            margin: 0 0 8px 0;
+            font-size: 22px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .month-page-hero__chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .month-page-hero__chip {
+            background: rgba(255, 255, 255, 0.16);
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .month-page-hero__chip--ok { background: rgba(16, 185, 129, 0.35); }
+        .month-page-hero__chip--warn { background: rgba(245, 158, 11, 0.4); }
+
+        .month-stats-details {
+            margin-bottom: 10px;
+        }
+
+        .month-stats-details .panel-surface {
+            padding: 16px;
+            margin-bottom: 10px;
+        }
+
+        .month-stats-details .panel-surface__title {
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
         .month-actionbar {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 10px;
-            padding: 14px 16px;
+            gap: 8px;
+            padding: 10px 12px;
             background: var(--bg-surface);
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
             box-shadow: var(--shadow-sm);
-            margin-bottom: 16px;
-        }
-
-        .month-actionbar__hint {
-            width: 100%;
-            flex-basis: 100%;
-            margin: 0;
+            margin-bottom: 10px;
+            position: sticky;
+            top: 0;
+            z-index: 16;
         }
 
         .month-actionbar__group {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
         }
 
         .month-actionbar__group-title {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 800;
             color: var(--gray);
-            padding: 6px 10px;
+            padding: 5px 8px;
             background: #f8fafc;
             border: 1px solid var(--border);
             border-radius: 999px;
@@ -2079,14 +2131,118 @@
             flex: 1;
         }
 
+        .month-actionbar__lock {
+            flex-basis: 100%;
+            width: 100%;
+        }
+
+        .month-actionbar__lock > div {
+            margin-bottom: 0 !important;
+        }
+
         .month-actionbar__rate-input {
-            width: 92px;
-            padding: 8px 10px;
+            width: 84px;
+            padding: 7px 8px;
             font-weight: 700;
             text-align: center;
             border: 1px solid var(--border);
             border-radius: 8px;
             background: #fffbeb;
+        }
+
+        .month-more {
+            position: relative;
+        }
+
+        .month-more > summary {
+            list-style: none;
+            cursor: pointer;
+        }
+
+        .month-more > summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .month-more__menu {
+            position: absolute;
+            inset-inline-end: 0;
+            top: calc(100% + 6px);
+            min-width: 220px;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: var(--shadow-md);
+            padding: 6px;
+            z-index: 24;
+        }
+
+        .month-more__menu button {
+            display: block;
+            width: 100%;
+            text-align: start;
+            background: transparent;
+            border: 0;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--dark);
+        }
+
+        .month-more__menu button:hover {
+            background: #f1f5f9;
+        }
+
+        .month-filterbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: end;
+            gap: 8px;
+            padding: 10px 12px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+        }
+
+        .month-filterbar .filter-group {
+            min-width: 128px;
+        }
+
+        .month-filterbar .filter-group--search {
+            flex: 1 1 220px;
+            min-width: 180px;
+        }
+
+        .month-filterbar label {
+            display: block;
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--gray);
+            margin-bottom: 4px;
+        }
+
+        .month-filterbar select,
+        .month-filterbar .search-box {
+            width: 100%;
+            min-height: 36px;
+            padding: 6px 8px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+            font-size: 13px;
+        }
+
+        .month-filterbar .search-row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .month-filterbar .search-row .search-box {
+            flex: 1;
+            min-width: 0;
         }
 
         .btn.btn-sm {
@@ -4127,6 +4283,13 @@
         .kpi-card__trend .status-chip {
             font-size: 10px;
             padding: 2px 8px;
+        }
+
+        .kpi-card__hint {
+            color: rgba(255, 255, 255, 0.88);
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 6px;
         }
 
         .kpi-card--primary { background: var(--primary); }
@@ -9315,6 +9478,7 @@
         let reservationFilter = 'all'; // 'all', 'enabled', 'disabled', 'shortage', 'completed' - فلترة حسب حالة الحجز
         let linkedFilter = 'all'; // 'all', 'linked', 'original', 'unlinked' - فلترة حسب حالة الربط
         let duplicateCodeFilter = 'all'; // 'all', 'duplicates' - فلترة الموظفين ذوي الرموز المكررة
+        let monthStatsExpanded = false;
         let currentProject = null;
         let selectedProjectMonth = 'august';
         let dashboardSelectedMonth = 'august';
@@ -9395,6 +9559,8 @@
                 monthDefaultRate: 'سعر الصرف الافتراضي',
                 saveMonthDefaultRate: 'حفظ الافتراضي',
                 applyMonthDefaultRate: 'تطبيق على غير المدفوعين',
+                more: 'المزيد',
+                monthStatistics: 'إحصائيات',
                 workDays: '⏰ الدوام', dailySalary: 'الراتب اليومي',
                 actualSalaryUSD: 'الفعلي (USD)', actualSalaryIQD: 'الفعلي (IQD)',
                 bonus: 'بونص', phoneBills: 'فواتير', deductions: 'خصومات',
@@ -9877,6 +10043,8 @@
                 monthDefaultRate: 'Default exchange rate',
                 saveMonthDefaultRate: 'Save default',
                 applyMonthDefaultRate: 'Apply to unpaid',
+                more: 'More',
+                monthStatistics: 'Statistics',
                 workDays: '⏰ Attendance', dailySalary: 'Daily Salary',
                 actualSalaryUSD: 'Actual (USD)', actualSalaryIQD: 'Actual (IQD)',
                 bonus: 'Bonus', phoneBills: 'Bills', deductions: 'Deductions',
@@ -11674,20 +11842,27 @@
             return parsePositiveExchangeRate(input && input.value);
         }
 
-        async function saveMonthDefaultExchangeRateFromToolbar() {
+        async function saveMonthDefaultExchangeRateFromToolbar(silent) {
             const rate = readMonthDefaultRateFromToolbar();
             if (rate == null) {
-                showNotification('warning', currentLang === 'ar' ? 'تنبيه' : 'Warning',
-                    currentLang === 'ar' ? 'أدخل سعر صرف أكبر من صفر' : 'Enter an exchange rate greater than zero');
+                if (!silent) {
+                    showNotification('warning', currentLang === 'ar' ? 'تنبيه' : 'Warning',
+                        currentLang === 'ar' ? 'أدخل سعر صرف أكبر من صفر' : 'Enter an exchange rate greater than zero');
+                }
+                return;
+            }
+            if (hasMonthDefaultExchangeRate(currentYear, currentMonth) && getDefaultExchangeRate(currentYear, currentMonth) === rate) {
                 return;
             }
             const ok = await setMonthDefaultExchangeRate(currentYear, currentMonth, rate);
             if (ok) {
-                showNotification('success', currentLang === 'ar' ? 'تم الحفظ' : 'Saved',
-                    currentLang === 'ar'
-                        ? ('سعر صرف ' + currentYear + ' / ' + (t('monthNames')[currentMonth] || currentMonth) + ' أصبح ' + rate)
-                        : ('Default rate for ' + (t('monthNames')[currentMonth] || currentMonth) + ' ' + currentYear + ' is now ' + rate));
-            } else {
+                if (!silent) {
+                    showNotification('success', currentLang === 'ar' ? 'تم الحفظ' : 'Saved',
+                        currentLang === 'ar'
+                            ? ('سعر صرف ' + currentYear + ' / ' + (t('monthNames')[currentMonth] || currentMonth) + ' أصبح ' + rate)
+                            : ('Default rate for ' + (t('monthNames')[currentMonth] || currentMonth) + ' ' + currentYear + ' is now ' + rate));
+                }
+            } else if (!silent) {
                 showNotification('error', t('error'), currentLang === 'ar' ? 'تعذر حفظ سعر الصرف الافتراضي' : 'Could not save the default exchange rate');
             }
         }
@@ -15119,101 +15294,66 @@
             
             // حساب الإحصائيات
             let totalNetSalary = 0;
-            let totalMonthly = 0, totalDaily = 0, totalVehicle = 0;
+            let totalMonthly = 0, totalDaily = 0, totalVehicle = 0, totalMachinery = 0, totalExternal = 0;
             allEmployees.forEach(emp => {
                 totalNetSalary += calculateNetSalary(emp, currentMonth, currentYear);
-                if (emp.employeeType === 'monthly') totalMonthly++;
-                else if (emp.employeeType === 'daily') totalDaily++;
-                else if (emp.employeeType === 'vehicle') totalVehicle++;
+                const empType = emp.employeeType || '';
+                if (empType === 'monthly') totalMonthly++;
+                else if (empType === 'daily') totalDaily++;
+                else if (empType === 'vehicle') totalVehicle++;
+                else if (empType === 'machinery') totalMachinery++;
+                else if (empType === 'external') totalExternal++;
             });
-            
-            // عنوان محسّن مع إحصائيات
-            let html = `
-            <div class="dashboard-hero" style="text-align: left; margin-bottom: 25px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
-                    <div>
-                        <h2 style="color: white; margin: 0 0 8px 0; font-size: 32px; font-weight: 800; display: flex; align-items: center; gap: 12px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                    📅 ${t('monthNames')[currentMonth]} ${currentYear}
-                </h2>
-                        <div style="display: flex; gap: 20px; flex-wrap: wrap; color: rgba(255,255,255,0.95); font-size: 14px; font-weight: 500;">
-                            <div style="display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px;">
-                                <span>👥 الموظفين:</span>
-                                <strong style="font-size: 16px;">${allEmployees.length}</strong>
-                            </div>
-                            ${employees.length !== allEmployees.length ? `
-                            <div style="display: flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, 0.3); padding: 6px 12px; border-radius: 20px;">
-                                <span>📊 المعروضين:</span>
-                                <strong style="font-size: 16px;">${employees.length}</strong>
-                            </div>` : ''}
-                            ${Object.keys(columnFilters).length > 0 ? `
-                            <div style="display: flex; align-items: center; gap: 6px; background: rgba(251, 191, 36, 0.3); padding: 6px 12px; border-radius: 20px;">
-                                <span>🔍 فلاتر نشطة:</span>
-                                <strong style="font-size: 16px;">${Object.keys(columnFilters).length}</strong>
-                            </div>` : ''}
-                        </div>
-                    </div>
-                    <div style="text-align: left;">
-                        <div style="background: rgba(255,255,255,0.2); padding: 15px 20px; border-radius: 12px; backdrop-filter: blur(10px);">
-                            <div style="font-size: 13px; color: rgba(255,255,255,0.9); margin-bottom: 4px;">💰 إجمالي الرواتب</div>
-                            <div style="font-size: 28px; font-weight: 800; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                                ${formatCurrency(totalNetSalary)}
-                            </div>
-                            <div style="font-size: 12px; color: rgba(255,255,255,0.8); margin-top: 4px;">USD</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- إحصائيات سريعة -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 20px;">
-                    <div style="background: rgba(255,255,255,0.15); padding: 12px; border-radius: 10px; text-align: center; backdrop-filter: blur(5px);">
-                        <div style="font-size: 24px; font-weight: 700; color: white;">${totalMonthly}</div>
-                        <div style="font-size: 12px; color: rgba(255,255,255,0.9); margin-top: 4px;">📋 ${currentLang === 'ar' ? 'موظف شهري' : 'Monthly'}</div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.15); padding: 12px; border-radius: 10px; text-align: center; backdrop-filter: blur(5px);">
-                        <div style="font-size: 24px; font-weight: 700; color: white;">${totalDaily}</div>
-                        <div style="font-size: 12px; color: rgba(255,255,255,0.9); margin-top: 4px;">📅 ${currentLang === 'ar' ? 'موظف يومي' : 'Daily'}</div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.15); padding: 12px; border-radius: 10px; text-align: center; backdrop-filter: blur(5px);">
-                        <div style="font-size: 24px; font-weight: 700; color: white;">${totalVehicle}</div>
-                        <div style="font-size: 12px; color: rgba(255,255,255,0.9); margin-top: 4px;">🚗 ${currentLang === 'ar' ? 'سيارات' : 'Vehicles'}</div>
-                    </div>
-                    <div style="background: rgba(16, 185, 129, 0.25); padding: 12px; border-radius: 10px; text-align: center; backdrop-filter: blur(5px); border: 2px solid rgba(16, 185, 129, 0.5);">
-                        <div style="font-size: 24px; font-weight: 700; color: white;">${Object.keys(projects).length}</div>
-                        <div style="font-size: 12px; color: rgba(255,255,255,0.9); margin-top: 4px;">🏗️ ${currentLang === 'ar' ? 'المشاريع' : 'Projects'}</div>
-                    </div>
-                </div>
-            </div>`;
-            
-            // إحصائيات الدفع
             const paidEmployees = allEmployees.filter(emp => emp.isPaid === true);
             const unpaidEmployees = allEmployees.filter(emp => !emp.isPaid);
             let paidAmount = 0;
             let unpaidAmount = 0;
-            
-            paidEmployees.forEach(emp => {
-                paidAmount += calculateNetSalary(emp, currentMonth, currentYear);
-            });
-            
-            unpaidEmployees.forEach(emp => {
-                unpaidAmount += calculateNetSalary(emp, currentMonth, currentYear);
-            });
-            
-            html += `
-            <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 30px;">
-                <h3 style="color: var(--primary); margin: 0 0 25px 0; font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
-                    <span>💳</span> ${t('paymentStatistics')}
-                </h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-                    <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);">
-                        <div style="color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 600; margin-bottom: 8px;">✅ ${t('paidEmployees')}</div>
-                        <div style="color: white; font-size: 38px; font-weight: 900; margin-bottom: 5px;">${paidEmployees.length}</div>
-                        <div style="color: rgba(255,255,255,0.85); font-size: 14px; font-weight: 600; margin-top: 10px;">${t('paidAmount')}: ${formatCurrency(paidAmount)}</div>
+            paidEmployees.forEach(emp => { paidAmount += calculateNetSalary(emp, currentMonth, currentYear); });
+            unpaidEmployees.forEach(emp => { unpaidAmount += calculateNetSalary(emp, currentMonth, currentYear); });
+            const monthActiveFilterCount = countMonthActiveFilters();
+
+            let html = `
+            <div class="month-page-hero">
+                <div>
+                    <h2>${t('monthNames')[currentMonth]} ${currentYear}</h2>
+                    <div class="month-page-hero__chips">
+                        <span class="month-page-hero__chip">${allEmployees.length} ${currentLang === 'ar' ? 'موظف' : 'employees'}</span>
+                        ${employees.length !== allEmployees.length ? `<span class="month-page-hero__chip">${employees.length} ${currentLang === 'ar' ? 'معروض' : 'shown'}</span>` : ''}
+                        <span class="month-page-hero__chip month-page-hero__chip--ok">${t('paidEmployees')}: ${paidEmployees.length}</span>
+                        <span class="month-page-hero__chip month-page-hero__chip--warn">${t('unpaidEmployees')}: ${unpaidEmployees.length}</span>
+                        <span class="month-page-hero__chip">${formatCurrency(totalNetSalary)}</span>
+                        ${monthActiveFilterCount ? `<span class="month-page-hero__chip month-page-hero__chip--warn">${currentLang === 'ar' ? 'فلاتر' : 'Filters'}: ${monthActiveFilterCount}</span>` : ''}
                     </div>
-                    <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);">
-                        <div style="color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 600; margin-bottom: 8px;">⏳ ${t('unpaidEmployees')}</div>
-                        <div style="color: white; font-size: 38px; font-weight: 900; margin-bottom: 5px;">${unpaidEmployees.length}</div>
-                        <div style="color: rgba(255,255,255,0.85); font-size: 14px; font-weight: 600; margin-top: 10px;">${t('unpaidAmount')}: ${formatCurrency(unpaidAmount)}</div>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" id="monthStatsToggle" aria-expanded="${monthStatsExpanded ? 'true' : 'false'}" onclick="toggleMonthStats()">${t('monthStatistics')} ${monthStatsExpanded ? '▴' : '▾'}</button>
+            </div>`;
+            
+            html += `<div id="monthStatsDetails" class="month-stats-details" ${monthStatsExpanded ? '' : 'hidden'}>
+            <div class="panel-surface" style="margin-bottom: 10px;">
+                <h3 class="panel-surface__title">${t('paymentStatistics')}</h3>
+                <div class="kpi-grid" style="margin-bottom: 12px;">
+                    <div class="kpi-card kpi-card--success">
+                        <div class="kpi-card__body">
+                            <div class="kpi-card__label">${t('paidEmployees')}</div>
+                            <div class="kpi-card__value">${paidEmployees.length}</div>
+                            <div class="kpi-card__hint">${t('paidAmount')}: ${formatCurrency(paidAmount)}</div>
+                        </div>
                     </div>
+                    <div class="kpi-card kpi-card--warning">
+                        <div class="kpi-card__body">
+                            <div class="kpi-card__label">${t('unpaidEmployees')}</div>
+                            <div class="kpi-card__value">${unpaidEmployees.length}</div>
+                            <div class="kpi-card__hint">${t('unpaidAmount')}: ${formatCurrency(unpaidAmount)}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="month-page-hero__chips" style="margin-top: 4px;">
+                    <span class="month-page-hero__chip" style="background:#e2e8f0;color:#0f172a;">${t('monthly')}: ${totalMonthly}</span>
+                    <span class="month-page-hero__chip" style="background:#e2e8f0;color:#0f172a;">${t('daily')}: ${totalDaily}</span>
+                    <span class="month-page-hero__chip" style="background:#e2e8f0;color:#0f172a;">${t('vehicle')}: ${totalVehicle}</span>
+                    <span class="month-page-hero__chip" style="background:#e2e8f0;color:#0f172a;">${t('machinery')}: ${totalMachinery}</span>
+                    <span class="month-page-hero__chip" style="background:#e2e8f0;color:#0f172a;">${t('external')}: ${totalExternal}</span>
+                    <span class="month-page-hero__chip" style="background:#e2e8f0;color:#0f172a;">${currentLang === 'ar' ? 'المشاريع' : 'Projects'}: ${Object.keys(projects).length}</span>
                 </div>
             </div>`;
             
@@ -15266,6 +15406,7 @@
                     </div>
                 </div>`;
             }
+            html += `</div>`;
             
             // أزرار الإجراءات محسّنة
             const isMonthLocked = !canEditCurrentMonth(currentMonth, currentYear);
@@ -15274,147 +15415,120 @@
             </div>` : '';
             
             html += `<div class="month-actionbar">
-                ${lockMessage}
-                <p class="toolbar-hint month-actionbar__hint">
-                    ${currentLang === 'ar'
-                        ? '↕️ الترتيب: المشروع ثم النوع (ثابت) — داخل كل مجموعة استخدم السحب أو ⬆️⬇️ لترتيب الموظفين يدوياً'
-                        : '↕️ Order: project then type (fixed) — within each group use drag or ⬆️⬇️ to set manual order'}
-                </p>
-
+                ${lockMessage ? `<div class="month-actionbar__lock">${lockMessage}</div>` : ''}
                 <div class="month-actionbar__group">
-                    <span class="month-actionbar__group-title">${currentLang === 'ar' ? 'إضافة' : 'Add'}</span>
                     <button type="button" class="btn btn-success btn-sm" onclick="openModal('employeeModal')" ${isMonthLocked ? 'disabled' : ''}>${t('addEmployee')}</button>
                     <button type="button" class="btn btn-success btn-sm" onclick="openMultipleEmployeesModal()" ${isMonthLocked ? 'disabled' : ''}>${currentLang === 'ar' ? 'إضافة متعدد' : 'Add multiple'}</button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openPrintOptionsModal()">${t('print')}</button>
+                    <button type="button" class="btn btn-warning btn-sm" onclick="toggleSelectAll()" ${isMonthLocked ? 'disabled' : ''}>${t('selectAll')}</button>
+                    ${selectedEmployees.size > 0 ? `<span class="selected-count">${selectedEmployees.size} ${t('selected')}</span>` : ''}
                 </div>
-
+                ${selectedEmployees.size > 0 ? `
                 <div class="month-actionbar__group">
-                    <span class="month-actionbar__group-title">${currentLang === 'ar' ? 'نسخ' : 'Copy'}</span>
-                    <button type="button" class="btn btn-primary btn-sm" onclick="openCopyAllModal()" ${isMonthLocked ? 'disabled' : ''}>${t('copyAll')}</button>
-                    ${selectedEmployees.size > 0 ? `<button type="button" class="btn btn-primary btn-sm" onclick="openCopySelectedModal()">${t('copySelected')}</button>` : ''}
-                </div>
-
+                    <button type="button" class="btn btn-success btn-sm" onclick="bulkMarkAsPaid()">${t('markSelectedAsPaid')}</button>
+                    <button type="button" class="btn btn-warning btn-sm" onclick="bulkMarkAsUnpaid()">${t('markSelectedAsUnpaid')}</button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openCopySelectedModal()">${t('copySelected')}</button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteSelectedEmployees()" ${isMonthLocked ? 'disabled' : ''}>${t('deleteSelected')}</button>
+                </div>` : ''}
                 <div class="month-actionbar__group">
-                    <span class="month-actionbar__group-title">${t('monthDefaultRate')}</span>
+                    <span class="month-actionbar__group-title">${t('exchangeRate')}</span>
                     <input type="number" id="monthDefaultExchangeRate" class="month-actionbar__rate-input" min="1" step="1"
                         value="${getDefaultExchangeRate(currentYear, currentMonth)}"
                         ${isMonthLocked ? 'disabled' : ''}
                         title="${t('monthDefaultRate')}"
-                        onkeydown="if(event.key==='Enter'){event.preventDefault();saveMonthDefaultExchangeRateFromToolbar();}">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="saveMonthDefaultExchangeRateFromToolbar()" ${isMonthLocked ? 'disabled' : ''}>${t('saveMonthDefaultRate')}</button>
+                        onkeydown="if(event.key==='Enter'){event.preventDefault();saveMonthDefaultExchangeRateFromToolbar();}"
+                        onblur="saveMonthDefaultExchangeRateFromToolbar(true)">
                     <button type="button" class="btn btn-warning btn-sm" onclick="applyMonthDefaultExchangeRateToUnpaid()" ${isMonthLocked ? 'disabled' : ''}>${t('applyMonthDefaultRate')}</button>
                 </div>
-
-                <div class="month-actionbar__group">
-                    <span class="month-actionbar__group-title">${currentLang === 'ar' ? 'تحديد' : 'Select'}</span>
-                    <button type="button" class="btn btn-warning btn-sm" onclick="toggleSelectAll()" ${isMonthLocked ? 'disabled' : ''}>${t('selectAll')}</button>
-                    ${selectedEmployees.size > 0 ? `<span class="selected-count">${selectedEmployees.size} ${t('selected')}</span>` : ''}
-                </div>
-
-                ${selectedEmployees.size > 0 ? `
-                <div class="month-actionbar__group">
-                    <span class="month-actionbar__group-title">${currentLang === 'ar' ? 'إجراءات محددة' : 'Selected'}</span>
-                    <button type="button" class="btn btn-success btn-sm" onclick="bulkMarkAsPaid()">${t('markSelectedAsPaid')}</button>
-                    <button type="button" class="btn btn-warning btn-sm" onclick="bulkMarkAsUnpaid()">${t('markSelectedAsUnpaid')}</button>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteSelectedEmployees()" ${isMonthLocked ? 'disabled' : ''}>${t('deleteSelected')}</button>
-                </div>` : ''}
-
                 <div class="month-actionbar__spacer"></div>
-
-                <div class="month-actionbar__group">
-                    <span class="month-actionbar__group-title">${currentLang === 'ar' ? 'أدوات' : 'Tools'}</span>
-                    <button type="button" class="btn btn-primary btn-sm" onclick="openPrintOptionsModal()">${t('print')}</button>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="openMonthChangeNotesModal()">${t('changeNotes')}</button>
-                    <button type="button" class="btn btn-primary btn-sm" onclick="openReservationReport()">${t('reservationReport')}</button>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleColumnVisibilityPanel()">${currentLang === 'ar' ? 'الأعمدة' : 'Columns'}</button>
-                    <button type="button" class="btn btn-secondary btn-format-save btn-sm" onclick="saveCurrentFormatting()">${currentLang === 'ar' ? 'حفظ التنسيق' : 'Save format'}</button>
-                    ${Object.keys(columnFilters).length > 0 ? `<button type="button" class="btn btn-warning btn-sm" onclick="clearAllFilters()">${currentLang === 'ar' ? 'مسح الفلاتر' : 'Clear filters'} (${Object.keys(columnFilters).length})</button>` : ''}
-                </div>
+                <details class="month-more">
+                    <summary class="btn btn-secondary btn-sm">${t('more')} ▾</summary>
+                    <div class="month-more__menu">
+                        <button type="button" onclick="this.closest('details').removeAttribute('open'); openCopyAllModal()" ${isMonthLocked ? 'disabled' : ''}>${t('copyAll')}</button>
+                        <button type="button" onclick="this.closest('details').removeAttribute('open'); openMonthChangeNotesModal()">${t('changeNotes')}</button>
+                        <button type="button" onclick="this.closest('details').removeAttribute('open'); openReservationReport()">${t('reservationReport')}</button>
+                        <button type="button" onclick="this.closest('details').removeAttribute('open'); toggleColumnVisibilityPanel()">${currentLang === 'ar' ? 'الأعمدة' : 'Columns'}</button>
+                        <button type="button" onclick="this.closest('details').removeAttribute('open'); saveCurrentFormatting()">${currentLang === 'ar' ? 'حفظ التنسيق' : 'Save format'}</button>
+                    </div>
+                </details>
             </div>`;
             
-            html += `<div class="filter-toolbar">
-                    <span>${t('filterByPayment')}:</span>
-                    <button class="btn ${paymentFilter === 'all' ? 'btn-primary' : 'btn'}" onclick="setPaymentFilter('all')" style="font-weight: 600;">${t('showAll')}</button>
-                    <button class="btn ${paymentFilter === 'paid' ? 'btn-success' : 'btn'}" onclick="setPaymentFilter('paid')" style="font-weight: 600;">✅ ${t('showPaid')}</button>
-                    <button class="btn ${paymentFilter === 'unpaid' ? 'btn-warning' : 'btn'}" onclick="setPaymentFilter('unpaid')">⏳ ${t('showUnpaid')}</button>
-            </div>`;
-            
-            html += `<div class="filter-toolbar">
-                    <span>💰 ${t('salaryReservation')}:</span>
-                    <button class="btn ${reservationFilter === 'all' ? 'btn-primary' : 'btn'}" onclick="setReservationFilter('all')" style="font-weight: 600;">${t('showAll')}</button>
-                    <button class="btn ${reservationFilter === 'enabled' ? 'btn-success' : 'btn'}" onclick="setReservationFilter('enabled')" style="font-weight: 600;">✅ ${t('reservationActive')}</button>
-                    <button class="btn ${reservationFilter === 'disabled' ? 'btn-secondary' : 'btn'}" onclick="setReservationFilter('disabled')" style="font-weight: 600;">⚙️ ${t('reservationInactive')}</button>
-                    <button class="btn ${reservationFilter === 'shortage' ? 'btn-warning' : 'btn'}" onclick="setReservationFilter('shortage')" style="font-weight: 600;">⚠️ ${t('reservationShortage')}</button>
-                    <button class="btn ${reservationFilter === 'completed' ? 'btn-info' : 'btn'}" onclick="setReservationFilter('completed')">🎉 ${t('reservationCompleted')}</button>
-                </div>
-                <div class="filter-group" style="width: 100%; flex-basis: 100%; margin-top: 8px;">
-                    <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px; font-weight: 600; color: var(--dark);">
-                        <span>🔗</span> ${t('showLinkedRelations')}
-                    </label>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button class="btn ${linkedFilter === 'all' ? 'btn-primary' : 'btn'}" onclick="setLinkedFilter('all')" style="font-weight: 600;">${t('showAll')}</button>
-                        <button class="btn ${linkedFilter === 'linked' ? 'btn-warning' : 'btn'}" onclick="setLinkedFilter('linked')" style="font-weight: 600;">🔗 ${t('linkedDuplicate')}</button>
-                        <button class="btn ${linkedFilter === 'original' ? 'btn-success' : 'btn'}" onclick="setLinkedFilter('original')" style="font-weight: 600;">✅ ${t('originalEmployee')}</button>
-                        <button class="btn ${linkedFilter === 'unlinked' ? 'btn-secondary' : 'btn'}" onclick="setLinkedFilter('unlinked')" style="font-weight: 600;">⚪ ${t('unlinked')}</button>
-                    </div>
-                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-                        <label style="font-weight: 600; color: #333;">🔖 ${t('duplicateCodeFilter')}:</label>
-                        <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
-                            <button class="btn ${duplicateCodeFilter === 'all' ? 'btn-primary' : 'btn'}" onclick="setDuplicateCodeFilter('all')" style="font-weight: 600;">${t('showAll')}</button>
-                            <button class="btn ${duplicateCodeFilter === 'duplicates' ? 'btn-danger' : 'btn'}" onclick="setDuplicateCodeFilter('duplicates')" style="font-weight: 600;">⚠️ ${t('showDuplicatesOnly')}</button>
-                        </div>
+            const monthSearchValue = String(monthFilterSearch || '').replace(/"/g, '&quot;');
+            html += `
+            <div class="month-filterbar">
+                <div class="filter-group filter-group--search">
+                    <label>${t('search')}</label>
+                    <div class="search-row">
+                        <input type="text" class="search-box" id="searchBox"
+                            placeholder="${currentLang === 'ar' ? 'ابحث عن موظف...' : 'Search employee...'}"
+                            value="${monthSearchValue}"
+                            onkeydown="if(event.key==='Enter') handleSearch(this.value)">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="handleSearch(document.getElementById('searchBox').value)">${currentLang === 'ar' ? 'بحث' : 'Search'}</button>
                     </div>
                 </div>
+                <div class="filter-group">
+                    <label>${t('project')}</label>
+                    <select id="projectFilter" onchange="handleProjectFilter(this.value)">
+                        <option value="all">${t('all')}</option>
+                        ${(() => {
+                            const allowedProjects = getAllowedProjects();
+                            const filteredProjects = allowedProjects === null ? projects :
+                                Object.fromEntries(Object.entries(projects).filter(([code]) => allowedProjects.includes(code)));
+                            return Object.entries(filteredProjects).map(([code, name]) =>
+                                `<option value="${code}" ${monthFilterProject === code ? 'selected' : ''}>${name}</option>`
+                            ).join('');
+                        })()}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>${t('type')}</label>
+                    <select id="typeFilter" onchange="handleTypeFilter(this.value)">
+                        <option value="all">${t('all')}</option>
+                        <option value="monthly" ${monthFilterType === 'monthly' ? 'selected' : ''}>${t('monthly')}</option>
+                        <option value="daily" ${monthFilterType === 'daily' ? 'selected' : ''}>${t('daily')}</option>
+                        <option value="vehicle" ${monthFilterType === 'vehicle' ? 'selected' : ''}>${t('vehicle')}</option>
+                        <option value="machinery" ${monthFilterType === 'machinery' ? 'selected' : ''}>${t('machinery')}</option>
+                        <option value="external" ${monthFilterType === 'external' ? 'selected' : ''}>${t('external')}</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>${t('filterByPayment')}</label>
+                    <select onchange="setPaymentFilter(this.value)">
+                        <option value="all" ${paymentFilter === 'all' ? 'selected' : ''}>${t('showAll')}</option>
+                        <option value="paid" ${paymentFilter === 'paid' ? 'selected' : ''}>${t('showPaid')}</option>
+                        <option value="unpaid" ${paymentFilter === 'unpaid' ? 'selected' : ''}>${t('showUnpaid')}</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>${t('salaryReservation')}</label>
+                    <select onchange="setReservationFilter(this.value)">
+                        <option value="all" ${reservationFilter === 'all' ? 'selected' : ''}>${t('showAll')}</option>
+                        <option value="enabled" ${reservationFilter === 'enabled' ? 'selected' : ''}>${t('reservationActive')}</option>
+                        <option value="disabled" ${reservationFilter === 'disabled' ? 'selected' : ''}>${t('reservationInactive')}</option>
+                        <option value="shortage" ${reservationFilter === 'shortage' ? 'selected' : ''}>${t('reservationShortage')}</option>
+                        <option value="completed" ${reservationFilter === 'completed' ? 'selected' : ''}>${t('reservationCompleted')}</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>${t('showLinkedRelations')}</label>
+                    <select onchange="setLinkedFilter(this.value)">
+                        <option value="all" ${linkedFilter === 'all' ? 'selected' : ''}>${t('showAll')}</option>
+                        <option value="linked" ${linkedFilter === 'linked' ? 'selected' : ''}>${t('linkedDuplicate')}</option>
+                        <option value="original" ${linkedFilter === 'original' ? 'selected' : ''}>${t('originalEmployee')}</option>
+                        <option value="unlinked" ${linkedFilter === 'unlinked' ? 'selected' : ''}>${t('unlinked')}</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>${t('duplicateCodeFilter')}</label>
+                    <select onchange="setDuplicateCodeFilter(this.value)">
+                        <option value="all" ${duplicateCodeFilter === 'all' ? 'selected' : ''}>${t('showAll')}</option>
+                        <option value="duplicates" ${duplicateCodeFilter === 'duplicates' ? 'selected' : ''}>${t('showDuplicatesOnly')}</option>
+                    </select>
+                </div>
+                ${monthActiveFilterCount ? `<button type="button" class="btn btn-warning btn-sm" onclick="clearMonthFiltersAndRefresh()">${t('clearFilters')} (${monthActiveFilterCount})</button>` : ''}
             </div>`;
 
             html += getColumnVisibilityPanelHTML();
-
-            // الفلاتر والبحث (منظم واحترافي)
-            html += `
-            <div class="panel-surface month-filters-panel">
-                <div class="month-filters-title">
-                    <h3>${currentLang === 'ar' ? 'الفلاتر والبحث' : 'Filters & Search'}</h3>
-                </div>
-                <div class="month-filters-grid">
-                    <div class="filter-group" style="min-width: unset;">
-                        <label>${t('search')}</label>
-                        <div class="search-row">
-                            <input type="text" class="search-box" id="searchBox"
-                                placeholder="${currentLang === 'ar' ? 'ابحث عن موظف...' : 'Search employee...'}"
-                                value="${monthFilterSearch}"
-                                onkeydown="if(event.key==='Enter') handleSearch(this.value)">
-                            <div class="search-actions">
-                                <button type="button" class="btn btn-primary btn-compact" onclick="handleSearch(document.getElementById('searchBox').value)">${currentLang === 'ar' ? 'بحث' : 'Search'}</button>
-                                <button type="button" class="btn btn-secondary btn-compact" onclick="document.getElementById('searchBox').value=''; handleSearch('');">${currentLang === 'ar' ? 'مسح' : 'Clear'}</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="filter-group" style="min-width: unset;">
-                        <label>${t('project')}</label>
-                        <select class="filter-select" id="projectFilter" onchange="handleProjectFilter(this.value)">
-                            <option value="all">${t('all')}</option>
-                            ${(() => {
-                                const allowedProjects = getAllowedProjects();
-                                const filteredProjects = allowedProjects === null ? projects :
-                                    Object.fromEntries(Object.entries(projects).filter(([code]) => allowedProjects.includes(code)));
-                                return Object.entries(filteredProjects).map(([code, name]) =>
-                                    `<option value="${code}" ${monthFilterProject === code ? 'selected' : ''}>${name}</option>`
-                                ).join('');
-                            })()}
-                        </select>
-                    </div>
-                    <div class="filter-group" style="min-width: unset;">
-                        <label>${t('type')}</label>
-                        <select class="filter-select" id="typeFilter" onchange="handleTypeFilter(this.value)">
-                            <option value="all">${t('all')}</option>
-                            <option value="monthly" ${monthFilterType === 'monthly' ? 'selected' : ''}>${t('monthly')}</option>
-                            <option value="daily" ${monthFilterType === 'daily' ? 'selected' : ''}>${t('daily')}</option>
-                            <option value="vehicle" ${monthFilterType === 'vehicle' ? 'selected' : ''}>${t('vehicle')}</option>
-                            <option value="machinery" ${monthFilterType === 'machinery' ? 'selected' : ''}>${t('machinery')}</option>
-                            <option value="external" ${monthFilterType === 'external' ? 'selected' : ''}>${t('external')}</option>
-                        </select>
-                    </div>
-                </div>
-            </div>`;
 
             if (employees.length === 0) {
                 if (allEmployees.length === 0) {
@@ -16614,6 +16728,30 @@ function renderProjectView() {
             }
         }
         
+        function countMonthActiveFilters() {
+            let n = 0;
+            if (monthFilterSearch) n++;
+            if (monthFilterProject !== 'all') n++;
+            if (monthFilterType !== 'all') n++;
+            if (paymentFilter !== 'all') n++;
+            if (reservationFilter !== 'all') n++;
+            if (linkedFilter !== 'all') n++;
+            if (duplicateCodeFilter !== 'all') n++;
+            if (columnFilters && Object.keys(columnFilters).length) n += Object.keys(columnFilters).length;
+            return n;
+        }
+
+        function toggleMonthStats() {
+            monthStatsExpanded = !monthStatsExpanded;
+            const panel = document.getElementById('monthStatsDetails');
+            const btn = document.getElementById('monthStatsToggle');
+            if (panel) panel.hidden = !monthStatsExpanded;
+            if (btn) {
+                btn.setAttribute('aria-expanded', monthStatsExpanded ? 'true' : 'false');
+                btn.textContent = t('monthStatistics') + (monthStatsExpanded ? ' ▴' : ' ▾');
+            }
+        }
+
         function setPaymentFilter(filter) {
             paymentFilter = filter;
             renderContent();
@@ -33034,6 +33172,7 @@ function generateComparisonSummary(projectCode, month1, month2) {
         window.openPrintOptionsModal = openPrintOptionsModal;
         window.saveMonthDefaultExchangeRateFromToolbar = saveMonthDefaultExchangeRateFromToolbar;
         window.applyMonthDefaultExchangeRateToUnpaid = applyMonthDefaultExchangeRateToUnpaid;
+        window.toggleMonthStats = toggleMonthStats;
         window.openMonthChangeNotesModal = openMonthChangeNotesModal;
         window.saveMonthChangeNotesFromModal = saveMonthChangeNotesFromModal;
         window.renderPrintChangeNotes = renderPrintChangeNotes;
